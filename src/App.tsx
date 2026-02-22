@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Share2, Plus, Edit2, Trash2, Tent, Link as LinkIcon } from 'lucide-react';
+import { Settings, Share2, Plus, Edit2, Trash2, Tent } from 'lucide-react';
 
 // 1. Define the TypeScript structure for a Link
 interface ScoutLink {
