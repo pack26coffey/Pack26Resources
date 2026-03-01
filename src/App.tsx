@@ -21,11 +21,16 @@ import {
   Terminal
 } from 'lucide-react';
 
-/** * RESET STYLES: This block overrides any default CSS that might be 
- * centering your text or breaking the layout in production.
+/** * FAIL-SAFE CSS: 
+ * These styles ensure the app looks correct even if Tailwind CSS 
+ * fails to load in the production environment.
  */
 const GlobalStyles = () => (
   <style>{`
+    :root {
+      --bsa-blue: #003F87;
+      --bsa-gold: #FDC82F;
+    }
     #root { 
       max-width: 100% !important; 
       margin: 0 !important; 
@@ -33,12 +38,52 @@ const GlobalStyles = () => (
       text-align: left !important;
       width: 100%;
     }
-    body { margin: 0; padding: 0; }
-    a { text-decoration: none; color: inherit; }
+    body { 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F8FAFC;
+    }
+    .dark body { background-color: #020617; }
+    
+    /* Manual Grid Layout Backup */
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem;
+    }
+    
+    /* Header styling backup */
+    .bsa-header {
+      background-color: var(--bsa-blue);
+      border-bottom: 4px solid var(--bsa-gold);
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .tile-card {
+      background: white;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      transition: transform 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+    .tile-card:hover { transform: translateY(-4px); }
+    .dark .tile-card { background: #0f172a; border-color: #1e293b; color: white; }
   `}</style>
 );
 
-// 1. Define the TypeScript structure for a Link
 interface ScoutLink {
   id: string;
   title: string;
@@ -88,18 +133,18 @@ const TileImage = ({ src, alt, iconName }: { src: string; alt: string; iconName?
   
   if ((!src || error) || (!src && iconName)) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-slate-800 text-[#003F87] dark:text-blue-400">
+      <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-slate-800 text-[#003F87] dark:text-blue-400 min-h-[150px]">
         <IconComponent size={48} strokeWidth={1.5} />
       </div>
     );
   }
   
   return (
-    <div className="w-full h-full flex items-center justify-center p-6 bg-white dark:bg-slate-200">
+    <div className="w-full h-full flex items-center justify-center p-6 bg-white dark:bg-slate-200 min-h-[150px]">
       <img 
         src={src} 
         alt={alt} 
-        className="max-w-full max-h-full object-contain" 
+        className="max-w-full max-h-[120px] object-contain" 
         onError={() => setError(true)}
       />
     </div>
@@ -118,7 +163,6 @@ export default function App() {
   
   const [toastMsg, setToastMsg] = useState('');
 
-  // Accessing environment variables for debug info
   const appId = typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : 'Local Dev';
 
   useEffect(() => {
@@ -223,16 +267,14 @@ export default function App() {
     <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-slate-950' : 'bg-[#F8FAFC]'} pb-20`}>
       <GlobalStyles />
       
-      {/* Premium Header */}
-      <header className="bg-[#003F87] dark:bg-slate-900 text-white sticky top-0 z-30 shadow-lg border-b-4 border-[#FDC82F] w-full">
-        <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
+      <header className="bsa-header dark:bg-slate-900 text-white sticky top-0 z-30 shadow-lg border-b-4 border-[#FDC82F] w-full">
+        <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between w-full">
           <div className="flex items-center gap-4">
-            {/* Logo Container Updated */}
             <div className="bg-[#003F87] dark:bg-slate-900 flex-shrink-0 w-16 h-16 flex items-center justify-center overflow-hidden">
               <img 
-                src="https://e7.pngegg.com/pngimages/993/536/png-clipart-patriots-path-council-boy-scouts-of-america-cub-scouting-cub-scouting-certificate-of-merit.png" 
+                src="https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Cubscouts.svg/1200px-Cubscouts.svg.png" 
                 alt="Cub Scouts Logo" 
-                className="w-full h-full object-contain scale-[1.25]" 
+                className="w-full h-full object-contain scale-[1.1]" 
               />
             </div>
             <div className="flex flex-col">
@@ -241,31 +283,30 @@ export default function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={toggleDarkMode} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20 active:scale-95">
+          <div className="flex items-center gap-2">
+            <button onClick={toggleDarkMode} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20">
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <button onClick={handleShare} className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-bold transition-all border border-white/20 active:scale-95">
-              <Share2 size={18} /> 
-              <span className="hidden sm:inline uppercase tracking-tighter">Share</span>
+            <button onClick={handleShare} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20">
+              <Share2 size={16} /> 
+              <span className="hidden sm:inline uppercase">Share</span>
             </button>
-            <button onClick={() => setIsEditing(!isEditing)} className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 ${isEditing ? 'bg-[#FDC82F] text-[#003F87]' : 'bg-white dark:bg-slate-100 text-[#003F87]'}`}>
-              <Settings size={18} /> 
-              <span className="hidden sm:inline uppercase tracking-tighter">{isEditing ? 'Done' : 'Edit'}</span>
+            <button onClick={() => setIsEditing(!isEditing)} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${isEditing ? 'bg-[#FDC82F] text-[#003F87]' : 'bg-white text-[#003F87]'}`}>
+              <Settings size={16} /> 
+              <span className="hidden sm:inline uppercase">{isEditing ? 'Done' : 'Edit'}</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Grid Content */}
       <main className="max-w-6xl mx-auto px-4 mt-12 w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 sm:gap-8">
+        <div className="resource-grid">
           {links.map((link: ScoutLink) => (
-            <div key={link.id} className="relative animate-in fade-in zoom-in duration-300">
+            <div key={link.id} className="relative">
               {isEditing && (
                 <div className="absolute -top-3 -right-3 z-20 flex flex-col gap-2">
-                  <button onClick={() => openEditModal(link)} className="bg-blue-600 text-white p-2.5 rounded-full shadow-xl hover:bg-blue-700 border-2 border-white dark:border-slate-800"><Edit2 size={16} /></button>
-                  <button onClick={() => handleDelete(link.id)} className="bg-red-600 text-white p-2.5 rounded-full shadow-xl hover:bg-red-700 border-2 border-white dark:border-slate-800"><Trash2 size={16} /></button>
+                  <button onClick={() => openEditModal(link)} className="bg-blue-600 text-white p-2 rounded-full shadow-xl border-2 border-white"><Edit2 size={14} /></button>
+                  <button onClick={() => handleDelete(link.id)} className="bg-red-600 text-white p-2 rounded-full shadow-xl border-2 border-white"><Trash2 size={14} /></button>
                 </div>
               )}
               
@@ -273,17 +314,13 @@ export default function App() {
                 href={isEditing ? '#' : link.url} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className={`group block h-full bg-white dark:bg-slate-900 rounded-3xl border-2 transition-all duration-300 overflow-hidden flex flex-col ${
-                  isEditing 
-                  ? 'border-dashed border-blue-400 opacity-60' 
-                  : 'border-white dark:border-slate-800 shadow-sm hover:shadow-2xl hover:-translate-y-2'
-                }`}
+                className={`tile-card h-full ${isEditing ? 'opacity-60 border-dashed border-blue-400' : ''}`}
               >
-                <div className="aspect-square w-full relative bg-slate-50 dark:bg-slate-800/50">
+                <div className="aspect-square w-full relative bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center overflow-hidden">
                   <TileImage src={link.imageUrl} alt={link.title} iconName={link.iconName} />
                 </div>
-                <div className={`p-5 text-center flex-grow flex items-center justify-center border-t border-slate-100 dark:border-slate-800 ${isEditing ? 'bg-slate-50 dark:bg-slate-800' : 'bg-white dark:bg-slate-900'}`}>
-                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-sm sm:text-base uppercase tracking-wide">
+                <div className="p-4 text-center border-t border-slate-100 dark:border-slate-800">
+                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-sm uppercase tracking-wide">
                     {link.title}
                   </span>
                 </div>
@@ -292,29 +329,27 @@ export default function App() {
           ))}
 
           {isEditing && (
-            <button onClick={openAddModal} className="aspect-square flex flex-col items-center justify-center gap-4 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-slate-400 hover:text-blue-600 transition-all group">
-              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl group-hover:bg-blue-100 transition-colors">
-                <Plus size={40} strokeWidth={2.5} />
+            <button onClick={openAddModal} className="tile-card flex flex-col items-center justify-center gap-4 border-4 border-dashed border-slate-200 dark:border-slate-800 min-h-[220px]">
+              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl">
+                <Plus size={32} strokeWidth={2.5} />
               </div>
               <span className="font-black uppercase text-xs tracking-widest">Add Link</span>
             </button>
           )}
         </div>
 
-        {/* Debug Info Helper */}
         {isEditing && (
           <div className="mt-20 p-6 bg-blue-50 dark:bg-slate-900/50 rounded-3xl border-2 border-blue-100 dark:border-slate-800 flex items-center gap-4 text-blue-600 dark:text-blue-400">
             <Terminal size={24} />
             <div className="text-xs font-mono">
               <p className="font-bold uppercase mb-1">StackBlitz Environment Debug</p>
               <p>App ID: {appId}</p>
-              <p className="mt-2 text-slate-500 italic">If sidebar icons are missing, try clicking 'Fork' or check if browser zoom is hiding them.</p>
+              <p className="mt-2 text-slate-500 italic">If Tailwind fails to load, the "GlobalStyles" CSS backup will maintain the layout.</p>
             </div>
           </div>
         )}
       </main>
 
-      {/* Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden border dark:border-slate-800">
@@ -328,24 +363,23 @@ export default function App() {
             
             <form onSubmit={handleSave} className="p-8 space-y-6">
               <div className="space-y-4">
-                <input required placeholder="Resource Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 focus:border-blue-500 outline-none font-semibold dark:text-white" />
-                <input required placeholder="Web Address (URL)" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 focus:border-blue-500 outline-none font-semibold dark:text-white" />
+                <input required placeholder="Resource Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 outline-none font-semibold dark:text-white" />
+                <input required placeholder="Web Address (URL)" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 outline-none font-semibold dark:text-white" />
                 <div className="grid grid-cols-5 gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700">
                   {Object.keys(ICON_MAP).map(name => {
                     const Icon = ICON_MAP[name];
                     return (
-                      <button key={name} type="button" onClick={() => setFormData({...formData, iconName: name, imageUrl: ''})} className={`p-3 rounded-xl flex items-center justify-center transition-all ${formData.iconName === name && !formData.imageUrl ? 'bg-[#003F87] text-white shadow-lg scale-110' : 'bg-white dark:bg-slate-700 text-slate-400'}`}>
+                      <button key={name} type="button" onClick={() => setFormData({...formData, iconName: name, imageUrl: ''})} className={`p-3 rounded-xl flex items-center justify-center transition-all ${formData.iconName === name && !formData.imageUrl ? 'bg-[#003F87] text-white shadow-lg' : 'bg-white dark:bg-slate-700 text-slate-400'}`}>
                         <Icon size={20} />
                       </button>
                     );
                   })}
                 </div>
-                <div className="relative flex justify-center text-[10px] uppercase font-black text-slate-300"><span className="bg-white dark:bg-slate-900 px-2 tracking-widest">Or Image URL</span></div>
-                <input placeholder="https://..." value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 focus:border-blue-500 outline-none font-semibold dark:text-white" />
+                <input placeholder="Image URL (optional)" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 outline-none font-semibold dark:text-white" />
               </div>
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 font-bold uppercase tracking-widest text-slate-400">Cancel</button>
-                <button type="submit" className="flex-[2] bg-[#003F87] dark:bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95">Save</button>
+                <button type="submit" className="flex-[2] bg-[#003F87] dark:bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl">Save</button>
               </div>
             </form>
           </div>
