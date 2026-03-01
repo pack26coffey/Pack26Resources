@@ -25,10 +25,6 @@ import {
   Layout
 } from 'lucide-react';
 
-/** * FAIL-SAFE CSS: 
- * These styles ensure the app looks correct even if Tailwind CSS 
- * fails to load in the production environment.
- */
 const GlobalStyles = () => (
   <style>{`
     :root {
@@ -98,12 +94,7 @@ const GlobalStyles = () => (
       overflow: hidden;
       border-radius: 8px;
       background: rgba(255,255,255,0.1);
-    }
-
-    .logo-box img {
-      width: 100%;
-      height: 100%;
-      transition: transform 0.2s ease;
+      position: relative;
     }
 
     .title-group h1 {
@@ -168,14 +159,10 @@ const GlobalStyles = () => (
       background: #f1f5f9;
       overflow: hidden;
       position: relative;
+      width: 100%;
     }
 
     .dark .tile-image-area { background: #1e293b; }
-
-    .tile-image-area img {
-      width: 100%;
-      height: 100%;
-    }
 
     .tile-label {
       padding: 16px;
@@ -357,7 +344,7 @@ const Toast = ({ message, onClose }: { message: string; onClose: () => void }) =
   );
 };
 
-const GenericImage = ({ url, zoom, offsetX, offsetY, alt, iconName }: any) => {
+const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, alt, iconName }: any) => {
   const [error, setError] = useState(false);
   const IconComponent = iconName && ICON_MAP[iconName] ? ICON_MAP[iconName] : Tent;
   
@@ -375,9 +362,17 @@ const GenericImage = ({ url, zoom, offsetX, offsetY, alt, iconName }: any) => {
       alt={alt || "Image"} 
       onError={() => setError(true)}
       style={{
-        transform: `scale(${zoom || 1}) translate(${offsetX || 0}%, ${offsetY || 0}%)`,
-        objectFit: (zoom && zoom > 1) ? 'none' : 'contain',
-        transition: 'transform 0.1s ease'
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        // Use transform-origin to ensure scaling happens from the center
+        transformOrigin: 'center center',
+        // Apply scale AND translate
+        // Translating by -50% -50% keeps it centered, then we add the manual offsets
+        transform: `translate(-50%, -50%) translate(${offsetX}%, ${offsetY}%) scale(${zoom})`,
+        // Object-fit: none ensures the image is rendered at its natural size so our scale works correctly
+        objectFit: 'none',
+        transition: 'none' // Disable transition during drag for smoothness
       }}
     />
   );
@@ -393,8 +388,6 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'link' | 'header'>('link');
   const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
-  
-  // Unified Form Data - handles both link editing and header editing
   const [formData, setFormData] = useState<any>({});
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -417,15 +410,12 @@ export default function App() {
     if (data) {
       try {
         const decoded = JSON.parse(decodeURIComponent(atob(data)));
-        
-        // Restore links
         const restoredLinks: ScoutLink[] = decoded.l.map((l: any) => ({
           id: l.i, title: l.t, url: l.u, imageUrl: l.img, iconName: l.icon || 'Tent',
           zoom: l.z || 1, offsetX: l.ox || 0, offsetY: l.oy || 0
         }));
         setLinks(restoredLinks);
 
-        // Restore settings
         if (decoded.s) {
           setSettings({
             headerTitle: decoded.s.ht || DEFAULT_SETTINGS.headerTitle,
@@ -436,22 +426,16 @@ export default function App() {
             headerLogoOffsetY: decoded.s.hoy || DEFAULT_SETTINGS.headerLogoOffsetY,
           });
         }
-        
         setIsDataLoaded(true);
         return;
-      } catch (e) {
-        console.error("Failed to parse shared link data", e);
-      }
+      } catch (e) { console.error(e); }
     }
     
     const localLinks = localStorage.getItem('cubScoutLinks');
     const localSettings = localStorage.getItem('cubScoutSettings');
-    
     if (localLinks) setLinks(JSON.parse(localLinks));
     else setLinks(DEFAULT_LINKS);
-
     if (localSettings) setSettings(JSON.parse(localSettings));
-    
     setIsDataLoaded(true);
   }, []);
 
@@ -465,13 +449,9 @@ export default function App() {
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('scoutTheme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('scoutTheme', 'light');
-    }
+    if (newMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+    localStorage.setItem('scoutTheme', newMode ? 'dark' : 'light');
   };
 
   const handleSearchImages = async () => {
@@ -501,56 +481,37 @@ export default function App() {
 
   const handleShare = () => {
     try {
-      const compactLinks = links.map(l => ({ 
-        i: l.id, t: l.title, u: l.url, img: l.imageUrl, icon: l.iconName,
-        z: l.zoom, ox: l.offsetX, oy: l.offsetY
-      }));
-      const compactSettings = {
-        ht: settings.headerTitle,
-        hs: settings.headerSubtitle,
-        hl: settings.headerLogoUrl,
-        hz: settings.headerLogoZoom,
-        hox: settings.headerLogoOffsetX,
-        hoy: settings.headerLogoOffsetY
+      const payload = { 
+        l: links.map(l => ({ i: l.id, t: l.title, u: l.url, img: l.imageUrl, icon: l.iconName, z: l.zoom, ox: l.offsetX, oy: l.offsetY })),
+        s: { ht: settings.headerTitle, hs: settings.headerSubtitle, hl: settings.headerLogoUrl, hz: settings.headerLogoZoom, hox: settings.headerLogoOffsetX, hoy: settings.headerLogoOffsetY }
       };
-
-      const payload = { l: compactLinks, s: compactSettings };
       const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
       const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
-      
       const textArea = document.createElement("textarea");
-      textArea.value = shareUrl;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+      textArea.value = shareUrl; document.body.appendChild(textArea);
+      textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea);
       setToastMsg("Link copied! Share this with your Pack.");
-    } catch (err) {
-      setToastMsg("Failed to generate link.");
-    }
+    } catch (err) { setToastMsg("Failed to generate link."); }
   };
 
   const openAddModal = () => {
     setModalMode('link');
     setFormData({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 });
     setEditingLink(null);
-    setSearchResults([]);
-    setSearchQuery('');
+    setSearchResults([]); setSearchQuery('');
     setIsModalOpen(true);
   };
 
   const openEditLinkModal = (link: ScoutLink) => {
     setModalMode('link');
-    setFormData(link);
+    setFormData({ ...link });
     setEditingLink(link);
-    setSearchResults([]);
-    setSearchQuery('');
+    setSearchResults([]); setSearchQuery('');
     setIsModalOpen(true);
   };
 
   const openEditHeaderModal = () => {
     setModalMode('header');
-    // Map settings to a temporary formData structure that GenericImage can read
     setFormData({
       title: settings.headerTitle,
       subtitle: settings.headerSubtitle,
@@ -559,35 +520,24 @@ export default function App() {
       offsetX: settings.headerLogoOffsetX,
       offsetY: settings.headerLogoOffsetY
     });
-    setSearchResults([]);
-    setSearchQuery('');
+    setSearchResults([]); setSearchQuery('');
     setIsModalOpen(true);
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (modalMode === 'link') {
       let finalUrl = formData.url.trim();
-      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-        finalUrl = 'https://' + finalUrl;
-      }
-      if (editingLink) {
-        setLinks(links.map(l => l.id === editingLink.id ? { ...formData, url: finalUrl } : l));
-      } else {
-        setLinks([...links, { ...formData, id: crypto.randomUUID(), url: finalUrl }]);
-      }
+      if (!finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+      if (editingLink) setLinks(links.map(l => l.id === editingLink.id ? { ...formData, url: finalUrl } : l));
+      else setLinks([...links, { ...formData, id: crypto.randomUUID(), url: finalUrl }]);
     } else {
       setSettings({
-        headerTitle: formData.title,
-        headerSubtitle: formData.subtitle,
-        headerLogoUrl: formData.imageUrl,
-        headerLogoZoom: formData.zoom,
-        headerLogoOffsetX: formData.offsetX,
-        headerLogoOffsetY: formData.offsetY
+        headerTitle: formData.title, headerSubtitle: formData.subtitle,
+        headerLogoUrl: formData.imageUrl, headerLogoZoom: formData.zoom,
+        headerLogoOffsetX: formData.offsetX, headerLogoOffsetY: formData.offsetY
       });
     }
-    
     setIsModalOpen(false);
   };
 
@@ -597,9 +547,10 @@ export default function App() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!dragRef.current.isDragging) return;
-    const factor = formData.zoom || 1;
-    const deltaX = (e.clientX - dragRef.current.startX) / (factor * 2);
-    const deltaY = (e.clientY - dragRef.current.startY) / (factor * 2);
+    // Scale the movement sensitivity based on zoom level
+    const factor = (formData.zoom || 1) * 0.5;
+    const deltaX = (e.clientX - dragRef.current.startX) / factor;
+    const deltaY = (e.clientY - dragRef.current.startY) / factor;
     setFormData((prev: any) => ({
       ...prev,
       offsetX: (prev.offsetX || 0) + deltaX,
@@ -609,32 +560,23 @@ export default function App() {
     dragRef.current.startY = e.clientY;
   };
 
-  const handleMouseUp = () => {
-    dragRef.current.isDragging = false;
-  };
+  const handleMouseUp = () => { dragRef.current.isDragging = false; };
 
   return (
     <div className={`app-wrapper ${darkMode ? 'dark' : ''}`}>
       <GlobalStyles />
-      
       <header className="bsa-header">
         <div className="header-container">
           <div className="logo-section">
             {isEditing && (
-              <button 
-                onClick={openEditHeaderModal}
-                className="action-badge"
-                style={{ position: 'absolute', top: '-10px', left: '-10px', zIndex: 110, background: 'var(--bsa-gold)' }}
-              >
+              <button onClick={openEditHeaderModal} className="action-badge" style={{ position: 'absolute', top: '-10px', left: '-10px', zIndex: 110, background: 'var(--bsa-gold)' }}>
                 <Settings size={14} color="var(--bsa-blue)" />
               </button>
             )}
             <div className="logo-box">
               <GenericImage 
-                url={settings.headerLogoUrl} 
-                zoom={settings.headerLogoZoom} 
-                offsetX={settings.headerLogoOffsetX} 
-                offsetY={settings.headerLogoOffsetY} 
+                url={settings.headerLogoUrl} zoom={settings.headerLogoZoom} 
+                offsetX={settings.headerLogoOffsetX} offsetY={settings.headerLogoOffsetY} 
                 alt="Logo"
               />
             </div>
@@ -643,76 +585,38 @@ export default function App() {
               <p>{settings.headerSubtitle}</p>
             </div>
           </div>
-          
           <div className="btn-group">
-            <button onClick={toggleDarkMode} className="icon-btn">
-              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-            <button onClick={handleShare} className="icon-btn">
-              <Share2 size={16} /> <span>Share</span>
-            </button>
-            <button 
-              onClick={() => setIsEditing(!isEditing)} 
-              className={`icon-btn ${isEditing ? 'active' : ''}`}
-            >
-              <Settings size={16} /> <span>{isEditing ? 'Done' : 'Edit'}</span>
-            </button>
+            <button onClick={toggleDarkMode} className="icon-btn">{darkMode ? <Sun size={16} /> : <Moon size={16} />}</button>
+            <button onClick={handleShare} className="icon-btn"><Share2 size={16} /> <span>Share</span></button>
+            <button onClick={() => setIsEditing(!isEditing)} className={`icon-btn ${isEditing ? 'active' : ''}`}><Settings size={16} /> <span>{isEditing ? 'Done' : 'Edit'}</span></button>
           </div>
         </div>
       </header>
 
       <main className="main-content">
         <div className="resource-grid">
-          {links.map((link: ScoutLink) => (
+          {links.map((link) => (
             <div key={link.id} style={{ position: 'relative' }}>
               {isEditing && (
                 <div style={{ position: 'absolute', top: '-12px', right: '-12px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button 
-                    onClick={() => openEditLinkModal(link)} 
-                    className="action-badge"
-                    style={{ background: '#2563eb' }}
-                  >
-                    <Edit2 size={14} color="white" />
-                  </button>
-                  <button 
-                    onClick={() => setLinks(links.filter(l => l.id !== link.id))} 
-                    className="action-badge"
-                    style={{ background: '#dc2626' }}
-                  >
-                    <Trash2 size={14} color="white" />
-                  </button>
+                  <button onClick={() => openEditLinkModal(link)} className="action-badge" style={{ background: '#2563eb' }}><Edit2 size={14} color="white" /></button>
+                  <button onClick={() => setLinks(links.filter(l => l.id !== link.id))} className="action-badge" style={{ background: '#dc2626' }}><Trash2 size={14} color="white" /></button>
                 </div>
               )}
-              
-              <a 
-                href={isEditing ? '#' : link.url} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="tile-card"
-                style={isEditing ? { opacity: 0.6, cursor: 'default' } : {}}
-              >
+              <a href={isEditing ? '#' : link.url} target="_blank" rel="noopener noreferrer" className="tile-card" style={isEditing ? { opacity: 0.6, cursor: 'default' } : {}}>
                 <div className="tile-image-area">
                   <GenericImage 
-                    url={link.imageUrl} 
-                    zoom={link.zoom} 
-                    offsetX={link.offsetX} 
-                    offsetY={link.offsetY} 
-                    iconName={link.iconName} 
-                    alt={link.title}
+                    url={link.imageUrl} zoom={link.zoom} 
+                    offsetX={link.offsetX} offsetY={link.offsetY} 
+                    iconName={link.iconName} alt={link.title}
                   />
                 </div>
-                <div className="tile-label">
-                  {link.title}
-                </div>
+                <div className="tile-label">{link.title}</div>
               </a>
             </div>
           ))}
-
           {isEditing && (
-            <button onClick={openAddModal} className="add-btn">
-              <Plus size={32} />
-              <span style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase' }}>Add Link</span>
-            </button>
+            <button onClick={openAddModal} className="add-btn"><Plus size={32} /><span style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase' }}>Add Link</span></button>
           )}
         </div>
       </main>
@@ -721,87 +625,48 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
           <div style={{ background: darkMode ? '#0f172a' : 'white', borderRadius: '24px', width: '100%', maxWidth: '550px', margin: 'auto', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
             <div style={{ background: '#003F87', padding: '20px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {modalMode === 'header' ? <Layout size={20} /> : <Plus size={20} />}
-                <h2 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontSize: '1.2rem' }}>
-                  {modalMode === 'header' ? 'Header Settings' : editingLink ? 'Edit Link' : 'Add New Link'}
-                </h2>
-              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>{modalMode === 'header' ? <Layout size={20} /> : <Plus size={20} />}<h2 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontSize: '1.2rem' }}>{modalMode === 'header' ? 'Header Settings' : editingLink ? 'Edit Link' : 'Add New Link'}</h2></div>
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
             </div>
-            
             <form onSubmit={handleSave} style={{ padding: '25px' }}>
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>Text Settings</label>
                 <input required placeholder={modalMode === 'header' ? "Pack Title" : "Website Title"} value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
-                
                 {modalMode === 'header' ? (
-                  <input placeholder="Subtitle (e.g. BSA Pack 123)" value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
+                  <input placeholder="Subtitle" value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
                 ) : (
-                  <input required placeholder="URL (e.g. scouting.org)" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
+                  <input required placeholder="URL" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
                 )}
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>Image & Icon Setup</label>
-                
+                <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>Crop & Center (Drag to adjust)</label>
                 <div className="crop-preview-container" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-                  <GenericImage 
-                    url={formData.imageUrl} 
-                    zoom={formData.zoom} 
-                    offsetX={formData.offsetX} 
-                    offsetY={formData.offsetY} 
-                    iconName={formData.iconName} 
-                  />
-                  <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '4px', borderRadius: '4px' }}>
-                    <Move size={12} />
-                  </div>
+                  <GenericImage url={formData.imageUrl} zoom={formData.zoom} offsetX={formData.offsetX} offsetY={formData.offsetY} iconName={formData.iconName} />
+                  <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '4px', borderRadius: '4px' }}><Move size={12} /></div>
                 </div>
-
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
                   <ZoomIn size={16} color="#64748b" />
-                  <input 
-                    type="range" 
-                    min="1" max="5" step="0.1" 
-                    value={formData.zoom} 
-                    onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} 
-                    style={{ flex: 1 }}
-                  />
-                  <span style={{ fontSize: '12px', minWidth: '35px' }}>{formData.zoom}x</span>
+                  <input type="range" min="0.1" max="5" step="0.05" value={formData.zoom} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} style={{ flex: 1 }} />
+                  <span style={{ fontSize: '12px', minWidth: '35px' }}>{formData.zoom?.toFixed(2)}x</span>
                 </div>
-
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                   <div style={{ position: 'relative', flex: 1 }}>
                     <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#64748b' }} />
-                    <input 
-                      placeholder="Search for a logo..." 
-                      value={searchQuery} 
-                      onChange={e => setSearchQuery(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleSearchImages())}
-                      style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} 
-                    />
+                    <input placeholder="Search for a logo..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleSearchImages())} style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
                   </div>
-                  <button type="button" onClick={handleSearchImages} style={{ background: '#003F87', color: 'white', border: 'none', borderRadius: '10px', padding: '0 15px', fontWeight: 'bold' }}>
-                    {isSearching ? <Loader2 className="animate-spin" size={20} /> : 'GO'}
-                  </button>
+                  <button type="button" onClick={handleSearchImages} style={{ background: '#003F87', color: 'white', border: 'none', borderRadius: '10px', padding: '0 15px', fontWeight: 'bold' }}>{isSearching ? <Loader2 className="animate-spin" size={20} /> : 'GO'}</button>
                 </div>
-
                 {searchResults.length > 0 && (
                   <div className="image-search-results">
                     {searchResults.map((url, idx) => (
-                      <img 
-                        key={idx} 
-                        src={url} 
-                        className="search-thumb" 
-                        onClick={() => setFormData({...formData, imageUrl: url, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} 
-                      />
+                      <img key={idx} src={url} className="search-thumb" onClick={() => setFormData({...formData, imageUrl: url, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} />
                     ))}
                   </div>
                 )}
-                
                 {modalMode === 'link' && (
                   <div style={{ marginTop: '10px' }}>
-                    <p style={{ margin: '0 0 10px 0', fontSize: '10px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Or Select Default Icon:</p>
+                    <p style={{ margin: '0 0 10px 0', fontSize: '10px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Or Select Icon:</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
                       {Object.keys(ICON_MAP).map(name => {
                         const Icon = ICON_MAP[name];
@@ -815,10 +680,7 @@ export default function App() {
                   </div>
                 )}
               </div>
-
-              <button type="submit" style={{ width: '100%', padding: '15px', background: '#003F87', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Save {modalMode === 'header' ? 'Header' : 'Link'}
-              </button>
+              <button type="submit" style={{ width: '100%', padding: '15px', background: '#003F87', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>Save {modalMode === 'header' ? 'Header' : 'Link'}</button>
             </form>
           </div>
         </div>
