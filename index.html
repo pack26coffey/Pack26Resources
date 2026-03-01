@@ -83,8 +83,8 @@
         <header class="bg-slate-50 dark:bg-slate-900 border-b-8 border-yellow-400 shadow-xl px-6 py-10 transition-colors duration-300 relative">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8 relative">
                 
-                <div class="w-32 h-32 rounded-3xl bg-white dark:bg-slate-800 flex items-center justify-center p-4 border-4 border-slate-200 dark:border-slate-700 shadow-inner relative group">
-                    <img id="header-logo" src="" class="max-h-full max-w-full object-contain" alt="Logo">
+                <div class="w-32 h-32 rounded-3xl bg-white dark:bg-slate-800 flex items-center justify-center p-0 border-4 border-slate-200 dark:border-slate-700 shadow-inner relative group overflow-hidden">
+                    <img id="header-logo" src="" class="absolute origin-center" alt="Logo">
                 </div>
 
                 <div class="text-center md:text-left flex-1 relative">
@@ -140,21 +140,37 @@
 
         <!-- Edit Header Modal -->
         <div id="header-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-md shadow-2xl border-t-8 border-blue-500 my-8">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-blue-500 my-8">
                 <h2 class="text-2xl font-black uppercase mb-6 text-blue-500">Edit Header</h2>
                 
-                <div class="space-y-4 mb-8">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Main Title</label>
-                        <input type="text" id="edit-header-title" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Main Title</label>
+                            <input type="text" id="edit-header-title" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Subtitle</label>
+                            <input type="text" id="edit-header-subtitle" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Logo URL</label>
+                            <input type="text" id="edit-header-img" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Subtitle</label>
-                        <input type="text" id="edit-header-subtitle" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Header Image / Logo URL</label>
-                        <input type="text" id="edit-header-img" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+
+                    <div class="flex flex-col items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-3 w-full text-center">Header Logo Editor (Drag to Move)</label>
+                        <div class="preview-container w-32 h-32 bg-white dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 mb-4 cursor-move shadow-inner" id="header-preview-box">
+                            <img id="header-preview-image" src="" class="preview-image pointer-events-none" alt="Preview">
+                        </div>
+                        <div class="w-full px-2">
+                            <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase mb-1">
+                                <span>Smaller</span>
+                                <span>Larger</span>
+                            </div>
+                            <input type="range" id="header-scale-slider" min="0.2" max="3" step="0.1" value="1">
+                        </div>
                     </div>
                 </div>
                 
@@ -167,7 +183,7 @@
 
         <!-- Edit/Add Link Modal -->
         <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-lg shadow-2xl border-t-8 border-yellow-400 my-8">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-yellow-400 my-8">
                 <h2 id="edit-modal-title" class="text-2xl font-black uppercase mb-6 text-[#003F87] dark:text-yellow-400">Add Link</h2>
                 
                 <input type="hidden" id="edit-index">
@@ -219,15 +235,15 @@
         const defaultHeader = {
             title: 'Pack 26 Resources',
             subtitle: 'Scouting America',
-            logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'
+            logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
+            scale: 1, x: 0, y: 0
         };
         let headerData = JSON.parse(localStorage.getItem('pack26Header')) || defaultHeader;
 
         const defaultLinks = [
             { title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: 'https://help.scoutbook.scouting.org/wp-content/uploads/2019/11/SB-logo-2.png', scale: 1, x: 0, y: 0 },
             { title: 'Scout Shop', url: 'https://www.scoutshop.org/', img: 'https://www.scouting.org/wp-content/themes/bsa-master/images/fleur-de-lis.png', scale: 1, x: 0, y: 0 },
-            { title: 'Scout Life', url: 'https://scoutlife.org/', img: 'https://scoutlife.org/wp-content/uploads/2020/08/sl-logo-2020.png', scale: 1, x: 0, y: 0 },
-            { title: 'Pack Calendar', url: '#', img: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png', scale: 1, x: 0, y: 0 }
+            { title: 'Scout Life', url: 'https://scoutlife.org/', img: 'https://scoutlife.org/wp-content/uploads/2020/08/sl-logo-2020.png', scale: 1, x: 0, y: 0 }
         ];
         let scoutLinks = JSON.parse(localStorage.getItem('pack26Links')) || defaultLinks;
 
@@ -236,29 +252,86 @@
             localStorage.setItem('pack26Header', JSON.stringify(headerData));
         }
 
-        // --- IMAGE EDITOR STATE ---
-        let currentScale = 1;
-        let currentX = 0;
-        let currentY = 0;
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
+        // --- UNIFIED IMAGE EDITOR LOGIC ---
+        let editorState = {
+            target: 'link', // 'link' or 'header'
+            scale: 1, x: 0, y: 0,
+            isDragging: false,
+            startX: 0, startY: 0
+        };
 
-        const previewImgEl = document.getElementById('preview-image');
-        const previewBox = document.getElementById('preview-box');
-        const scaleSlider = document.getElementById('scale-slider');
-        const imgInput = document.getElementById('edit-img');
+        const elements = {
+            link: {
+                previewImg: document.getElementById('preview-image'),
+                previewBox: document.getElementById('preview-box'),
+                scaleSlider: document.getElementById('scale-slider'),
+                inputImg: document.getElementById('edit-img')
+            },
+            header: {
+                previewImg: document.getElementById('header-preview-image'),
+                previewBox: document.getElementById('header-preview-box'),
+                scaleSlider: document.getElementById('header-scale-slider'),
+                inputImg: document.getElementById('edit-header-img')
+            }
+        };
 
-        // --- REORDERING LOGIC ---
+        function applyEditorTransform() {
+            const el = elements[editorState.target].previewImg;
+            el.style.transform = `translate(${editorState.x}px, ${editorState.y}px) scale(${editorState.scale})`;
+            el.style.height = "100%";
+        }
+
+        // Setup Listeners for both editors
+        ['link', 'header'].forEach(type => {
+            const cfg = elements[type];
+            cfg.inputImg.addEventListener('input', e => cfg.previewImg.src = e.target.value || 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png');
+            cfg.scaleSlider.addEventListener('input', e => { 
+                if (editorState.target === type) {
+                    editorState.scale = parseFloat(e.target.value); 
+                    applyEditorTransform(); 
+                }
+            });
+
+            cfg.previewBox.addEventListener('mousedown', e => {
+                editorState.target = type;
+                editorState.isDragging = true;
+                editorState.startX = e.clientX - editorState.x;
+                editorState.startY = e.clientY - editorState.y;
+            });
+
+            cfg.previewBox.addEventListener('touchstart', e => {
+                editorState.target = type;
+                editorState.isDragging = true;
+                editorState.startX = e.touches[0].clientX - editorState.x;
+                editorState.startY = e.touches[0].clientY - editorState.y;
+            }, {passive: false});
+        });
+
+        window.addEventListener('mousemove', e => {
+            if (!editorState.isDragging) return;
+            editorState.x = e.clientX - editorState.startX;
+            editorState.y = e.clientY - editorState.startY;
+            applyEditorTransform();
+        });
+
+        window.addEventListener('touchmove', e => {
+            if (!editorState.isDragging) return;
+            e.preventDefault();
+            editorState.x = e.touches[0].clientX - editorState.startX;
+            editorState.y = e.touches[0].clientY - editorState.startY;
+            applyEditorTransform();
+        }, {passive: false});
+
+        window.addEventListener('mouseup', () => editorState.isDragging = false);
+        window.addEventListener('touchend', () => editorState.isDragging = false);
+
+        // --- REORDERING ---
         function moveTile(index, direction) {
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= scoutLinks.length) return;
-            
             const item = scoutLinks.splice(index, 1)[0];
             scoutLinks.splice(newIndex, 0, item);
-            
-            saveToStorage();
-            updateUI();
+            saveToStorage(); updateUI();
         }
 
         // --- UI RENDERER ---
@@ -266,179 +339,143 @@
             document.documentElement.classList.toggle('dark', darkMode);
             document.getElementById('theme-icon').setAttribute('data-lucide', darkMode ? 'sun' : 'moon');
 
-            document.getElementById('header-title').innerText = headerData.title;
-            document.getElementById('header-subtitle').innerText = headerData.subtitle;
-            document.getElementById('header-logo').src = headerData.logo;
+            // Header Render
+            const h = headerData;
+            const headerLogo = document.getElementById('header-logo');
+            document.getElementById('header-title').innerText = h.title;
+            document.getElementById('header-subtitle').innerText = h.subtitle;
+            headerLogo.src = h.logo;
+            headerLogo.style.transform = `translate(${h.x}px, ${h.y}px) scale(${h.scale})`;
+            headerLogo.style.height = "100%";
 
-            const lockIcon = document.getElementById('lock-icon');
+            document.getElementById('edit-header-btn').classList.toggle('hidden', !isAdmin);
             const lockBtn = document.getElementById('lock-btn');
+            const lockIcon = document.getElementById('lock-icon');
             lockIcon.setAttribute('data-lucide', isAdmin ? 'unlock' : 'lock');
-            lockBtn.className = isAdmin 
-                ? "w-16 h-16 rounded-2xl bg-yellow-400 flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 border-2 border-white"
-                : "w-16 h-16 rounded-2xl bg-[#003F87] flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 border-2 border-white/20";
-            
-            const headerBtn = document.getElementById('edit-header-btn');
-            headerBtn.classList.toggle('hidden', !isAdmin);
+            lockBtn.className = isAdmin ? "w-16 h-16 rounded-2xl bg-yellow-400 flex items-center justify-center shadow-2xl hover:scale-110" : "w-16 h-16 rounded-2xl bg-[#003F87] flex items-center justify-center shadow-2xl hover:scale-110";
 
+            // Grid Render
             const container = document.getElementById('links-container');
-            let html = scoutLinks.map((link, index) => {
-                const s = link.scale || 1;
-                const tx = link.x || 0;
-                const ty = link.y || 0;
-                
-                return `
+            let html = scoutLinks.map((link, index) => `
                 <div class="relative group h-full">
                     ${isAdmin ? `
-                    <!-- Control Overlay -->
                     <div class="absolute -top-3 -left-3 -right-3 z-10 flex justify-between pointer-events-none">
-                        <!-- Movement Controls -->
                         <div class="flex gap-1 pointer-events-auto">
-                            ${index > 0 ? `
-                                <button onclick="moveTile(${index}, -1)" class="p-2 bg-slate-800 text-white rounded-lg shadow-xl hover:bg-blue-500 transition-colors">
-                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                                </button>
-                            ` : '<div class="w-8"></div>'}
-                            ${index < scoutLinks.length - 1 ? `
-                                <button onclick="moveTile(${index}, 1)" class="p-2 bg-slate-800 text-white rounded-lg shadow-xl hover:bg-blue-500 transition-colors">
-                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                                </button>
-                            ` : ''}
+                            ${index > 0 ? `<button onclick="moveTile(${index}, -1)" class="p-2 bg-slate-800 text-white rounded-lg shadow-xl hover:bg-blue-500"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>` : '<div class="w-8"></div>'}
+                            ${index < scoutLinks.length - 1 ? `<button onclick="moveTile(${index}, 1)" class="p-2 bg-slate-800 text-white rounded-lg shadow-xl hover:bg-blue-500"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>` : ''}
                         </div>
-                        <!-- Edit Controls -->
                         <div class="flex gap-1 pointer-events-auto">
-                            <button onclick="openEditModal(${index})" class="p-2 bg-blue-500 text-white rounded-lg shadow-xl hover:scale-110 transition-transform">
-                                <i data-lucide="edit-2" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deleteLink(${index})" class="p-2 bg-red-500 text-white rounded-lg shadow-xl hover:scale-110 transition-transform">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                            <button onclick="openEditModal(${index})" class="p-2 bg-blue-500 text-white rounded-lg shadow-xl hover:scale-110"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                            <button onclick="deleteLink(${index})" class="p-2 bg-red-500 text-white rounded-lg shadow-xl hover:scale-110"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                     ` : ''}
-                    <a href="${isAdmin ? 'javascript:void(0)' : link.url}" ${isAdmin ? '' : 'target="_blank"'} class="scout-card block h-full bg-slate-50 dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg flex flex-col items-center border border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:-translate-y-1 transition-all">
-                        <div class="w-full aspect-square bg-white dark:bg-slate-950 rounded-2xl mb-4 flex items-center justify-center p-0 border border-slate-100 dark:border-slate-800/50 overflow-hidden relative">
-                            <img src="${link.img}" class="max-w-none absolute origin-center pointer-events-none" style="transform: translate(${tx}px, ${ty}px) scale(${s}); height: 100%;" alt="${link.title}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3652/3652191.png'">
+                    <a href="${isAdmin ? 'javascript:void(0)' : link.url}" target="${isAdmin ? '_self' : '_blank'}" class="scout-card block h-full bg-slate-50 dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg flex flex-col items-center border border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:-translate-y-1 transition-all">
+                        <div class="w-full aspect-square bg-white dark:bg-slate-950 rounded-2xl mb-4 flex items-center justify-center p-0 overflow-hidden relative border border-slate-100 dark:border-slate-800/50">
+                            <img src="${link.img}" class="max-w-none absolute origin-center pointer-events-none" style="transform: translate(${link.x}px, ${link.y}px) scale(${link.scale}); height: 100%;">
                         </div>
                         <span class="font-black uppercase text-xs tracking-[0.2em] text-blue-900 dark:text-blue-400 text-center line-clamp-1">${link.title}</span>
                     </a>
                 </div>
-            `}).join('');
+            `).join('');
 
             if (isAdmin) {
-                html += `
-                <button onclick="openAddModal()" class="bg-transparent border-4 border-dashed border-slate-300 dark:border-slate-700 p-6 rounded-[2rem] flex flex-col items-center justify-center min-h-[200px] hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-slate-400 hover:text-blue-500 group h-full">
-                    <div class="p-4 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 mb-4 transition-colors">
-                        <i data-lucide="plus" class="w-8 h-8"></i>
-                    </div>
+                html += `<button onclick="openAddModal()" class="bg-transparent border-4 border-dashed border-slate-300 dark:border-slate-700 p-6 rounded-[2rem] flex flex-col items-center justify-center min-h-[200px] hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-500 group h-full">
+                    <div class="p-4 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 mb-4 transition-colors"><i data-lucide="plus" class="w-8 h-8"></i></div>
                     <span class="font-black uppercase text-xs tracking-[0.2em]">Add New Link</span>
-                </button>
-                `;
+                </button>`;
             }
-
             container.innerHTML = html;
             lucide.createIcons();
         }
 
-        // --- MODAL & EDITOR LOGIC ---
-        function applyEditorTransform() {
-            previewImgEl.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
-            previewImgEl.style.height = "100%";
+        // --- MODAL TRIGGERS ---
+        function openHeaderModal() {
+            editorState.target = 'header';
+            editorState.scale = headerData.scale || 1;
+            editorState.x = headerData.x || 0;
+            editorState.y = headerData.y || 0;
+            
+            document.getElementById('edit-header-title').value = headerData.title;
+            document.getElementById('edit-header-subtitle').value = headerData.subtitle;
+            document.getElementById('edit-header-img').value = headerData.logo;
+            document.getElementById('header-preview-image').src = headerData.logo;
+            document.getElementById('header-scale-slider').value = editorState.scale;
+            
+            applyEditorTransform();
+            document.getElementById('header-modal').style.display = 'flex';
         }
 
-        imgInput.addEventListener('input', e => previewImgEl.src = e.target.value || 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png');
-        scaleSlider.addEventListener('input', e => { currentScale = parseFloat(e.target.value); applyEditorTransform(); });
-
-        function startDrag(clientX, clientY) { isDragging = true; dragStartX = clientX - currentX; dragStartY = clientY - currentY; }
-        function doDrag(clientX, clientY) { if (!isDragging) return; currentX = clientX - dragStartX; currentY = clientY - dragStartY; applyEditorTransform(); }
-        function stopDrag() { isDragging = false; }
-
-        previewBox.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-        window.addEventListener('mousemove', e => doDrag(e.clientX, e.clientY));
-        window.addEventListener('mouseup', stopDrag);
-        previewBox.addEventListener('touchstart', e => startDrag(e.touches[0].clientX, e.touches[0].clientY), {passive: false});
-        window.addEventListener('touchmove', e => { if(isDragging) { e.preventDefault(); doDrag(e.touches[0].clientX, e.touches[0].clientY); }}, {passive: false});
-        window.addEventListener('touchend', stopDrag);
-
         function openAddModal() {
+            editorState.target = 'link';
+            editorState.scale = 1; editorState.x = 0; editorState.y = 0;
             document.getElementById('edit-modal-title').innerText = "Add New Link";
             document.getElementById('edit-index').value = "";
             document.getElementById('edit-title').value = "";
             document.getElementById('edit-url').value = "";
             document.getElementById('edit-img').value = "";
-            currentScale = 1; currentX = 0; currentY = 0;
-            scaleSlider.value = 1;
-            previewImgEl.src = "https://cdn-icons-png.flaticon.com/512/3652/3652191.png";
+            document.getElementById('preview-image').src = "https://cdn-icons-png.flaticon.com/512/3652/3652191.png";
+            document.getElementById('scale-slider').value = 1;
             applyEditorTransform();
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
         function openEditModal(index) {
             const link = scoutLinks[index];
+            editorState.target = 'link';
+            editorState.scale = link.scale || 1;
+            editorState.x = link.x || 0;
+            editorState.y = link.y || 0;
             document.getElementById('edit-modal-title').innerText = "Edit Link";
             document.getElementById('edit-index').value = index;
             document.getElementById('edit-title').value = link.title;
             document.getElementById('edit-url').value = link.url;
             document.getElementById('edit-img').value = link.img;
-            currentScale = link.scale || 1;
-            currentX = link.x || 0;
-            currentY = link.y || 0;
-            scaleSlider.value = currentScale;
-            previewImgEl.src = link.img || 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png';
+            document.getElementById('preview-image').src = link.img;
+            document.getElementById('scale-slider').value = editorState.scale;
             applyEditorTransform();
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
         function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        function closeHeaderModal() { document.getElementById('header-modal').style.display = 'none'; }
+
+        function saveHeader() {
+            headerData = {
+                title: document.getElementById('edit-header-title').value,
+                subtitle: document.getElementById('edit-header-subtitle').value,
+                logo: document.getElementById('edit-header-img').value,
+                scale: editorState.scale, x: editorState.x, y: editorState.y
+            };
+            saveToStorage(); closeHeaderModal(); updateUI();
+        }
+
         function saveLink() {
             const index = document.getElementById('edit-index').value;
             const newLink = {
                 title: document.getElementById('edit-title').value || "New Link",
                 url: document.getElementById('edit-url').value || "#",
                 img: document.getElementById('edit-img').value || "https://cdn-icons-png.flaticon.com/512/3652/3652191.png",
-                scale: currentScale, x: currentX, y: currentY
+                scale: editorState.scale, x: editorState.x, y: editorState.y
             };
-            if (index === "") scoutLinks.push(newLink);
-            else scoutLinks[index] = newLink;
+            if (index === "") scoutLinks.push(newLink); else scoutLinks[index] = newLink;
             saveToStorage(); closeEditModal(); updateUI();
         }
 
         function deleteLink(index) { if (confirm("Delete this link?")) { scoutLinks.splice(index, 1); saveToStorage(); updateUI(); } }
 
-        function openHeaderModal() {
-            document.getElementById('edit-header-title').value = headerData.title;
-            document.getElementById('edit-header-subtitle').value = headerData.subtitle;
-            document.getElementById('edit-header-img').value = headerData.logo;
-            document.getElementById('header-modal').style.display = 'flex';
-        }
-        function closeHeaderModal() { document.getElementById('header-modal').style.display = 'none'; }
-        function saveHeader() {
-            headerData = {
-                title: document.getElementById('edit-header-title').value || 'Pack 26',
-                subtitle: document.getElementById('edit-header-subtitle').value || 'Scouting',
-                logo: document.getElementById('edit-header-img').value || defaultHeader.logo
-            };
-            saveToStorage(); closeHeaderModal(); updateUI();
-        }
-
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            darkMode = !darkMode;
-            localStorage.setItem('theme', darkMode ? 'dark' : 'light');
-            updateUI();
+        // --- AUTH & THEME ---
+        document.getElementById('theme-toggle').addEventListener('click', () => { darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); updateUI(); });
+        document.getElementById('lock-btn').addEventListener('click', () => { 
+            if (isAdmin) { isAdmin = false; updateUI(); } 
+            else { document.getElementById('modal').style.display = 'flex'; document.getElementById('pass-input').focus(); }
         });
-
-        document.getElementById('lock-btn').addEventListener('click', () => {
-            if (isAdmin) { isAdmin = false; updateUI(); }
-            else { document.getElementById('login-error').classList.add('hidden'); document.getElementById('modal').style.display = 'flex'; document.getElementById('pass-input').focus(); }
-        });
-
-        document.getElementById('cancel-btn').addEventListener('click', () => { document.getElementById('modal').style.display = 'none'; document.getElementById('pass-input').value = ''; });
+        document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('modal').style.display = 'none');
         document.getElementById('login-btn').addEventListener('click', () => {
             if (document.getElementById('pass-input').value === "CoRf121") { isAdmin = true; document.getElementById('modal').style.display = 'none'; updateUI(); }
             else document.getElementById('login-error').classList.remove('hidden');
             document.getElementById('pass-input').value = '';
         });
-
-        document.getElementById('pass-input').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
 
         window.onload = () => { if (darkMode) document.documentElement.classList.add('dark'); updateUI(); };
     </script>
