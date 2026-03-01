@@ -1,326 +1,376 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scout Links Professional</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        :root {
-            --bsa-blue: #003F87;
-            --bsa-gold: #FDC82F;
-        }
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s; }
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-        .scout-card {
-            background: white;
-            border-radius: 2rem;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(0,0,0,0.05);
-            position: relative;
-            aspect-ratio: 1/1;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .dark .scout-card { background: #1e293b; border-color: rgba(255,255,255,0.05); color: white; }
-        .scout-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .image-container {
-            width: 100%;
-            height: 75%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 1.5rem;
-            margin-bottom: 1rem;
-            background: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .dark .image-container { background: #0f172a; }
-        .admin-controls { position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem; z-index: 20; }
-        [v-cloak] { display: none; }
-    </style>
-</head>
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen">
+import React, { useState, useEffect } from 'react';
+import { 
+  Shield, 
+  Lock, 
+  Settings, 
+  Plus, 
+  Edit3, 
+  Trash2, 
+  X, 
+  Moon, 
+  Sun, 
+  ExternalLink,
+  ChevronRight,
+  Star
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  onAuthStateChanged,
+  User
+} from 'firebase/auth';
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  onSnapshot,
+  DocumentSnapshot
+} from 'firebase/firestore';
 
-    <div id="app" class="v-cloak">
-        <!-- Header -->
-        <header class="bg-white dark:bg-slate-900 border-b-8 border-yellow-400 shadow-xl px-6 py-12 relative overflow-hidden">
-            <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 relative z-10">
-                <div class="relative">
-                    <div class="w-40 h-40 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 shadow-inner flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-700">
-                        <img :src="settings.headerLogoUrl" :style="getLogoStyle()" class="max-w-none h-full object-contain">
-                    </div>
-                    <button v-if="isEditing" @click="openHeaderModal" class="absolute -bottom-2 -right-2 p-3 bg-blue-600 text-white rounded-2xl shadow-xl hover:scale-110 transition-transform">
-                        <i data-lucide="edit-2"></i>
-                    </button>
-                </div>
+// --- Types ---
+interface ScoutLink {
+  id: string;
+  title: string;
+  url: string;
+  imageUrl?: string;
+  zoom?: number;
+}
 
-                <div class="text-center md:text-left flex-1">
-                    <h1 class="text-5xl md:text-7xl font-black text-[#003F87] dark:text-blue-400 uppercase tracking-tighter mb-2 leading-none">
-                        {{ settings.headerTitle }}
-                    </h1>
-                    <div class="text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] flex items-center justify-center md:justify-start gap-3">
-                        <i data-lucide="star" class="text-yellow-500 fill-yellow-500 w-5 h-5"></i>
-                        {{ settings.headerSubtitle }}
-                    </div>
-                </div>
+interface AppSettings {
+  headerTitle: string;
+  headerSubtitle: string;
+  headerLogoUrl: string;
+  headerLogoZoom: number;
+}
 
-                <div class="flex gap-4">
-                    <button @click="toggleDarkMode" class="p-5 rounded-3xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 transition-all">
-                        <i :data-lucide="darkMode ? 'sun' : 'moon'"></i>
-                    </button>
-                    <button v-if="isAdmin" @click="isEditing = !isEditing" 
-                        :class="['flex items-center gap-3 px-8 py-5 rounded-3xl font-black uppercase tracking-widest transition-all shadow-md', isEditing ? 'bg-yellow-400 text-blue-900' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700']">
-                        <i data-lucide="settings"></i>
-                        <span>{{ isEditing ? 'Done' : 'Edit' }}</span>
-                    </button>
-                </div>
+// --- Firebase Config (Global Fallbacks) ---
+// @ts-ignore
+const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+// @ts-ignore
+const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'scout-links-v1';
+// @ts-ignore
+const initialToken = window.__initial_auth_token;
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+
+export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [password, setPassword] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
+  const [links, setLinks] = useState<ScoutLink[]>([]);
+  const [settings, setSettings] = useState<AppSettings>({
+    headerTitle: 'Scout Resources',
+    headerSubtitle: 'Pack 505 • Troop 101',
+    headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
+    headerLogoZoom: 1,
+  });
+
+  // Modal State
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'link' | 'header'>('link');
+  const [activeItem, setActiveItem] = useState<any>(null);
+
+  // 1. Auth Lifecycle
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (initialToken) {
+          await signInWithCustomToken(auth, initialToken);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Auth failed:", err);
+      }
+    };
+    initAuth();
+    return onAuthStateChanged(auth, setUser);
+  }, []);
+
+  // 2. Data Lifecycle
+  useEffect(() => {
+    if (!user) return;
+
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+    const unsubscribe = onSnapshot(docRef, (snap: DocumentSnapshot) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.links) setLinks(data.links);
+        if (data.settings) setSettings(data.settings);
+      }
+    }, (err) => {
+      console.error("Firestore error:", err);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Actions
+  const handleSave = async (updatedLinks: ScoutLink[], updatedSettings: AppSettings) => {
+    if (!user) return;
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+    await setDoc(docRef, {
+      links: updatedLinks,
+      settings: updatedSettings,
+      lastUpdated: Date.now()
+    });
+  };
+
+  const doLogin = () => {
+    if (password === 'scout123') {
+      setIsAdmin(true);
+      setIsEditing(true);
+      setShowLogin(false);
+      setPassword('');
+    }
+  };
+
+  const openLinkModal = (link?: ScoutLink) => {
+    setModalMode('link');
+    setActiveItem(link || { id: Date.now().toString(), title: '', url: 'https://', imageUrl: '', zoom: 1 });
+    setShowModal(true);
+  };
+
+  const openHeaderModal = () => {
+    setModalMode('header');
+    setActiveItem({ ...settings });
+    setShowModal(true);
+  };
+
+  const saveModal = () => {
+    if (modalMode === 'link') {
+      const newLinks = [...links];
+      const index = newLinks.findIndex(l => l.id === activeItem.id);
+      if (index > -1) newLinks[index] = activeItem;
+      else newLinks.push(activeItem);
+      setLinks(newLinks);
+      handleSave(newLinks, settings);
+    } else {
+      setSettings(activeItem);
+      handleSave(links, activeItem);
+    }
+    setShowModal(false);
+  };
+
+  const deleteLink = (id: string) => {
+    const newLinks = links.filter(l => l.id !== id);
+    setLinks(newLinks);
+    handleSave(newLinks, settings);
+  };
+
+  return (
+    <div className={`min-h-screen transition-colors duration-500 ${darkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'}`}>
+      
+      {/* Header Area */}
+      <header className={`relative overflow-hidden border-b-8 border-yellow-400 py-12 px-6 ${darkMode ? 'bg-slate-900' : 'bg-white'} shadow-2xl`}>
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8 relative z-10">
+          <div className="relative group">
+            <div className={`w-32 h-32 md:w-44 md:h-44 rounded-[2.5rem] flex items-center justify-center overflow-hidden shadow-inner border-4 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-white'}`}>
+              <img 
+                src={settings.headerLogoUrl} 
+                style={{ transform: `scale(${settings.headerLogoZoom})` }}
+                className="max-w-none h-full object-contain transition-transform"
+                alt="Logo"
+              />
             </div>
-        </header>
+            {isEditing && (
+              <button onClick={openHeaderModal} className="absolute -bottom-2 -right-2 p-3 bg-blue-600 text-white rounded-2xl shadow-xl hover:scale-110 transition-transform">
+                <Settings size={20} />
+              </button>
+            )}
+          </div>
 
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto py-16 px-6">
-            <div class="bento-grid">
-                <div v-for="link in links" :key="link.id" class="relative">
-                    <div v-if="isEditing" class="admin-controls">
-                        <button @click="editLink(link)" class="p-2 bg-blue-600 text-white rounded-xl shadow-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button @click="deleteLink(link.id)" class="p-2 bg-red-600 text-white rounded-xl shadow-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </div>
-                    <a :href="isEditing ? 'javascript:void(0)' : link.url" target="_blank" class="scout-card">
-                        <div class="image-container">
-                            <img v-if="link.imageUrl" :src="link.imageUrl" :style="getLinkStyle(link)" class="max-w-none h-full object-contain">
-                            <i v-else :data-lucide="link.iconName || 'tent'" class="w-20 h-20 text-blue-900/10 dark:text-white/10"></i>
-                        </div>
-                        <div class="font-black text-blue-900 dark:text-slate-300 uppercase text-sm tracking-wider">{{ link.title }}</div>
-                    </a>
-                </div>
-
-                <button v-if="isEditing" @click="addNewLink" 
-                    class="scout-card border-dashed border-4 border-slate-200 dark:border-slate-800 bg-transparent shadow-none opacity-40 hover:opacity-100 hover:border-blue-500">
-                    <i data-lucide="plus" class="w-16 h-16 text-slate-400 mb-2"></i>
-                    <div class="font-black text-slate-400 uppercase text-xs tracking-widest">Add New</div>
-                </button>
+          <div className="text-center md:text-left flex-1">
+            <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-2 text-blue-800 dark:text-blue-400">
+              {settings.headerTitle}
+            </h1>
+            <div className="flex items-center justify-center md:justify-start gap-2 text-slate-400 font-bold uppercase tracking-widest text-sm md:text-base">
+              <Star size={16} className="text-yellow-500 fill-yellow-500" />
+              {settings.headerSubtitle}
             </div>
-        </main>
+          </div>
 
-        <!-- Login / Admin Modal -->
-        <div v-if="showLogin" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
-            <div class="bg-white dark:bg-slate-900 p-12 rounded-[3.5rem] w-full max-w-sm shadow-2xl">
-                <h2 class="text-3xl font-black text-center mb-10 uppercase">Leader Login</h2>
-                <input type="password" v-model="password" @keyup.enter="doLogin" placeholder="Password" class="w-full p-6 rounded-3xl bg-slate-100 dark:bg-slate-800 border-2 border-transparent focus:border-blue-900 outline-none font-bold text-center mb-6">
-                <div class="flex gap-4">
-                    <button @click="showLogin = false" class="flex-1 font-bold text-slate-400">Cancel</button>
-                    <button @click="doLogin" class="flex-2 p-5 bg-[#003F87] text-white font-black rounded-2xl w-full">Enter</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lock Button -->
-        <div class="fixed bottom-10 right-10 z-[50]">
-            <button @click="isAdmin ? (isAdmin = false, isEditing = false) : showLogin = true" 
-                class="w-20 h-20 rounded-[2rem] flex items-center justify-center shadow-2xl transition-all hover:rotate-6"
-                :class="isAdmin ? 'bg-yellow-400' : 'bg-[#003F87] text-white'">
-                <i :data-lucide="isAdmin ? 'eye' : 'lock'" class="w-8 h-8"></i>
+          <div className="flex gap-3">
+            <button onClick={() => setDarkMode(!darkMode)} className={`p-4 rounded-2xl transition-all ${darkMode ? 'bg-slate-800 text-yellow-400' : 'bg-slate-100 text-slate-600'}`}>
+              {darkMode ? <Sun size={24} /> : <Moon size={24} />}
             </button>
+            {isAdmin && (
+              <button 
+                onClick={() => setIsEditing(!isEditing)} 
+                className={`px-6 py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all ${isEditing ? 'bg-yellow-400 text-blue-900' : 'bg-blue-800 text-white'}`}
+              >
+                {isEditing ? 'Finish' : 'Edit'}
+              </button>
+            )}
+          </div>
         </div>
+      </header>
 
-        <!-- Link Modal -->
-        <div v-if="showModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] flex items-center justify-center p-6">
-            <div class="bg-white dark:bg-slate-900 rounded-[3.5rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl">
-                <div class="bg-[#003F87] p-8 text-white flex justify-between items-center">
-                    <h3 class="text-xl font-black uppercase tracking-widest">Edit Resource</h3>
-                    <button @click="showModal = false"><i data-lucide="x"></i></button>
+      {/* Grid Content */}
+      <main className="max-w-7xl mx-auto py-16 px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {links.map(link => (
+            <div key={link.id} className="group relative">
+              {isEditing && (
+                <div className="absolute top-4 right-4 z-20 flex gap-2">
+                  <button onClick={() => openLinkModal(link)} className="p-2 bg-blue-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform"><Edit3 size={16} /></button>
+                  <button onClick={() => deleteLink(link.id)} className="p-2 bg-red-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform"><Trash2 size={16} /></button>
                 </div>
-                <div class="p-10 space-y-6 overflow-y-auto max-h-[70vh]">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block">Title</label>
-                                <input v-model="activeItem.title" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold">
-                            </div>
-                            <div v-if="modalMode === 'link'">
-                                <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block">URL</label>
-                                <input v-model="activeItem.url" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                            </div>
-                            <div v-else>
-                                <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block">Subtitle</label>
-                                <input v-model="activeItem.subtitle" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block">Image URL</label>
-                                <input v-model="activeItem.imageUrl" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs">
-                            </div>
-                        </div>
-                        <div class="flex flex-col items-center">
-                            <div class="w-40 h-40 bg-slate-100 dark:bg-slate-800 rounded-3xl overflow-hidden relative border-4 border-[#003F87] shadow-inner mb-4">
-                                <img :src="activeItem.imageUrl" :style="getPreviewStyle()" class="max-w-none h-full object-contain">
-                            </div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2">Zoom: {{ activeItem.zoom }}x</label>
-                            <input type="range" min="0.5" max="4" step="0.1" v-model="activeItem.zoom" class="w-full">
-                        </div>
-                    </div>
-                    <div class="flex gap-4 pt-6">
-                        <button @click="showModal = false" class="flex-1 font-black text-slate-400 uppercase">Discard</button>
-                        <button @click="saveModalData" class="flex-[2] p-5 bg-[#003F87] text-white rounded-2xl font-black uppercase">Save Change</button>
-                    </div>
+              )}
+              <a 
+                href={isEditing ? undefined : link.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className={`block aspect-square p-6 rounded-[2.5rem] transition-all duration-300 transform ${isEditing ? 'cursor-default' : 'hover:-translate-y-2 hover:shadow-2xl'} ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-xl border border-slate-100'}`}
+              >
+                <div className={`h-3/4 w-full rounded-3xl mb-4 overflow-hidden flex items-center justify-center ${darkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+                  {link.imageUrl ? (
+                    <img 
+                      src={link.imageUrl} 
+                      style={{ transform: `scale(${link.zoom || 1})` }}
+                      className="max-w-none h-full object-contain"
+                      alt={link.title}
+                    />
+                  ) : (
+                    <Shield size={64} className="opacity-10" />
+                  )}
                 </div>
+                <div className="text-center">
+                  <span className="font-black uppercase tracking-widest text-sm opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    {link.title}
+                    {!isEditing && <ExternalLink size={14} className="opacity-40" />}
+                  </span>
+                </div>
+              </a>
             </div>
-        </div>
+          ))}
 
-        <div v-if="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-[#003F87] text-white px-8 py-4 rounded-full font-black uppercase tracking-widest text-sm z-[1000] shadow-2xl">
-            {{ toast }}
+          {isEditing && (
+            <button 
+              onClick={() => openLinkModal()}
+              className="aspect-square rounded-[2.5rem] border-4 border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 hover:border-blue-500 hover:text-blue-500 transition-all group"
+            >
+              <Plus size={48} className="mb-2 group-hover:scale-110 transition-transform" />
+              <span className="font-black uppercase tracking-tighter">Add Resource</span>
+            </button>
+          )}
         </div>
+      </main>
+
+      {/* Admin Toggle (Bottom Right) */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <button 
+          onClick={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)}
+          className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl transition-all active:scale-95 ${isAdmin ? 'bg-yellow-400 text-blue-900' : 'bg-blue-800 text-white'}`}
+        >
+          {isAdmin ? <Lock size={28} /> : <Shield size={28} />}
+        </button>
+      </div>
+
+      {/* Login Modal */}
+      {showLogin && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+          <div className={`${darkMode ? 'bg-slate-900' : 'bg-white'} p-10 rounded-[3rem] w-full max-w-sm shadow-2xl`}>
+            <h2 className="text-2xl font-black uppercase text-center mb-8">Leader Access</h2>
+            <input 
+              type="password" 
+              placeholder="Access Key"
+              className={`w-full p-5 rounded-2xl mb-4 text-center font-bold text-xl outline-none border-2 focus:border-blue-500 transition-colors ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-transparent'}`}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && doLogin()}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setShowLogin(false)} className="flex-1 font-bold opacity-50">Cancel</button>
+              <button onClick={doLogin} className="flex-[2] bg-blue-800 text-white p-5 rounded-2xl font-black uppercase tracking-widest">Unlock</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] flex items-center justify-center p-6">
+          <div className={`${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white'} w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl`}>
+            <div className="bg-blue-800 p-8 text-white flex justify-between items-center">
+              <h3 className="font-black uppercase tracking-widest">{modalMode === 'link' ? 'Edit Resource' : 'App Settings'}</h3>
+              <button onClick={() => setShowModal(false)}><X /></button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase opacity-40 mb-1 block">Title</label>
+                    <input 
+                      value={activeItem?.title || ''} 
+                      onChange={e => setActiveItem({...activeItem, title: e.target.value})}
+                      className={`w-full p-4 rounded-xl font-bold ${darkMode ? 'bg-slate-800' : 'bg-slate-100'}`}
+                    />
+                  </div>
+                  {modalMode === 'link' ? (
+                    <div>
+                      <label className="text-[10px] font-black uppercase opacity-40 mb-1 block">Target URL</label>
+                      <input 
+                        value={activeItem?.url || ''} 
+                        onChange={e => setActiveItem({...activeItem, url: e.target.value})}
+                        className={`w-full p-4 rounded-xl ${darkMode ? 'bg-slate-800' : 'bg-slate-100'}`}
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="text-[10px] font-black uppercase opacity-40 mb-1 block">Subtitle</label>
+                      <input 
+                        value={activeItem?.headerSubtitle || ''} 
+                        onChange={e => setActiveItem({...activeItem, headerSubtitle: e.target.value})}
+                        className={`w-full p-4 rounded-xl ${darkMode ? 'bg-slate-800' : 'bg-slate-100'}`}
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-[10px] font-black uppercase opacity-40 mb-1 block">Image/Logo URL</label>
+                    <input 
+                      value={modalMode === 'link' ? activeItem?.imageUrl : activeItem?.headerLogoUrl} 
+                      onChange={e => setActiveItem(modalMode === 'link' ? {...activeItem, imageUrl: e.target.value} : {...activeItem, headerLogoUrl: e.target.value})}
+                      className={`w-full p-4 rounded-xl text-xs ${darkMode ? 'bg-slate-800' : 'bg-slate-100'}`}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center border-l border-slate-800/10 dark:border-slate-800 pl-4">
+                  <div className={`w-32 h-32 rounded-3xl mb-4 overflow-hidden border-2 border-blue-500/20 flex items-center justify-center ${darkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+                    <img 
+                      src={modalMode === 'link' ? activeItem?.imageUrl : activeItem?.headerLogoUrl} 
+                      style={{ transform: `scale(${modalMode === 'link' ? activeItem?.zoom : activeItem?.headerLogoZoom})` }}
+                      className="max-w-none h-full object-contain"
+                      alt="Preview"
+                    />
+                  </div>
+                  <label className="text-[10px] font-black uppercase opacity-40 mb-2">Zoom: {modalMode === 'link' ? activeItem?.zoom : activeItem?.headerLogoZoom}x</label>
+                  <input 
+                    type="range" min="0.5" max="3" step="0.1" 
+                    value={modalMode === 'link' ? activeItem?.zoom : activeItem?.headerLogoZoom}
+                    onChange={e => setActiveItem(modalMode === 'link' ? {...activeItem, zoom: parseFloat(e.target.value)} : {...activeItem, headerLogoZoom: parseFloat(e.target.value)})}
+                    className="w-full h-2 bg-blue-800 rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-4 pt-4">
+                <button onClick={() => setShowModal(false)} className="flex-1 font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">Discard</button>
+                <button onClick={saveModal} className="flex-[2] bg-blue-800 text-white p-5 rounded-2xl font-black uppercase tracking-widest shadow-xl">Apply Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-
-    <!-- Firebase & Vue -->
-    <script type="module">
-        import { createApp } from 'https://unpkg.com/vue@3/dist/vue.global.js';
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-
-        // Safe access to globals
-        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'scout-links-v1';
-        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-        const token = window.__initial_auth_token;
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        createApp({
-            data() {
-                return {
-                    isAdmin: false,
-                    isEditing: false,
-                    showLogin: false,
-                    showModal: false,
-                    modalMode: 'link',
-                    password: '',
-                    darkMode: false,
-                    toast: '',
-                    links: [],
-                    settings: {
-                        headerTitle: 'Scout Resources',
-                        headerSubtitle: 'Pack 505 • Troop 101',
-                        headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
-                        headerLogoZoom: 1, headerLogoOffsetX: 0, headerLogoOffsetY: 0
-                    },
-                    activeItem: {}
-                }
-            },
-            async mounted() {
-                // Auth first
-                if (token) await signInWithCustomToken(auth, token);
-                else await signInAnonymously(auth);
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) this.loadData();
-                });
-
-                this.$nextTick(() => lucide.createIcons());
-            },
-            methods: {
-                loadData() {
-                    // Correct Path Rule: /artifacts/{appId}/public/data/config
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
-                    onSnapshot(docRef, (snap) => {
-                        if (snap.exists()) {
-                            const data = snap.data();
-                            this.links = data.links || [];
-                            this.settings = data.settings || this.settings;
-                            this.$nextTick(() => lucide.createIcons());
-                        }
-                    }, (err) => console.error("Firestore Error:", err));
-                },
-                async saveData() {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
-                    await setDoc(docRef, {
-                        links: this.links,
-                        settings: this.settings,
-                        lastUpdate: Date.now()
-                    });
-                    this.showToast('Cloud Updated');
-                },
-                doLogin() {
-                    if (this.password === 'scout123') {
-                        this.isAdmin = true;
-                        this.isEditing = true;
-                        this.showLogin = false;
-                        this.password = '';
-                    }
-                },
-                toggleDarkMode() {
-                    this.darkMode = !this.darkMode;
-                    document.documentElement.classList.toggle('dark');
-                    this.$nextTick(() => lucide.createIcons());
-                },
-                getLogoStyle() {
-                    return `transform: scale(${this.settings.headerLogoZoom}) translate(${this.settings.headerLogoOffsetX}%, ${this.settings.headerLogoOffsetY}%)`;
-                },
-                getLinkStyle(link) {
-                    return `transform: scale(${link.zoom || 1}) translate(${link.offsetX || 0}%, ${link.offsetY || 0}%)`;
-                },
-                getPreviewStyle() {
-                    return `transform: scale(${this.activeItem.zoom || 1}) translate(${this.activeItem.offsetX || 0}%, ${this.activeItem.offsetY || 0}%)`;
-                },
-                addNewLink() {
-                    this.modalMode = 'link';
-                    this.activeItem = { id: Date.now().toString(), title: 'New Site', url: 'https://', imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0 };
-                    this.showModal = true;
-                },
-                editLink(link) {
-                    this.modalMode = 'link';
-                    this.activeItem = { ...link };
-                    this.showModal = true;
-                },
-                openHeaderModal() {
-                    this.modalMode = 'header';
-                    this.activeItem = { 
-                        title: this.settings.headerTitle, 
-                        subtitle: this.settings.headerSubtitle, 
-                        imageUrl: this.settings.headerLogoUrl, 
-                        zoom: this.settings.headerLogoZoom,
-                        offsetX: this.settings.headerLogoOffsetX,
-                        offsetY: this.settings.headerLogoOffsetY
-                    };
-                    this.showModal = true;
-                },
-                saveModalData() {
-                    if (this.modalMode === 'link') {
-                        const index = this.links.findIndex(l => l.id === this.activeItem.id);
-                        if (index > -1) this.links[index] = { ...this.activeItem };
-                        else this.links.push({ ...this.activeItem });
-                    } else {
-                        this.settings.headerTitle = this.activeItem.title;
-                        this.settings.headerSubtitle = this.activeItem.subtitle;
-                        this.settings.headerLogoUrl = this.activeItem.imageUrl;
-                        this.settings.headerLogoZoom = this.activeItem.zoom;
-                    }
-                    this.saveData();
-                    this.showModal = false;
-                },
-                deleteLink(id) {
-                    this.links = this.links.filter(l => l.id !== id);
-                    this.saveData();
-                },
-                showToast(msg) {
-                    this.toast = msg;
-                    setTimeout(() => this.toast = '', 2000);
-                }
-            }
-        }).mount('#app');
-    </script>
-</body>
-</html>
+  );
+}
