@@ -3,7 +3,7 @@ import {
   Settings, Plus, Edit2, Trash2, Tent, Calendar, MapPin, 
   Info, BookOpen, Camera, MessageSquare, Shield, Star, 
   Globe, X, Sun, Moon, ZoomIn, Lock, Eye, KeyRound, 
-  Link as LinkIcon, Cloud, ExternalLink
+  Cloud, ExternalLink
 } from 'lucide-react';
 
 // --- TYPES & GLOBALS ---
@@ -165,6 +165,7 @@ const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, iconName }: any
   return (
     <img 
       src={url} 
+      alt=""
       onError={() => setError(true)}
       style={{
         position: 'absolute',
@@ -202,13 +203,12 @@ export default function App() {
   
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
 
-  // --- INITIALIZATION & CLOUD FETCH ---
+  // --- INITIALIZATION ---
   useEffect(() => {
     const initApp = async () => {
       if (!window.firebase) return;
       const configStr = window.__firebase_config;
       const config = configStr ? JSON.parse(configStr) : {};
-      const appId = window.__app_id || 'scout-links';
       const firebase = window.firebase;
       
       if (!firebase.apps.length) firebase.initializeApp(config);
@@ -224,20 +224,34 @@ export default function App() {
 
       auth.onAuthStateChanged((u: any) => {
         setUser(u);
-        if (u) {
-          const docRef = db.collection('artifacts').doc(appId).collection('public').doc('config');
-          docRef.onSnapshot((doc: any) => {
-            if (doc.exists) {
-              const data = doc.data();
-              if (data.links) setLinks(data.links);
-              if (data.settings) setSettings(data.settings);
-            }
-          });
-        }
       });
+
+      // Cleanup
+      return () => {};
     };
     initApp();
   }, []);
+
+  // --- DATA FETCHING ---
+  useEffect(() => {
+    if (!user || !window.firebase) return;
+    const appId = window.__app_id || 'scout-links';
+    const db = window.firebase.firestore();
+    
+    // Rule: Fetch all and process in memory
+    const unsubscribe = db.collection('artifacts').doc(appId).collection('public').doc('config')
+      .onSnapshot((doc: any) => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.links) setLinks(data.links);
+          if (data.settings) setSettings(data.settings);
+        }
+      }, (err: any) => {
+        console.error("Firestore Error:", err);
+      });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const saveData = async (newLinks: ScoutLink[], newSettings: AppSettings) => {
     if (!user || !window.firebase) return;
@@ -246,7 +260,8 @@ export default function App() {
       const db = window.firebase.firestore();
       await db.collection('artifacts').doc(appId).collection('public').doc('config').set({
         links: newLinks,
-        settings: newSettings
+        settings: newSettings,
+        updatedAt: Date.now()
       });
       setToastMsg("Cloud Saved");
       setTimeout(() => setToastMsg(''), 2000);
@@ -293,7 +308,7 @@ export default function App() {
     <div className={`min-h-screen ${darkMode ? 'dark text-white' : 'text-slate-900'}`}>
       <GlobalStyles />
       
-      {/* --- HEADER (Original Styling) --- */}
+      {/* --- HEADER --- */}
       <header className="bg-white dark:bg-slate-900 border-b-4 border-yellow-400 shadow-xl px-6 py-8 relative">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8">
           <div className="relative group">
@@ -344,7 +359,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* --- GRID (Original Styling) --- */}
+      {/* --- GRID --- */}
       <main className="max-w-7xl mx-auto py-12">
         <div className="bento-grid">
           {links.map((link) => (
@@ -390,7 +405,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* --- LOCK/EYE TOGGLE --- */}
+      {/* --- ACCESS CONTROL --- */}
       <div className="fixed bottom-8 right-8 z-[100]">
         <button 
           onClick={() => isAdmin ? setIsAdmin(false) : setIsLoginOpen(true)}
@@ -400,7 +415,7 @@ export default function App() {
         </button>
       </div>
 
-      {/* --- LOGIN MODAL --- */}
+      {/* --- MODALS --- */}
       {isLoginOpen && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[300] flex items-center justify-center p-6">
           <div className="bg-white dark:bg-slate-800 p-10 rounded-[2.5rem] w-full max-w-sm shadow-2xl border-b-8 border-blue-900">
@@ -421,7 +436,6 @@ export default function App() {
         </div>
       )}
 
-      {/* --- EDIT MODAL --- */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[400] flex items-center justify-center p-6">
           <div className="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
