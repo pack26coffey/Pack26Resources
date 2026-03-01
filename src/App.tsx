@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, 
   Share2, 
@@ -12,12 +12,17 @@ import {
   BookOpen, 
   Camera, 
   MessageSquare,
-  Shield,
+  Shield, 
   Star, 
   Globe,
   X,
   Sun,
-  Moon
+  Moon,
+  Search,
+  Move,
+  ZoomIn,
+  Loader2,
+  Layout
 } from 'lucide-react';
 
 /** * FAIL-SAFE CSS: 
@@ -80,6 +85,7 @@ const GlobalStyles = () => (
       display: flex;
       align-items: center;
       gap: 12px;
+      position: relative;
     }
 
     .logo-box {
@@ -89,12 +95,15 @@ const GlobalStyles = () => (
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
     }
 
     .logo-box img {
-      max-height: 100%;
-      max-width: 100%;
-      object-fit: contain;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.2s ease;
     }
 
     .title-group h1 {
@@ -155,16 +164,17 @@ const GlobalStyles = () => (
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 0;
       background: #f1f5f9;
+      overflow: hidden;
+      position: relative;
     }
 
     .dark .tile-image-area { background: #1e293b; }
 
     .tile-image-area img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
+      width: 100%;
+      height: 100%;
     }
 
     .tile-label {
@@ -232,6 +242,48 @@ const GlobalStyles = () => (
     }
 
     .dark .add-btn { border-color: #334155; color: #94a3b8; }
+
+    .crop-preview-container {
+      width: 150px;
+      height: 150px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #003F87;
+      position: relative;
+      margin: 0 auto 20px;
+      background: #f1f5f9;
+      cursor: grab;
+    }
+
+    .crop-preview-container:active {
+      cursor: grabbing;
+    }
+
+    .image-search-results {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding: 4px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+
+    .search-thumb {
+      aspect-ratio: 1;
+      width: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .search-thumb:hover {
+      opacity: 0.8;
+      outline: 2px solid var(--bsa-blue);
+    }
   `}</style>
 );
 
@@ -241,6 +293,18 @@ interface ScoutLink {
   url: string;
   imageUrl: string;
   iconName?: string; 
+  zoom?: number;
+  offsetX?: number;
+  offsetY?: number;
+}
+
+interface AppSettings {
+  headerTitle: string;
+  headerSubtitle: string;
+  headerLogoUrl: string;
+  headerLogoZoom: number;
+  headerLogoOffsetX: number;
+  headerLogoOffsetY: number;
 }
 
 const DEFAULT_LINKS: ScoutLink[] = [
@@ -249,16 +313,31 @@ const DEFAULT_LINKS: ScoutLink[] = [
     title: 'Scoutbook',
     url: 'https://scoutbook.scouting.org/',
     imageUrl: 'https://help.scoutbook.scouting.org/wp-content/uploads/2019/11/SB-logo-2.png',
-    iconName: 'BookOpen'
+    iconName: 'BookOpen',
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0
   },
   {
     id: '2',
     title: 'Boy Scouts',
     url: 'https://www.scouting.org/',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Cubscouts.svg/1200px-Cubscouts.svg.png',
-    iconName: 'Shield'
+    iconName: 'Shield',
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0
   }
 ];
+
+const DEFAULT_SETTINGS: AppSettings = {
+  headerTitle: 'Pack Resources',
+  headerSubtitle: 'Cub Scouts of America',
+  headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
+  headerLogoZoom: 1,
+  headerLogoOffsetX: 0,
+  headerLogoOffsetY: 0
+};
 
 const ICON_MAP: Record<string, any> = {
   Tent, Calendar, MapPin, Info, BookOpen, Camera, MessageSquare, Shield, Star, Globe
@@ -278,38 +357,52 @@ const Toast = ({ message, onClose }: { message: string; onClose: () => void }) =
   );
 };
 
-const TileImage = ({ src, alt, iconName }: { src: string; alt: string; iconName?: string }) => {
+const GenericImage = ({ url, zoom, offsetX, offsetY, alt, iconName }: any) => {
   const [error, setError] = useState(false);
   const IconComponent = iconName && ICON_MAP[iconName] ? ICON_MAP[iconName] : Tent;
   
-  if ((!src || error) || (!src && iconName)) {
+  if ((!url || error) || (!url && iconName)) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-[#003F87] dark:text-blue-400">
-        <IconComponent size={48} strokeWidth={1.5} />
+      <div className="w-full h-full flex items-center justify-center p-2 text-inherit opacity-70">
+        <IconComponent size="80%" strokeWidth={1.5} />
       </div>
     );
   }
   
   return (
     <img 
-      src={src} 
-      alt={alt} 
+      src={url} 
+      alt={alt || "Image"} 
       onError={() => setError(true)}
+      style={{
+        transform: `scale(${zoom || 1}) translate(${offsetX || 0}%, ${offsetY || 0}%)`,
+        objectFit: (zoom && zoom > 1) ? 'none' : 'contain',
+        transition: 'transform 0.1s ease'
+      }}
     />
   );
 };
 
 export default function App() {
   const [links, setLinks] = useState<ScoutLink[]>([]);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isEditing, setIsEditing] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'link' | 'header'>('link');
   const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
-  const [formData, setFormData] = useState<ScoutLink>({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent' });
   
+  // Unified Form Data - handles both link editing and header editing
+  const [formData, setFormData] = useState<any>({});
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+
+  const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('scoutTheme');
@@ -324,10 +417,26 @@ export default function App() {
     if (data) {
       try {
         const decoded = JSON.parse(decodeURIComponent(atob(data)));
-        const restored: ScoutLink[] = decoded.map((l: any) => ({
-          id: l.i, title: l.t, url: l.u, imageUrl: l.img, iconName: l.icon || 'Tent'
+        
+        // Restore links
+        const restoredLinks: ScoutLink[] = decoded.l.map((l: any) => ({
+          id: l.i, title: l.t, url: l.u, imageUrl: l.img, iconName: l.icon || 'Tent',
+          zoom: l.z || 1, offsetX: l.ox || 0, offsetY: l.oy || 0
         }));
-        setLinks(restored);
+        setLinks(restoredLinks);
+
+        // Restore settings
+        if (decoded.s) {
+          setSettings({
+            headerTitle: decoded.s.ht || DEFAULT_SETTINGS.headerTitle,
+            headerSubtitle: decoded.s.hs || DEFAULT_SETTINGS.headerSubtitle,
+            headerLogoUrl: decoded.s.hl || DEFAULT_SETTINGS.headerLogoUrl,
+            headerLogoZoom: decoded.s.hz || DEFAULT_SETTINGS.headerLogoZoom,
+            headerLogoOffsetX: decoded.s.hox || DEFAULT_SETTINGS.headerLogoOffsetX,
+            headerLogoOffsetY: decoded.s.hoy || DEFAULT_SETTINGS.headerLogoOffsetY,
+          });
+        }
+        
         setIsDataLoaded(true);
         return;
       } catch (e) {
@@ -335,20 +444,23 @@ export default function App() {
       }
     }
     
-    const local = localStorage.getItem('cubScoutLinks');
-    if (local) {
-      setLinks(JSON.parse(local));
-    } else {
-      setLinks(DEFAULT_LINKS);
-    }
+    const localLinks = localStorage.getItem('cubScoutLinks');
+    const localSettings = localStorage.getItem('cubScoutSettings');
+    
+    if (localLinks) setLinks(JSON.parse(localLinks));
+    else setLinks(DEFAULT_LINKS);
+
+    if (localSettings) setSettings(JSON.parse(localSettings));
+    
     setIsDataLoaded(true);
   }, []);
 
   useEffect(() => {
     if (isDataLoaded) {
       localStorage.setItem('cubScoutLinks', JSON.stringify(links));
+      localStorage.setItem('cubScoutSettings', JSON.stringify(settings));
     }
-  }, [links, isDataLoaded]);
+  }, [links, settings, isDataLoaded]);
 
   const toggleDarkMode = () => {
     const newMode = !darkMode;
@@ -362,11 +474,50 @@ export default function App() {
     }
   };
 
+  const handleSearchImages = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    const apiKey = "";
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Find high quality logo or icon URLs for "${searchQuery}". Return only a JSON array of image URLs.` }] }],
+          tools: [{ google_search: {} }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+      const result = await response.json();
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      const urls = JSON.parse(text || "[]");
+      setSearchResults(Array.isArray(urls) ? urls : []);
+    } catch (e) {
+      setToastMsg("Search failed. Try entering a URL manually.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const handleShare = () => {
     try {
-      const compact = links.map(l => ({ i: l.id, t: l.title, u: l.url, img: l.imageUrl, icon: l.iconName }));
-      const encoded = btoa(encodeURIComponent(JSON.stringify(compact)));
+      const compactLinks = links.map(l => ({ 
+        i: l.id, t: l.title, u: l.url, img: l.imageUrl, icon: l.iconName,
+        z: l.zoom, ox: l.offsetX, oy: l.offsetY
+      }));
+      const compactSettings = {
+        ht: settings.headerTitle,
+        hs: settings.headerSubtitle,
+        hl: settings.headerLogoUrl,
+        hz: settings.headerLogoZoom,
+        hox: settings.headerLogoOffsetX,
+        hoy: settings.headerLogoOffsetY
+      };
+
+      const payload = { l: compactLinks, s: compactSettings };
+      const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
       const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+      
       const textArea = document.createElement("textarea");
       textArea.value = shareUrl;
       document.body.appendChild(textArea);
@@ -380,33 +531,86 @@ export default function App() {
   };
 
   const openAddModal = () => {
-    setFormData({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent' });
+    setModalMode('link');
+    setFormData({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 });
     setEditingLink(null);
+    setSearchResults([]);
+    setSearchQuery('');
     setIsModalOpen(true);
   };
 
-  const openEditModal = (link: ScoutLink) => {
+  const openEditLinkModal = (link: ScoutLink) => {
+    setModalMode('link');
     setFormData(link);
     setEditingLink(link);
+    setSearchResults([]);
+    setSearchQuery('');
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setLinks(links.filter(l => l.id !== id));
+  const openEditHeaderModal = () => {
+    setModalMode('header');
+    // Map settings to a temporary formData structure that GenericImage can read
+    setFormData({
+      title: settings.headerTitle,
+      subtitle: settings.headerSubtitle,
+      imageUrl: settings.headerLogoUrl,
+      zoom: settings.headerLogoZoom,
+      offsetX: settings.headerLogoOffsetX,
+      offsetY: settings.headerLogoOffsetY
+    });
+    setSearchResults([]);
+    setSearchQuery('');
+    setIsModalOpen(true);
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    let finalUrl = formData.url.trim();
-    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-      finalUrl = 'https://' + finalUrl;
-    }
-    if (editingLink) {
-      setLinks(links.map(l => l.id === editingLink.id ? { ...formData, url: finalUrl } : l));
+    
+    if (modalMode === 'link') {
+      let finalUrl = formData.url.trim();
+      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+        finalUrl = 'https://' + finalUrl;
+      }
+      if (editingLink) {
+        setLinks(links.map(l => l.id === editingLink.id ? { ...formData, url: finalUrl } : l));
+      } else {
+        setLinks([...links, { ...formData, id: crypto.randomUUID(), url: finalUrl }]);
+      }
     } else {
-      setLinks([...links, { ...formData, id: crypto.randomUUID(), url: finalUrl }]);
+      setSettings({
+        headerTitle: formData.title,
+        headerSubtitle: formData.subtitle,
+        headerLogoUrl: formData.imageUrl,
+        headerLogoZoom: formData.zoom,
+        headerLogoOffsetX: formData.offsetX,
+        headerLogoOffsetY: formData.offsetY
+      });
     }
+    
     setIsModalOpen(false);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current.isDragging) return;
+    const factor = formData.zoom || 1;
+    const deltaX = (e.clientX - dragRef.current.startX) / (factor * 2);
+    const deltaY = (e.clientY - dragRef.current.startY) / (factor * 2);
+    setFormData((prev: any) => ({
+      ...prev,
+      offsetX: (prev.offsetX || 0) + deltaX,
+      offsetY: (prev.offsetY || 0) + deltaY
+    }));
+    dragRef.current.startX = e.clientX;
+    dragRef.current.startY = e.clientY;
+  };
+
+  const handleMouseUp = () => {
+    dragRef.current.isDragging = false;
   };
 
   return (
@@ -416,18 +620,27 @@ export default function App() {
       <header className="bsa-header">
         <div className="header-container">
           <div className="logo-section">
+            {isEditing && (
+              <button 
+                onClick={openEditHeaderModal}
+                className="action-badge"
+                style={{ position: 'absolute', top: '-10px', left: '-10px', zIndex: 110, background: 'var(--bsa-gold)' }}
+              >
+                <Settings size={14} color="var(--bsa-blue)" />
+              </button>
+            )}
             <div className="logo-box">
-              <img 
-                src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" 
-                alt="Cub Scouts Logo"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Cubscouts.svg/1200px-Cubscouts.svg.png";
-                }}
+              <GenericImage 
+                url={settings.headerLogoUrl} 
+                zoom={settings.headerLogoZoom} 
+                offsetX={settings.headerLogoOffsetX} 
+                offsetY={settings.headerLogoOffsetY} 
+                alt="Logo"
               />
             </div>
             <div className="title-group">
-              <h1>Pack 26 Resources</h1>
-              <p>Scouting America</p>
+              <h1>{settings.headerTitle}</h1>
+              <p>{settings.headerSubtitle}</p>
             </div>
           </div>
           
@@ -455,14 +668,14 @@ export default function App() {
               {isEditing && (
                 <div style={{ position: 'absolute', top: '-12px', right: '-12px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <button 
-                    onClick={() => openEditModal(link)} 
+                    onClick={() => openEditLinkModal(link)} 
                     className="action-badge"
                     style={{ background: '#2563eb' }}
                   >
                     <Edit2 size={14} color="white" />
                   </button>
                   <button 
-                    onClick={() => handleDelete(link.id)} 
+                    onClick={() => setLinks(links.filter(l => l.id !== link.id))} 
                     className="action-badge"
                     style={{ background: '#dc2626' }}
                   >
@@ -479,7 +692,14 @@ export default function App() {
                 style={isEditing ? { opacity: 0.6, cursor: 'default' } : {}}
               >
                 <div className="tile-image-area">
-                  <TileImage src={link.imageUrl} alt={link.title} iconName={link.iconName} />
+                  <GenericImage 
+                    url={link.imageUrl} 
+                    zoom={link.zoom} 
+                    offsetX={link.offsetX} 
+                    offsetY={link.offsetY} 
+                    iconName={link.iconName} 
+                    alt={link.title}
+                  />
                 </div>
                 <div className="tile-label">
                   {link.title}
@@ -498,28 +718,107 @@ export default function App() {
       </main>
 
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: darkMode ? '#0f172a' : 'white', borderRadius: '24px', width: '100%', maxWidth: '500px', margin: 'auto', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
-            <div style={{ background: '#003F87', padding: '20px', color: 'white', display: 'flex', justifyContent: 'space-between' }}>
-              <h2 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontSize: '1.2rem' }}>Link Settings</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', overflowY: 'auto' }}>
+          <div style={{ background: darkMode ? '#0f172a' : 'white', borderRadius: '24px', width: '100%', maxWidth: '550px', margin: 'auto', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <div style={{ background: '#003F87', padding: '20px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {modalMode === 'header' ? <Layout size={20} /> : <Plus size={20} />}
+                <h2 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontSize: '1.2rem' }}>
+                  {modalMode === 'header' ? 'Header Settings' : editingLink ? 'Edit Link' : 'Add New Link'}
+                </h2>
+              </div>
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
             </div>
-            <form onSubmit={handleSave} style={{ padding: '30px' }}>
-              <input required placeholder="Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: '12px', marginBottom: '15px', borderRadius: '12px', border: '1px solid #ddd' }} />
-              <input required placeholder="URL" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '12px', marginBottom: '15px', borderRadius: '12px', border: '1px solid #ddd' }} />
-              <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: 'bold', color: '#666' }}>SELECT AN ICON:</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '20px' }}>
-                {Object.keys(ICON_MAP).map(name => {
-                  const Icon = ICON_MAP[name];
-                  return (
-                    <button key={name} type="button" onClick={() => setFormData({...formData, iconName: name, imageUrl: ''})} style={{ padding: '10px', borderRadius: '8px', border: formData.iconName === name ? '2px solid #003F87' : '1px solid #ddd', background: formData.iconName === name ? '#eff6ff' : 'white', cursor: 'pointer' }}>
-                      <Icon size={18} />
-                    </button>
-                  );
-                })}
+            
+            <form onSubmit={handleSave} style={{ padding: '25px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>Text Settings</label>
+                <input required placeholder={modalMode === 'header' ? "Pack Title" : "Website Title"} value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
+                
+                {modalMode === 'header' ? (
+                  <input placeholder="Subtitle (e.g. BSA Pack 123)" value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
+                ) : (
+                  <input required placeholder="URL (e.g. scouting.org)" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} />
+                )}
               </div>
-              <input placeholder="Or Image URL" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})} style={{ width: '100%', padding: '12px', marginBottom: '20px', borderRadius: '12px', border: '1px solid #ddd' }} />
-              <button type="submit" style={{ width: '100%', padding: '15px', background: '#003F87', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE CHANGES</button>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>Image & Icon Setup</label>
+                
+                <div className="crop-preview-container" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+                  <GenericImage 
+                    url={formData.imageUrl} 
+                    zoom={formData.zoom} 
+                    offsetX={formData.offsetX} 
+                    offsetY={formData.offsetY} 
+                    iconName={formData.iconName} 
+                  />
+                  <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '4px', borderRadius: '4px' }}>
+                    <Move size={12} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
+                  <ZoomIn size={16} color="#64748b" />
+                  <input 
+                    type="range" 
+                    min="1" max="5" step="0.1" 
+                    value={formData.zoom} 
+                    onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} 
+                    style={{ flex: 1 }}
+                  />
+                  <span style={{ fontSize: '12px', minWidth: '35px' }}>{formData.zoom}x</span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#64748b' }} />
+                    <input 
+                      placeholder="Search for a logo..." 
+                      value={searchQuery} 
+                      onChange={e => setSearchQuery(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleSearchImages())}
+                      style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '10px', border: '1px solid #e2e8f0', background: darkMode ? '#1e293b' : 'white', color: 'inherit' }} 
+                    />
+                  </div>
+                  <button type="button" onClick={handleSearchImages} style={{ background: '#003F87', color: 'white', border: 'none', borderRadius: '10px', padding: '0 15px', fontWeight: 'bold' }}>
+                    {isSearching ? <Loader2 className="animate-spin" size={20} /> : 'GO'}
+                  </button>
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="image-search-results">
+                    {searchResults.map((url, idx) => (
+                      <img 
+                        key={idx} 
+                        src={url} 
+                        className="search-thumb" 
+                        onClick={() => setFormData({...formData, imageUrl: url, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} 
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                {modalMode === 'link' && (
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ margin: '0 0 10px 0', fontSize: '10px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Or Select Default Icon:</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                      {Object.keys(ICON_MAP).map(name => {
+                        const Icon = ICON_MAP[name];
+                        return (
+                          <button key={name} type="button" onClick={() => setFormData({...formData, iconName: name, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '10px', borderRadius: '8px', border: formData.iconName === name ? '2px solid #003F87' : '1px solid #e2e8f0', background: formData.iconName === name ? '#eff6ff' : 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center' }}>
+                            <Icon size={18} color={formData.iconName === name ? '#003F87' : '#64748b'} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" style={{ width: '100%', padding: '15px', background: '#003F87', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Save {modalMode === 'header' ? 'Header' : 'Link'}
+              </button>
             </form>
           </div>
         </div>
