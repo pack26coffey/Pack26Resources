@@ -22,8 +22,11 @@ import {
   ZoomIn,
   Loader2,
   Lock,
-  Eye
+  Eye,
+  KeyRound
 } from 'lucide-react';
+
+const ADMIN_PASSWORD = "CoRf121"; // Change this to your preferred password
 
 const GlobalStyles = () => (
   <style>{`
@@ -49,6 +52,7 @@ const GlobalStyles = () => (
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-light);
       color: #1e293b;
+      transition: background-color 0.3s ease;
     }
 
     .dark body { 
@@ -138,6 +142,7 @@ const GlobalStyles = () => (
       flex-direction: column;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       position: relative;
+      height: 100%;
     }
 
     .dark .tile-card { 
@@ -172,6 +177,10 @@ const GlobalStyles = () => (
       font-size: 14px;
       text-transform: uppercase;
       border-top: 1px solid #f1f5f9;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .dark .tile-label { border-top-color: #1e293b; }
@@ -197,7 +206,7 @@ const GlobalStyles = () => (
     }
 
     .icon-btn:hover { background: rgba(255,255,255,0.2); }
-    .icon-btn.active { background: var(--bsa-gold); color: var(--bsa-blue); }
+    .icon-btn.active { background: var(--bsa-gold); color: var(--bsa-blue); border-color: var(--bsa-gold); }
 
     .action-badge {
       width: 32px;
@@ -236,7 +245,7 @@ const GlobalStyles = () => (
       height: 150px;
       border-radius: 12px;
       overflow: hidden;
-      border: 2px solid #003F87;
+      border: 2px solid var(--bsa-blue);
       position: relative;
       margin: 0 auto 20px;
       background: #f1f5f9;
@@ -247,27 +256,40 @@ const GlobalStyles = () => (
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      max-height: 200px;
+      max-height: 220px;
       overflow-y: auto;
       margin-top: 10px;
-      padding: 4px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 12px;
     }
 
     .search-thumb {
       aspect-ratio: 1;
       width: 100%;
-      object-fit: cover;
-      border-radius: 4px;
+      object-fit: contain;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
       cursor: pointer;
+      transition: transform 0.1s;
     }
+    
+    .search-thumb:hover { transform: scale(1.05); border-color: var(--bsa-blue); }
 
     .admin-footer {
        position: fixed;
-       bottom: 20px;
-       right: 20px;
+       bottom: 24px;
+       right: 24px;
        z-index: 50;
+    }
+    
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
   `}</style>
 );
@@ -294,7 +316,7 @@ interface AppSettings {
 
 const DEFAULT_LINKS: ScoutLink[] = [
   { id: '1', title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', imageUrl: '', iconName: 'BookOpen', zoom: 1, offsetX: 0, offsetY: 0 },
-  { id: '2', title: 'Boy Scouts', url: 'https://www.scouting.org/', imageUrl: '', iconName: 'Shield', zoom: 1, offsetX: 0, offsetY: 0 }
+  { id: '2', title: 'Official BSA', url: 'https://www.scouting.org/', imageUrl: '', iconName: 'Shield', zoom: 1, offsetX: 0, offsetY: 0 }
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -314,8 +336,8 @@ const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, alt, iconName }
   
   if ((!url || error) || (!url && iconName)) {
     return (
-      <div className="w-full h-full flex items-center justify-center p-2 text-inherit opacity-70">
-        <IconComponent size="80%" strokeWidth={1.5} />
+      <div className="w-full h-full flex items-center justify-center p-4 text-inherit opacity-70">
+        <IconComponent size="60%" strokeWidth={1.5} />
       </div>
     );
   }
@@ -323,7 +345,7 @@ const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, alt, iconName }
   return (
     <img 
       src={url} 
-      alt={alt || "Image"} 
+      alt={alt || "Resource"} 
       onError={() => setError(true)}
       style={{
         position: 'absolute',
@@ -331,7 +353,8 @@ const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, alt, iconName }
         left: '50%',
         transformOrigin: 'center center',
         transform: `translate(-50%, -50%) translate(${offsetX}%, ${offsetY}%) scale(${zoom})`,
-        objectFit: 'none',
+        maxWidth: 'none',
+        height: 'auto',
         transition: 'none'
       }}
     />
@@ -347,6 +370,9 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  
   const [modalMode, setModalMode] = useState<'link' | 'header'>('link');
   const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
   const [formData, setFormData] = useState<any>({});
@@ -361,9 +387,6 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const data = params.get('data');
-    const mode = params.get('mode');
-
-    if (mode === 'admin') setIsAdmin(true);
     if (darkMode) document.documentElement.classList.add('dark');
 
     if (data) {
@@ -386,7 +409,6 @@ export default function App() {
         }
         setIsDataLoaded(true);
       } catch (e) { 
-        console.error("Data decode error", e); 
         setLinks(DEFAULT_LINKS);
         setIsDataLoaded(true);
       }
@@ -416,7 +438,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `Find high-quality logo URLs for "${searchQuery}". Return only a JSON array of 8 direct image URLs (strings).` }] }],
+          contents: [{ parts: [{ text: `Provide exactly 8 high-quality logo or icon image URLs for "${searchQuery}" related to Scouting or the specific topic. Return ONLY a valid JSON array of strings. Avoid broken links.` }] }],
           tools: [{ google_search: {} }],
           generationConfig: { responseMimeType: "application/json" }
         })
@@ -426,7 +448,7 @@ export default function App() {
       const urls = JSON.parse(text || "[]");
       setSearchResults(Array.isArray(urls) ? urls : []);
     } catch (e) {
-      setToastMsg("Search failed. Try a different query.");
+      setToastMsg("Search failed. Try a different term.");
     } finally {
       setIsSearching(false);
     }
@@ -447,20 +469,29 @@ export default function App() {
       textArea.select(); 
       document.execCommand('copy'); 
       document.body.removeChild(textArea);
-      setToastMsg("Public link copied!");
+      setToastMsg("Public link copied to clipboard!");
     } catch (err) { 
       setToastMsg("Failed to generate link."); 
     }
   };
 
-  const toggleAdmin = () => {
-    const next = !isAdmin;
-    setIsAdmin(next);
-    if (!next) setIsEditing(false);
-    const params = new URLSearchParams(window.location.search);
-    if (next) params.set('mode', 'admin');
-    else params.delete('mode');
-    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      setIsEditing(true);
+      setIsLoginOpen(false);
+      setPasswordInput('');
+      setToastMsg("Welcome, Admin!");
+    } else {
+      setToastMsg("Incorrect password.");
+    }
+  };
+
+  const logout = () => {
+    setIsAdmin(false);
+    setIsEditing(false);
+    setToastMsg("Logged out.");
   };
 
   const handleSaveModal = (e: React.FormEvent) => {
@@ -481,7 +512,7 @@ export default function App() {
   };
 
   return (
-    <div className={`app-wrapper ${darkMode ? 'dark' : ''}`}>
+    <div className={`app-wrapper min-h-screen ${darkMode ? 'dark' : ''}`}>
       <GlobalStyles />
       <header className="bsa-header">
         <div className="header-container">
@@ -509,10 +540,11 @@ export default function App() {
             </button>
             {isAdmin && (
               <>
-                <button onClick={handleShare} className="icon-btn"><Share2 size={16} /> <span>Save & Share</span></button>
+                <button onClick={handleShare} className="icon-btn"><Share2 size={16} /> <span>Copy Public Link</span></button>
                 <button onClick={() => setIsEditing(!isEditing)} className={`icon-btn ${isEditing ? 'active' : ''}`}>
-                  <Settings size={16} /> <span>{isEditing ? 'Exit Editor' : 'Edit Page'}</span>
+                  <Settings size={16} /> <span>{isEditing ? 'Exit' : 'Edit'}</span>
                 </button>
+                <button onClick={logout} className="icon-btn" style={{ background: '#ef4444' }}><X size={16} /></button>
               </>
             )}
           </div>
@@ -548,44 +580,70 @@ export default function App() {
               setFormData({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 });
               setEditingLink(null);
               setIsModalOpen(true);
-            }} className="add-btn"><Plus size={32} /><span>Add New Link</span></button>
+            }} className="add-btn"><Plus size={32} /><span>Add Link</span></button>
           )}
         </div>
       </main>
 
       <div className="admin-footer">
-        <button onClick={toggleAdmin} className="action-badge" style={{ background: isAdmin ? 'var(--bsa-gold)' : '#64748b' }}>
+        <button onClick={() => isAdmin ? logout() : setIsLoginOpen(true)} className="action-badge" style={{ background: isAdmin ? 'var(--bsa-gold)' : '#64748b' }}>
           {isAdmin ? <Eye size={16} color="var(--bsa-blue)" /> : <Lock size={16} color="white" />}
         </button>
       </div>
 
+      {isLoginOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: darkMode ? '#1e293b' : 'white', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+            <div style={{ width: '60px', height: '60px', background: 'var(--bsa-blue)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <KeyRound color="white" />
+            </div>
+            <h2 style={{ margin: '0 0 10px', fontSize: '20px' }}>Admin Access</h2>
+            <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: '14px' }}>Enter password to manage this page.</p>
+            <form onSubmit={handleLogin}>
+              <input 
+                type="password" 
+                autoFocus
+                placeholder="Password" 
+                value={passwordInput} 
+                onChange={e => setPasswordInput(e.target.value)} 
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '15px', background: 'transparent', color: 'inherit' }}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" onClick={() => setIsLoginOpen(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', background: 'transparent', color: 'inherit' }}>Cancel</button>
+                <button type="submit" style={{ flex: 2, padding: '12px', borderRadius: '12px', background: 'var(--bsa-blue)', color: 'white', fontWeight: 'bold' }}>Login</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: darkMode ? '#0f172a' : 'white', borderRadius: '24px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: darkMode ? '#0f172a' : 'white', borderRadius: '24px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ background: 'var(--bsa-blue)', padding: '20px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, textTransform: 'uppercase' }}>{modalMode === 'header' ? 'Header Settings' : 'Link Settings'}</h3>
+              <h3 style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>{modalMode === 'header' ? 'Header Settings' : 'Link Settings'}</h3>
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white' }}><X /></button>
             </div>
-            <form onSubmit={handleSaveModal} style={{ padding: '20px' }}>
+            <form onSubmit={handleSaveModal} style={{ padding: '25px' }}>
               <div style={{ marginBottom: '15px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 'bold' }}>TITLE</label>
-                <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '8px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
+                <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b' }}>TITLE</label>
+                <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
               </div>
               
               {modalMode === 'link' ? (
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 'bold' }}>URL</label>
-                  <input required value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '8px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
+                  <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b' }}>URL</label>
+                  <input required value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
                 </div>
               ) : (
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 'bold' }}>SUBTITLE</label>
-                  <input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} style={{ width: '100%', padding: '10px', marginTop: '5px', borderRadius: '8px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
+                  <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b' }}>SUBTITLE</label>
+                  <input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
                 </div>
               )}
 
-              <div style={{ marginBottom: '15px', border: '1px solid #ddd', padding: '15px', borderRadius: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>VISUALS (DRAG TO CENTER)</label>
+              <div style={{ marginBottom: '15px', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '16px', background: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+                <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', display: 'block', marginBottom: '10px' }}>VISUALS (DRAG TO RECENTER)</label>
                 <div 
                   className="crop-preview-container"
                   onMouseDown={(e) => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
@@ -604,21 +662,21 @@ export default function App() {
                   <GenericImage url={formData.imageUrl} zoom={formData.zoom} offsetX={formData.offsetX} offsetY={formData.offsetY} iconName={formData.iconName} />
                 </div>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                   <ZoomIn size={16} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                   <ZoomIn size={18} />
                    <input type="range" min="0.1" max="5" step="0.05" value={formData.zoom || 1} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} style={{ flex: 1 }} />
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                   <input 
-                    placeholder="Search for logo..." 
+                    placeholder="Search for scout logos..." 
                     value={searchQuery} 
                     onChange={e => setSearchQuery(e.target.value)} 
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSearchImages(); } }}
-                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} 
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} 
                   />
-                  <button type="button" onClick={handleSearchImages} style={{ background: 'var(--bsa-blue)', color: 'white', padding: '8px 15px', borderRadius: '8px' }}>
-                    {isSearching ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
+                  <button type="button" onClick={handleSearchImages} style={{ background: 'var(--bsa-blue)', color: 'white', padding: '12px 18px', borderRadius: '10px' }}>
+                    {isSearching ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
                   </button>
                 </div>
 
@@ -630,13 +688,13 @@ export default function App() {
                   </div>
                 )}
 
-                {modalMode === 'link' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginTop: '10px' }}>
+                {modalMode === 'link' && !searchResults.length && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginTop: '10px' }}>
                     {Object.keys(ICON_MAP).map(n => {
                       const Icon = ICON_MAP[n];
                       return (
-                        <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '8px', border: formData.iconName === n ? '2px solid blue' : '1px solid #ddd', borderRadius: '8px', background: 'transparent', color: 'inherit' }}>
-                          <Icon size={16} />
+                        <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '12px', border: formData.iconName === n ? '2px solid var(--bsa-blue)' : '1px solid #ddd', borderRadius: '10px', background: 'transparent', color: 'inherit' }}>
+                          <Icon size={20} />
                         </button>
                       );
                     })}
@@ -644,16 +702,16 @@ export default function App() {
                 )}
               </div>
 
-              <button type="submit" style={{ width: '100%', padding: '15px', background: 'var(--bsa-blue)', color: 'white', borderRadius: '12px', fontWeight: 'bold' }}>SAVE CHANGES</button>
+              <button type="submit" style={{ width: '100%', padding: '16px', background: 'var(--bsa-blue)', color: 'white', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px' }}>SAVE CHANGES</button>
             </form>
           </div>
         </div>
       )}
       
       {toastMsg && (
-        <div style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(0,0,0,0.9)', color: 'white', padding: '12px 24px', borderRadius: '99px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 300, display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span>{toastMsg}</span>
-          <button onClick={() => setToastMsg('')} style={{ color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+        <div style={{ position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(0,0,0,0.9)', color: 'white', padding: '14px 28px', borderRadius: '99px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 500, display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span style={{ fontSize: '14px', fontWeight: '500' }}>{toastMsg}</span>
+          <button onClick={() => setToastMsg('')} style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
       )}
     </div>
