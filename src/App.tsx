@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, 
-  Share2, 
   Plus, 
   Edit2, 
   Trash2, 
@@ -16,15 +15,11 @@ import {
   Star, 
   Globe,
   X,
-  Sun,
-  Moon,
   Search,
   ZoomIn,
   Loader2,
   Lock,
-  Eye,
-  KeyRound,
-  Image as ImageIcon
+  KeyRound
 } from 'lucide-react';
 
 const ADMIN_PASSWORD = "scout123";
@@ -302,7 +297,6 @@ export default function App() {
       const data = await response.json();
       let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
       
-      // Clean possible markdown if model ignored MimeType instruction
       text = text.replace(/```json/g, '').replace(/```/g, '').trim();
       const urls = JSON.parse(text);
       
@@ -419,7 +413,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* Login Modal */}
       {isLoginOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-6">
           <div className="bg-white rounded-3xl p-8 w-full max-w-sm text-center">
@@ -454,13 +447,12 @@ export default function App() {
                 } else {
                   setToast("Incorrect password.");
                 }
-              }} className="flex-2 bg-blue-900 text-white p-3 rounded-xl font-bold">Login</button>
+              }} className="flex-1 bg-blue-900 text-white p-3 rounded-xl font-bold">Login</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Editor Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4">
           <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
