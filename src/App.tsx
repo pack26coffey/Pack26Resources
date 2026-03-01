@@ -18,12 +18,11 @@ import {
   X,
   Sun,
   Moon,
-  Search,
   ZoomIn,
-  Loader2,
   Lock,
   Eye,
-  KeyRound
+  KeyRound,
+  Link as LinkIcon
 } from 'lucide-react';
 
 const ADMIN_PASSWORD = "scout123"; // Change this to your preferred password
@@ -252,44 +251,11 @@ const GlobalStyles = () => (
       cursor: grab;
     }
 
-    .image-search-results {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      max-height: 220px;
-      overflow-y: auto;
-      margin-top: 10px;
-      padding: 8px;
-      background: rgba(0,0,0,0.05);
-      border-radius: 12px;
-    }
-
-    .search-thumb {
-      aspect-ratio: 1;
-      width: 100%;
-      object-fit: contain;
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
-    
-    .search-thumb:hover { transform: scale(1.05); border-color: var(--bsa-blue); }
-
     .admin-footer {
        position: fixed;
        bottom: 24px;
        right: 24px;
        z-index: 50;
-    }
-    
-    .animate-spin {
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
   `}</style>
 );
@@ -377,9 +343,6 @@ export default function App() {
   const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
   const [formData, setFormData] = useState<any>({});
   
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<string[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
@@ -428,31 +391,6 @@ export default function App() {
       localStorage.setItem('cubScoutSettings', JSON.stringify(settings));
     }
   }, [links, settings, isDataLoaded]);
-
-  const handleSearchImages = async () => {
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
-    const apiKey = ""; 
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Provide exactly 8 high-quality logo or icon image URLs for "${searchQuery}" related to Scouting or the specific topic. Return ONLY a valid JSON array of strings. Avoid broken links.` }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: { responseMimeType: "application/json" }
-        })
-      });
-      const result = await response.json();
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      const urls = JSON.parse(text || "[]");
-      setSearchResults(Array.isArray(urls) ? urls : []);
-    } catch (e) {
-      setToastMsg("Search failed. Try a different term.");
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const handleShare = () => {
     try {
@@ -667,37 +605,32 @@ export default function App() {
                    <input type="range" min="0.1" max="5" step="0.05" value={formData.zoom || 1} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} style={{ flex: 1 }} />
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <LinkIcon size={14} /> IMAGE URL
+                  </label>
                   <input 
-                    placeholder="Search for scout logos..." 
-                    value={searchQuery} 
-                    onChange={e => setSearchQuery(e.target.value)} 
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSearchImages(); } }}
-                    style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} 
+                    placeholder="https://example.com/image.png" 
+                    value={formData.imageUrl || ''} 
+                    onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})}
+                    style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} 
                   />
-                  <button type="button" onClick={handleSearchImages} style={{ background: 'var(--bsa-blue)', color: 'white', padding: '12px 18px', borderRadius: '10px' }}>
-                    {isSearching ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
-                  </button>
+                  <p style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>Paste a direct link to a logo or icon image.</p>
                 </div>
 
-                {searchResults.length > 0 && (
-                  <div className="image-search-results">
-                    {searchResults.map((u, i) => (
-                      <img key={i} src={u} alt="Result" className="search-thumb" onClick={() => setFormData({...formData, imageUrl: u, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} />
-                    ))}
-                  </div>
-                )}
-
-                {modalMode === 'link' && !searchResults.length && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginTop: '10px' }}>
-                    {Object.keys(ICON_MAP).map(n => {
-                      const Icon = ICON_MAP[n];
-                      return (
-                        <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '12px', border: formData.iconName === n ? '2px solid var(--bsa-blue)' : '1px solid #ddd', borderRadius: '10px', background: 'transparent', color: 'inherit' }}>
-                          <Icon size={20} />
-                        </button>
-                      );
-                    })}
+                {modalMode === 'link' && (
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: '900', color: '#64748b' }}>OR SELECT ICON:</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+                      {Object.keys(ICON_MAP).map(n => {
+                        const Icon = ICON_MAP[n];
+                        return (
+                          <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '12px', border: formData.iconName === n ? '2px solid var(--bsa-blue)' : '1px solid #ddd', borderRadius: '10px', background: 'transparent', color: 'inherit' }}>
+                            <Icon size={20} />
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
