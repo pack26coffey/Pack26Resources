@@ -19,10 +19,8 @@ import {
   Sun,
   Moon,
   Search,
-  Move,
   ZoomIn,
   Loader2,
-  Layout,
   Lock,
   Eye
 } from 'lucide-react';
@@ -360,20 +358,18 @@ export default function App() {
 
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
 
-  // Handle Initial Load and View Mode
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const data = params.get('data');
     const mode = params.get('mode');
 
-    // Simple secret for demo, usually you'd check a password or token
     if (mode === 'admin') setIsAdmin(true);
-
     if (darkMode) document.documentElement.classList.add('dark');
 
     if (data) {
       try {
-        const decoded = JSON.parse(decodeURIComponent(atob(data)));
+        const decodedString = atob(decodeURIComponent(data));
+        const decoded = JSON.parse(decodedString);
         setLinks(decoded.l.map((l: any) => ({
           id: l.i, title: l.t, url: l.u, imageUrl: l.img, iconName: l.icon || 'Tent',
           zoom: l.z || 1, offsetX: l.ox || 0, offsetY: l.oy || 0
@@ -389,7 +385,11 @@ export default function App() {
           });
         }
         setIsDataLoaded(true);
-      } catch (e) { console.error(e); }
+      } catch (e) { 
+        console.error("Data decode error", e); 
+        setLinks(DEFAULT_LINKS);
+        setIsDataLoaded(true);
+      }
     } else {
       const localLinks = localStorage.getItem('cubScoutLinks');
       const localSettings = localStorage.getItem('cubScoutSettings');
@@ -400,7 +400,6 @@ export default function App() {
     }
   }, []);
 
-  // Save to LocalStorage for dev persist
   useEffect(() => {
     if (isDataLoaded) {
       localStorage.setItem('cubScoutLinks', JSON.stringify(links));
@@ -417,7 +416,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `Provide a list of direct image URL links (ending in .png or .jpg) for high-quality logos related to "${searchQuery}". Ensure they are publicly accessible and diverse. Return ONLY a JSON array of strings.` }] }],
+          contents: [{ parts: [{ text: `Find high-quality logo URLs for "${searchQuery}". Return only a JSON array of 8 direct image URLs (strings).` }] }],
           tools: [{ google_search: {} }],
           generationConfig: { responseMimeType: "application/json" }
         })
@@ -425,9 +424,9 @@ export default function App() {
       const result = await response.json();
       const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
       const urls = JSON.parse(text || "[]");
-      setSearchResults(Array.isArray(urls) ? urls.slice(0, 12) : []);
+      setSearchResults(Array.isArray(urls) ? urls : []);
     } catch (e) {
-      setToastMsg("Search failed. Try entering a URL manually.");
+      setToastMsg("Search failed. Try a different query.");
     } finally {
       setIsSearching(false);
     }
@@ -440,14 +439,18 @@ export default function App() {
         s: { ht: settings.headerTitle, hs: settings.headerSubtitle, hl: settings.headerLogoUrl, hz: settings.headerLogoZoom, hox: settings.headerLogoOffsetX, hoy: settings.headerLogoOffsetY }
       };
       const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
-      // This is the Public Link (No admin mode)
       const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
       
       const textArea = document.createElement("textarea");
-      textArea.value = shareUrl; document.body.appendChild(textArea);
-      textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea);
-      setToastMsg("Public link copied! Share this with your Pack.");
-    } catch (err) { setToastMsg("Failed to generate link."); }
+      textArea.value = shareUrl; 
+      document.body.appendChild(textArea);
+      textArea.select(); 
+      document.execCommand('copy'); 
+      document.body.removeChild(textArea);
+      setToastMsg("Public link copied!");
+    } catch (err) { 
+      setToastMsg("Failed to generate link."); 
+    }
   };
 
   const toggleAdmin = () => {
@@ -531,7 +534,7 @@ export default function App() {
                   <button onClick={() => setLinks(links.filter(l => l.id !== link.id))} className="action-badge" style={{ background: '#dc2626' }}><Trash2 size={14} color="white" /></button>
                 </div>
               )}
-              <a href={isEditing ? '#' : link.url} target="_blank" rel="noopener noreferrer" className={`tile-card ${isEditing ? 'editing' : ''}`} style={isEditing ? { opacity: 0.8, cursor: 'default' } : {}}>
+              <a href={isEditing ? '#' : link.url} target="_blank" rel="noopener noreferrer" className={`tile-card ${isEditing ? 'editing' : ''}`}>
                 <div className="tile-image-area">
                   <GenericImage url={link.imageUrl} zoom={link.zoom} offsetX={link.offsetX} offsetY={link.offsetY} iconName={link.iconName} alt={link.title} />
                 </div>
@@ -592,7 +595,8 @@ export default function App() {
                     const dx = (e.clientX - dragRef.current.startX) / factor;
                     const dy = (e.clientY - dragRef.current.startY) / factor;
                     setFormData((p: any) => ({ ...p, offsetX: (p.offsetX || 0) + dx, offsetY: (p.offsetY || 0) + dy }));
-                    dragRef.current.startX = e.clientX; dragRef.current.startY = e.clientY;
+                    dragRef.current.startX = e.clientX; 
+                    dragRef.current.startY = e.clientY;
                   }}
                   onMouseUp={() => dragRef.current.isDragging = false}
                   onMouseLeave={() => dragRef.current.isDragging = false}
@@ -602,7 +606,7 @@ export default function App() {
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
                    <ZoomIn size={16} />
-                   <input type="range" min="0.1" max="5" step="0.05" value={formData.zoom} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} style={{ flex: 1 }} />
+                   <input type="range" min="0.1" max="5" step="0.05" value={formData.zoom || 1} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} style={{ flex: 1 }} />
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
@@ -610,7 +614,7 @@ export default function App() {
                     placeholder="Search for logo..." 
                     value={searchQuery} 
                     onChange={e => setSearchQuery(e.target.value)} 
-                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleSearchImages())}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSearchImages(); } }}
                     style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} 
                   />
                   <button type="button" onClick={handleSearchImages} style={{ background: 'var(--bsa-blue)', color: 'white', padding: '8px 15px', borderRadius: '8px' }}>
@@ -621,7 +625,7 @@ export default function App() {
                 {searchResults.length > 0 && (
                   <div className="image-search-results">
                     {searchResults.map((u, i) => (
-                      <img key={i} src={u} className="search-thumb" onClick={() => setFormData({...formData, imageUrl: u, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} />
+                      <img key={i} src={u} alt="Result" className="search-thumb" onClick={() => setFormData({...formData, imageUrl: u, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} />
                     ))}
                   </div>
                 )}
@@ -631,8 +635,8 @@ export default function App() {
                     {Object.keys(ICON_MAP).map(n => {
                       const Icon = ICON_MAP[n];
                       return (
-                        <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '8px', border: formData.iconName === n ? '2px solid blue' : '1px solid #ddd', borderRadius: '8px', background: 'transparent' }}>
-                          <Icon size={16} color="inherit" />
+                        <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '8px', border: formData.iconName === n ? '2px solid blue' : '1px solid #ddd', borderRadius: '8px', background: 'transparent', color: 'inherit' }}>
+                          <Icon size={16} />
                         </button>
                       );
                     })}
@@ -647,9 +651,9 @@ export default function App() {
       )}
       
       {toastMsg && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-black/90 text-white px-6 py-3 rounded-full shadow-xl z-50">
-          {toastMsg}
-          <button onClick={() => setToastMsg('')} className="ml-4 opacity-50">✕</button>
+        <div style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(0,0,0,0.9)', color: 'white', padding: '12px 24px', borderRadius: '99px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 300, display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span>{toastMsg}</span>
+          <button onClick={() => setToastMsg('')} style={{ color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
         </div>
       )}
     </div>
