@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// We use Lucide icons as SVGs or via the standard library if available
 import { 
   Settings, Plus, Edit2, Trash2, Tent, Calendar, MapPin, 
   Info, BookOpen, Camera, MessageSquare, Shield, Star, 
@@ -7,32 +6,29 @@ import {
   Link as LinkIcon, Cloud 
 } from 'lucide-react';
 
-// --- FIREBASE CDN HELPERS ---
-// This bypasses the need for local 'firebase' npm modules which were failing your build
-const getFirebase = () => (window as any).firebase;
+// --- TYPE DEFINITIONS FOR GLOBAL WINDOW ---
+declare global {
+  interface Window {
+    firebase: any;
+    __app_id?: string;
+    __firebase_config?: string;
+    __initial_auth_token?: string;
+  }
+}
 
 const GlobalStyles = () => (
   <style>{`
-    :root {
-      --bsa-blue: #003F87;
-      --bsa-gold: #FDC82F;
-      --bg-light: #F8FAFC;
-      --bg-dark: #020617;
-    }
+    :root { --bsa-blue: #003F87; --bsa-gold: #FDC82F; --bg-light: #F8FAFC; --bg-dark: #020617; }
     #root { width: 100%; margin: 0; padding: 0; }
     body { 
       margin: 0; padding: 0; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-light);
-      color: #1e293b;
-      transition: background-color 0.3s ease;
+      background-color: var(--bg-light); color: #1e293b; transition: background-color 0.3s ease;
     }
     .dark body { background-color: var(--bg-dark); color: #f8fafc; }
     .bsa-header {
-      background-color: var(--bsa-blue);
-      border-bottom: 5px solid var(--bsa-gold);
-      color: white; padding: 0 1rem;
-      position: sticky; top: 0; z-index: 100;
+      background-color: var(--bsa-blue); border-bottom: 5px solid var(--bsa-gold);
+      color: white; padding: 0 1rem; position: sticky; top: 0; z-index: 100;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     .header-container {
@@ -69,7 +65,6 @@ const GlobalStyles = () => (
   `}</style>
 );
 
-// --- CONFIGURATION ---
 const ADMIN_PASSWORD = "scout123";
 
 interface ScoutLink {
@@ -132,29 +127,23 @@ export default function App() {
 
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
 
-  // Initialize Firebase from CDN scripts (assumed to be loaded in index.html)
-  // If not, we'll use a dynamic loader
   useEffect(() => {
-    const loadFirebase = async () => {
-      const config = JSON.parse((window as any).__app_id ? (window as any).__firebase_config : '{}');
-      const appId = (window as any).__app_id || 'scout-links';
+    const initApp = async () => {
+      if (!window.firebase) return;
 
-      // Dynamically import Firebase if not present
-      if (!(window as any).firebase) {
-        console.warn("Firebase scripts not found in index.html. Ensure they are included.");
-        return;
-      }
+      const configStr = window.__firebase_config;
+      const config = configStr ? JSON.parse(configStr) : {};
+      const appId = window.__app_id || 'scout-links';
 
-      const firebase = (window as any).firebase;
+      const firebase = window.firebase;
       if (!firebase.apps.length) firebase.initializeApp(config);
       
       const auth = firebase.auth();
       const db = firebase.firestore();
 
-      // Auth logic
-      const token = (window as any).__initial_auth_token;
+      const token = window.__initial_auth_token;
       if (token) {
-        await auth.signInWithCustomToken(token);
+        await auth.signInWithCustomToken(token).catch(() => auth.signInAnonymously());
       } else {
         await auth.signInAnonymously();
       }
@@ -162,7 +151,6 @@ export default function App() {
       auth.onAuthStateChanged((u: any) => {
         setUser(u);
         if (u) {
-          // Sync Data
           const docRef = db.collection('artifacts').doc(appId).collection('public').doc('config');
           docRef.onSnapshot((doc: any) => {
             if (doc.exists) {
@@ -175,15 +163,14 @@ export default function App() {
       });
     };
 
-    loadFirebase();
+    initApp();
   }, []);
 
   const saveData = async (newLinks: ScoutLink[], newSettings: AppSettings) => {
-    if (!user) return;
+    if (!user || !window.firebase) return;
     try {
-      const firebase = (window as any).firebase;
-      const appId = (window as any).__app_id || 'scout-links';
-      const db = firebase.firestore();
+      const appId = window.__app_id || 'scout-links';
+      const db = window.firebase.firestore();
       await db.collection('artifacts').doc(appId).collection('public').doc('config').set({
         links: newLinks,
         settings: newSettings
