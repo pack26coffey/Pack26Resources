@@ -4,20 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pack 26 Resources</title>
+    
+    <!-- Tailwind Configuration (Required to make Dark Mode work properly) -->
+    <script>
+        tailwind = {
+            config: {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            bsa: { blue: '#003F87', gold: '#FDC82F' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
     <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons for Scout symbols -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --bsa-blue: #003F87; --bsa-gold: #FDC82F; }
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; }
-        .dark { background-color: #0f172a; color: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; }
         .scout-card { 
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             cursor: pointer;
         }
-        .scout-card:hover { transform: translateY(-8px); shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .scout-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -25,20 +41,20 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300">
     <div id="app" class="min-h-screen">
         <!-- Header Section -->
-        <header class="bg-white dark:bg-slate-900 border-b-8 border-yellow-400 shadow-xl px-6 py-10">
+        <header class="bg-white dark:bg-slate-900 border-b-8 border-yellow-400 shadow-xl px-6 py-10 transition-colors duration-300">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8">
                 <div class="w-32 h-32 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-4 border-4 border-white dark:border-slate-700 shadow-inner">
                     <img id="logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="max-h-full" alt="Cub Scout Logo">
                 </div>
                 <div class="text-center md:text-left flex-1">
-                    <h1 id="title" class="text-4xl md:text-6xl font-black text-[#003F87] dark:text-blue-500 uppercase tracking-tighter">Pack 26 Resources</h1>
+                    <h1 id="title" class="text-4xl md:text-6xl font-black text-[#003F87] dark:text-blue-400 uppercase tracking-tighter">Pack 26 Resources</h1>
                     <p id="subtitle" class="text-lg font-bold text-slate-400 uppercase tracking-widest mt-2">Scouting America</p>
                 </div>
                 <div class="flex gap-3">
-                    <button id="theme-toggle" class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-yellow-400 transition-all shadow border border-slate-200 dark:border-slate-700">
+                    <button id="theme-toggle" class="p-4 rounded-2xl bg-yellow-400 text-[#003F87] hover:bg-yellow-300 hover:scale-105 transition-all shadow-lg border-2 border-transparent dark:border-[#003F87]">
                         <i data-lucide="moon" id="theme-icon" class="w-6 h-6"></i>
                     </button>
                 </div>
@@ -53,9 +69,9 @@
         </main>
 
         <!-- Admin Access Button -->
-        <div class="fixed bottom-8 right-8">
+        <div class="fixed bottom-8 right-8 z-40">
             <button id="lock-btn" class="w-16 h-16 rounded-2xl bg-[#003F87] flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95">
-                <i data-lucide="lock" class="text-white w-6 h-6"></i>
+                <i data-lucide="lock" id="lock-icon" class="text-white w-6 h-6"></i>
             </button>
         </div>
 
@@ -65,10 +81,10 @@
                 <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <i data-lucide="shield-check" class="text-blue-900 dark:text-blue-400 w-8 h-8"></i>
                 </div>
-                <h2 class="text-2xl font-black uppercase mb-2">Leader Access</h2>
+                <h2 class="text-2xl font-black uppercase mb-2 dark:text-white">Leader Access</h2>
                 <p class="text-slate-400 text-sm mb-6">Enter the pack password to edit</p>
                 
-                <input type="password" id="pass-input" placeholder="••••••••" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 mb-6 text-center font-bold outline-none focus:ring-2 focus:ring-blue-900 dark:focus:ring-blue-500">
+                <input type="password" id="pass-input" placeholder="••••••••" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 mb-6 text-center font-bold outline-none focus:ring-2 focus:ring-blue-900 dark:focus:ring-blue-500 dark:text-white">
                 
                 <div class="flex gap-3">
                     <button id="cancel-btn" class="flex-1 py-3 text-slate-400 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
@@ -76,52 +92,169 @@
                 </div>
             </div>
         </div>
+
+        <!-- Edit/Add Link Modal -->
+        <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-md shadow-2xl border-t-8 border-yellow-400">
+                <h2 id="edit-modal-title" class="text-2xl font-black uppercase mb-6 text-[#003F87] dark:text-yellow-400">Add Link</h2>
+                
+                <input type="hidden" id="edit-index">
+                
+                <div class="space-y-4 mb-8">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Button Title</label>
+                        <input type="text" id="edit-title" placeholder="e.g. Scoutbook" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-yellow-400 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Web Address (URL)</label>
+                        <input type="text" id="edit-url" placeholder="https://..." class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-yellow-400 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Image URL</label>
+                        <input type="text" id="edit-img" placeholder="https://..." class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-yellow-400 dark:text-white">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="closeEditModal()" class="flex-1 py-4 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
+                    <button onclick="saveLink()" class="flex-[2] py-4 bg-yellow-400 text-[#003F87] rounded-xl font-black uppercase text-sm hover:bg-yellow-300 shadow-lg">Save Link</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 1. Initial Data (The 'Links')
-        let darkMode = false;
+        // 1. Initial Data Setup (with LocalStorage so edits save temporarily)
+        let darkMode = localStorage.getItem('theme') === 'dark';
         let isAdmin = false;
         
-        const scoutLinks = [
+        const defaultLinks = [
             { title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: 'https://help.scoutbook.scouting.org/wp-content/uploads/2019/11/SB-logo-2.png' },
             { title: 'Scout Shop', url: 'https://www.scoutshop.org/', img: 'https://www.scouting.org/wp-content/themes/bsa-master/images/fleur-de-lis.png' },
             { title: 'Scout Life', url: 'https://scoutlife.org/', img: 'https://scoutlife.org/wp-content/uploads/2020/08/sl-logo-2020.png' },
             { title: 'Pack Calendar', url: '#', img: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png' }
         ];
 
+        let scoutLinks = JSON.parse(localStorage.getItem('pack26Links')) || defaultLinks;
+
+        function saveToStorage() {
+            localStorage.setItem('pack26Links', JSON.stringify(scoutLinks));
+        }
+
         // 2. Render Function (Updates the UI)
         function updateUI() {
-            // Update Dark Mode
-            document.body.classList.toggle('dark', darkMode);
+            // Update Dark Mode Classes
+            document.documentElement.classList.toggle('dark', darkMode);
+            
+            // Update Theme Icon
             const themeIcon = document.getElementById('theme-icon');
             themeIcon.setAttribute('data-lucide', darkMode ? 'sun' : 'moon');
 
+            // Update Lock Icon
+            const lockIcon = document.getElementById('lock-icon');
+            lockIcon.setAttribute('data-lucide', isAdmin ? 'unlock' : 'lock');
+            document.getElementById('lock-btn').className = isAdmin 
+                ? "w-16 h-16 rounded-2xl bg-yellow-400 flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95"
+                : "w-16 h-16 rounded-2xl bg-[#003F87] flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95";
+
             // Generate Link Cards
             const container = document.getElementById('links-container');
-            container.innerHTML = scoutLinks.map(link => `
-                <a href="${link.url}" target="_blank" class="scout-card bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg flex flex-col items-center border border-slate-100 dark:border-slate-800">
-                    <div class="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl mb-4 flex items-center justify-center p-6 border border-slate-100 dark:border-slate-800/50">
-                        <img src="${link.img}" class="max-h-full object-contain pointer-events-none" alt="${link.title}">
+            
+            let html = scoutLinks.map((link, index) => `
+                <div class="relative group">
+                    ${isAdmin ? `
+                    <div class="absolute -top-3 -right-3 z-10 flex gap-2">
+                        <button onclick="openEditModal(${index})" class="p-3 bg-blue-500 text-white rounded-full shadow-xl hover:scale-110 transition-transform"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteLink(${index})" class="p-3 bg-red-500 text-white rounded-full shadow-xl hover:scale-110 transition-transform"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
-                    <span class="font-black uppercase text-xs tracking-[0.2em] text-blue-900 dark:text-blue-400 text-center">${link.title}</span>
-                </a>
+                    ` : ''}
+                    <a href="${isAdmin ? '#' : link.url}" ${isAdmin ? '' : 'target="_blank"'} class="scout-card block h-full bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg flex flex-col items-center border border-slate-100 dark:border-slate-800">
+                        <div class="w-full aspect-square bg-slate-50 dark:bg-slate-950 rounded-2xl mb-4 flex items-center justify-center p-6 border border-slate-100 dark:border-slate-800/50">
+                            <img src="${link.img}" class="max-h-full object-contain pointer-events-none" alt="${link.title}">
+                        </div>
+                        <span class="font-black uppercase text-xs tracking-[0.2em] text-blue-900 dark:text-blue-400 text-center">${link.title}</span>
+                    </a>
+                </div>
             `).join('');
 
-            // Re-initialize Icons
+            // Add the "New Link" button if Admin
+            if (isAdmin) {
+                html += `
+                <button onclick="openAddModal()" class="scout-card bg-transparent border-4 border-dashed border-slate-300 dark:border-slate-700 p-6 rounded-[2rem] flex flex-col items-center justify-center min-h-[250px] hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-slate-400 hover:text-blue-500 group">
+                    <div class="p-4 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 mb-4 transition-colors">
+                        <i data-lucide="plus" class="w-8 h-8"></i>
+                    </div>
+                    <span class="font-black uppercase text-xs tracking-[0.2em]">Add New Link</span>
+                </button>
+                `;
+            }
+
+            container.innerHTML = html;
             lucide.createIcons();
         }
 
-        // 3. Event Listeners
+        // 3. Admin & CRUD Functions
+        function openAddModal() {
+            document.getElementById('edit-modal-title').innerText = "Add New Link";
+            document.getElementById('edit-index').value = "";
+            document.getElementById('edit-title').value = "";
+            document.getElementById('edit-url').value = "";
+            document.getElementById('edit-img').value = "";
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function openEditModal(index) {
+            const link = scoutLinks[index];
+            document.getElementById('edit-modal-title').innerText = "Edit Link";
+            document.getElementById('edit-index').value = index;
+            document.getElementById('edit-title').value = link.title;
+            document.getElementById('edit-url').value = link.url;
+            document.getElementById('edit-img').value = link.img;
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        function saveLink() {
+            const index = document.getElementById('edit-index').value;
+            const newLink = {
+                title: document.getElementById('edit-title').value || "New Link",
+                url: document.getElementById('edit-url').value || "#",
+                img: document.getElementById('edit-img').value || "https://cdn-icons-png.flaticon.com/512/3652/3652191.png"
+            };
+
+            if (index === "") {
+                scoutLinks.push(newLink); // Add new
+            } else {
+                scoutLinks[index] = newLink; // Update existing
+            }
+
+            saveToStorage();
+            closeEditModal();
+            updateUI();
+        }
+
+        function deleteLink(index) {
+            if (confirm("Are you sure you want to remove this link?")) {
+                scoutLinks.splice(index, 1);
+                saveToStorage();
+                updateUI();
+            }
+        }
+
+        // 4. Base Event Listeners
         document.getElementById('theme-toggle').addEventListener('click', () => {
             darkMode = !darkMode;
+            localStorage.setItem('theme', darkMode ? 'dark' : 'light');
             updateUI();
         });
 
         document.getElementById('lock-btn').addEventListener('click', () => {
             if (isAdmin) {
                 isAdmin = false;
-                alert("Logged out of Leader mode");
+                updateUI();
             } else {
                 document.getElementById('modal').style.display = 'flex';
                 document.getElementById('pass-input').focus();
@@ -137,7 +270,6 @@
             if (pass === "CoRf121") {
                 isAdmin = true;
                 document.getElementById('modal').style.display = 'none';
-                alert("Leader Access Granted! You can now edit links (Connect Firebase to save permanently).");
                 updateUI();
             } else {
                 alert("Incorrect password. Please try again.");
@@ -145,8 +277,12 @@
             document.getElementById('pass-input').value = '';
         });
 
-        // 4. Start the app
-        window.onload = updateUI;
+        // 5. Start the app
+        window.onload = () => {
+            // Apply initial dark mode immediately to avoid flash
+            if (darkMode) document.documentElement.classList.add('dark');
+            updateUI();
+        };
     </script>
 </body>
 </html>
