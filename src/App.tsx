@@ -1,10 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken, User } from 'firebase/auth';
-import { getFirestore, doc, onSnapshot, setDoc, collection } from 'firebase/firestore';
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  User 
+} from 'firebase/auth';
+import { 
+  getFirestore, 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  DocumentSnapshot, 
+  FirestoreError 
+} from 'firebase/firestore';
 import { 
   Settings, 
-  Share2, 
   Plus, 
   Edit2, 
   Trash2, 
@@ -14,7 +26,7 @@ import {
   Info, 
   BookOpen, 
   Camera, 
-  MessageSquare,
+  MessageSquare, 
   Shield, 
   Star, 
   Globe,
@@ -26,18 +38,18 @@ import {
   Eye,
   KeyRound,
   Link as LinkIcon,
-  Cloud // Using Cloud instead of CloudCheck to fix the build error
+  Cloud
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const ADMIN_PASSWORD = "scout123";
 
-// Firebase Globals (Provided by environment)
-const firebaseConfig = JSON.parse(__firebase_config);
+// Safe access to environment globals
+const firebaseConfig = JSON.parse((window as any).__firebase_config || '{}');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'scout-links-default';
+const appId = typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : 'scout-links-default';
 
 const GlobalStyles = () => (
   <style>{`
@@ -183,8 +195,9 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
+        const token = (window as any).__initial_auth_token;
+        if (typeof token !== 'undefined' && token) {
+          await signInWithCustomToken(auth, token);
         } else {
           await signInAnonymously(auth);
         }
@@ -200,16 +213,15 @@ export default function App() {
     if (!user) return;
 
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+    const unsubscribe = onSnapshot(docRef, (snapshot: DocumentSnapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data.links) setLinks(data.links);
         if (data.settings) setSettings(data.settings);
       } else {
-        // Initialize if empty
         saveData([], settings);
       }
-    }, (err) => {
+    }, (err: FirestoreError) => {
       console.error("Firestore Error:", err);
       setToastMsg("Sync error. Please refresh.");
     });
@@ -246,8 +258,9 @@ export default function App() {
     let updatedSettings = { ...settings };
 
     if (modalMode === 'link') {
-      let finalUrl = formData.url.trim();
-      if (!finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+      let finalUrl = (formData.url || '').trim();
+      if (finalUrl && !finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+      
       if (editingLink) {
         updatedLinks = links.map(l => l.id === editingLink.id ? { ...formData, url: finalUrl } : l);
       } else {
@@ -390,17 +403,17 @@ export default function App() {
               {modalMode === 'link' ? (
                 <div className="mb-4">
                   <label className="text-[10px] font-black text-slate-500 block mb-1">WEBSITE URL</label>
-                  <input required value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full p-3 border rounded-xl bg-transparent" />
+                  <input required value={formData.url || ''} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full p-3 border rounded-xl bg-transparent" />
                 </div>
               ) : (
                 <div className="mb-4">
                   <label className="text-[10px] font-black text-slate-500 block mb-1">SUBTITLE</label>
-                  <input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} className="w-full p-3 border rounded-xl bg-transparent" />
+                  <input value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} className="w-full p-3 border rounded-xl bg-transparent" />
                 </div>
               )}
 
               <div className="mb-6 p-5 border border-slate-200 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-                <label className="text-[10px] font-black text-slate-500 block mb-2 text-center">PREVIEW & PLACEMENT (DRAG IMAGE)</label>
+                <label className="text-[10px] font-black text-slate-500 block mb-2 text-center uppercase">Preview & Placement (Drag Image)</label>
                 <div 
                   className="crop-preview-container"
                   onMouseDown={(e) => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
@@ -423,7 +436,7 @@ export default function App() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="text-[10px] font-black text-slate-500 flex items-center gap-2 mb-1"><LinkIcon size={12}/> DIRECT IMAGE URL</label>
+                  <label className="text-[10px] font-black text-slate-500 flex items-center gap-2 mb-1 uppercase"><LinkIcon size={12}/> Direct Image Url</label>
                   <input 
                     placeholder="https://example.com/logo.png" 
                     value={formData.imageUrl || ''} 
@@ -434,7 +447,7 @@ export default function App() {
 
                 {modalMode === 'link' && (
                   <div>
-                    <p className="text-[10px] font-black text-slate-500 mb-2">OR SELECT PRESET ICON:</p>
+                    <p className="text-[10px] font-black text-slate-500 mb-2 uppercase">Or Select Preset Icon:</p>
                     <div className="grid grid-cols-5 gap-2">
                       {Object.keys(ICON_MAP).map(n => {
                         const Icon = ICON_MAP[n];
@@ -449,7 +462,7 @@ export default function App() {
                 )}
               </div>
 
-              <button type="submit" className="w-full p-4 bg-blue-700 text-white rounded-xl font-bold">SAVE TO CLOUD</button>
+              <button type="submit" className="w-full p-4 bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wide">Save to Cloud</button>
             </form>
           </div>
         </div>
