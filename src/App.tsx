@@ -23,11 +23,10 @@ import {
   Loader2,
   Lock,
   Eye,
-  KeyRound,
-  Image as ImageIcon
+  KeyRound
 } from 'lucide-react';
 
-const ADMIN_PASSWORD = "scout123";
+const ADMIN_PASSWORD = "scout123"; // Change this to your preferred password
 
 const GlobalStyles = () => (
   <style>{`
@@ -37,16 +36,29 @@ const GlobalStyles = () => (
       --bg-light: #F8FAFC;
       --bg-dark: #020617;
     }
+
     * { box-sizing: border-box; }
-    #root { width: 100%; margin: 0; padding: 0; }
+
+    #root { 
+      max-width: 100% !important; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      width: 100%;
+    }
+
     body { 
-      margin: 0; padding: 0; 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-light);
       color: #1e293b;
       transition: background-color 0.3s ease;
     }
-    .dark body { background-color: var(--bg-dark); color: #f8fafc; }
+
+    .dark body { 
+      background-color: var(--bg-dark);
+      color: #f8fafc;
+    }
     
     .bsa-header {
       background-color: var(--bsa-blue);
@@ -56,8 +68,10 @@ const GlobalStyles = () => (
       position: sticky;
       top: 0;
       z-index: 100;
+      width: 100%;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
+
     .header-container {
       max-width: 1100px;
       margin: 0 auto;
@@ -66,25 +80,54 @@ const GlobalStyles = () => (
       justify-content: space-between;
       align-items: center;
     }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+
     .logo-box {
       width: 50px;
       height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
       overflow: hidden;
       border-radius: 8px;
       background: rgba(255,255,255,0.1);
       position: relative;
     }
-    .title-group h1 { margin: 0; font-size: 1.5rem; font-weight: 900; text-transform: uppercase; font-style: italic; }
-    .title-group p { margin: 2px 0 0; font-size: 10px; text-transform: uppercase; color: #bfdbfe; }
 
-    .main-content { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .title-group h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-style: italic;
+      line-height: 1;
+    }
+
+    .title-group p {
+      margin: 2px 0 0 0;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #bfdbfe;
+    }
+
+    .main-content {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
     .resource-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 24px;
     }
 
     .tile-card {
@@ -101,29 +144,51 @@ const GlobalStyles = () => (
       position: relative;
       height: 100%;
     }
-    .dark .tile-card { background: #0f172a; border-color: #1e293b; color: white; }
-    .tile-card:hover:not(.editing) { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+    .dark .tile-card { 
+      background: #0f172a; 
+      border-color: #1e293b; 
+      color: white; 
+    }
+
+    .tile-card:hover:not(.editing) { 
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
 
     .tile-image-area {
       aspect-ratio: 1/1;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 0;
       background: #f1f5f9;
       overflow: hidden;
       position: relative;
       width: 100%;
     }
+
     .dark .tile-image-area { background: #1e293b; }
+
     .tile-label {
-      padding: 12px;
+      padding: 16px;
       text-align: center;
-      font-weight: 700;
-      font-size: 13px;
+      font-weight: 800;
+      font-size: 14px;
       text-transform: uppercase;
       border-top: 1px solid #f1f5f9;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    
     .dark .tile-label { border-top-color: #1e293b; }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
 
     .icon-btn {
       background: rgba(255,255,255,0.1);
@@ -135,9 +200,12 @@ const GlobalStyles = () => (
       display: flex;
       align-items: center;
       gap: 6px;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 12px;
+      text-transform: uppercase;
     }
+
+    .icon-btn:hover { background: rgba(255,255,255,0.2); }
     .icon-btn.active { background: var(--bsa-gold); color: var(--bsa-blue); border-color: var(--bsa-gold); }
 
     .action-badge {
@@ -150,45 +218,79 @@ const GlobalStyles = () => (
       border: 2px solid white;
       cursor: pointer;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.1s;
+      flex-shrink: 0;
     }
 
+    .action-badge:active { transform: scale(0.9); }
+
+    .add-btn {
+      border: 3px dashed #cbd5e1;
+      background: transparent;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 1.25rem;
+    }
+
+    .dark .add-btn { border-color: #334155; color: #94a3b8; }
+
     .crop-preview-container {
-      width: 120px;
-      height: 120px;
+      width: 150px;
+      height: 150px;
       border-radius: 12px;
       overflow: hidden;
       border: 2px solid var(--bsa-blue);
       position: relative;
-      margin: 0 auto 15px;
+      margin: 0 auto 20px;
       background: #f1f5f9;
-      cursor: move;
+      cursor: grab;
     }
 
     .image-search-results {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      max-height: 250px;
+      gap: 8px;
+      max-height: 220px;
       overflow-y: auto;
-      margin-top: 15px;
-      padding: 10px;
-      background: rgba(0,0,0,0.03);
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(0,0,0,0.05);
       border-radius: 12px;
     }
+
     .search-thumb {
       aspect-ratio: 1;
       width: 100%;
       object-fit: contain;
       background: white;
-      border: 2px solid transparent;
-      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
       cursor: pointer;
-      padding: 4px;
+      transition: transform 0.1s;
     }
-    .search-thumb:hover { border-color: var(--bsa-blue); }
+    
+    .search-thumb:hover { transform: scale(1.05); border-color: var(--bsa-blue); }
 
-    .animate-spin { animation: spin 1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .admin-footer {
+       position: fixed;
+       bottom: 24px;
+       right: 24px;
+       z-index: 50;
+    }
+    
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   `}</style>
 );
 
@@ -198,9 +300,18 @@ interface ScoutLink {
   url: string;
   imageUrl: string;
   iconName?: string; 
-  zoom: number;
-  offsetX: number;
-  offsetY: number;
+  zoom?: number;
+  offsetX?: number;
+  offsetY?: number;
+}
+
+interface AppSettings {
+  headerTitle: string;
+  headerSubtitle: string;
+  headerLogoUrl: string;
+  headerLogoZoom: number;
+  headerLogoOffsetX: number;
+  headerLogoOffsetY: number;
 }
 
 const DEFAULT_LINKS: ScoutLink[] = [
@@ -208,34 +319,43 @@ const DEFAULT_LINKS: ScoutLink[] = [
   { id: '2', title: 'Official BSA', url: 'https://www.scouting.org/', imageUrl: '', iconName: 'Shield', zoom: 1, offsetX: 0, offsetY: 0 }
 ];
 
+const DEFAULT_SETTINGS: AppSettings = {
+  headerTitle: 'Pack Resources',
+  headerSubtitle: 'Cub Scouts of America',
+  headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
+  headerLogoZoom: 1,
+  headerLogoOffsetX: 0,
+  headerLogoOffsetY: 0
+};
+
 const ICON_MAP: Record<string, any> = { Tent, Calendar, MapPin, Info, BookOpen, Camera, MessageSquare, Shield, Star, Globe };
 
-const ResourceImage = ({ item }: { item: Partial<ScoutLink> }) => {
+const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, alt, iconName }: any) => {
   const [error, setError] = useState(false);
-  const IconComponent = item.iconName && ICON_MAP[item.iconName] ? ICON_MAP[item.iconName] : Tent;
+  const IconComponent = iconName && ICON_MAP[iconName] ? ICON_MAP[iconName] : Tent;
   
-  if (!item.imageUrl || error) {
+  if ((!url || error) || (!url && iconName)) {
     return (
-      <div className="w-full h-full flex items-center justify-center opacity-40">
-        <IconComponent size="50%" strokeWidth={1.5} />
+      <div className="w-full h-full flex items-center justify-center p-4 text-inherit opacity-70">
+        <IconComponent size="60%" strokeWidth={1.5} />
       </div>
     );
   }
   
   return (
     <img 
-      src={item.imageUrl} 
-      alt="" 
+      src={url} 
+      alt={alt || "Resource"} 
       onError={() => setError(true)}
       style={{
         position: 'absolute',
         top: '50%',
         left: '50%',
-        transform: `translate(-50%, -50%) translate(${item.offsetX}%, ${item.offsetY}%) scale(${item.zoom})`,
+        transformOrigin: 'center center',
+        transform: `translate(-50%, -50%) translate(${offsetX}%, ${offsetY}%) scale(${zoom})`,
         maxWidth: 'none',
         height: 'auto',
-        width: 'auto',
-        display: 'block'
+        transition: 'none'
       }}
     />
   );
@@ -243,150 +363,189 @@ const ResourceImage = ({ item }: { item: Partial<ScoutLink> }) => {
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [links, setLinks] = useState<ScoutLink[]>([]);
-  const [settings, setSettings] = useState({
-    headerTitle: 'Pack Resources',
-    headerSubtitle: 'Cub Scouts of America',
-    headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
-    headerLogoZoom: 1, headerLogoOffsetX: 0, headerLogoOffsetY: 0
-  });
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [password, setPassword] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  
   const [modalMode, setModalMode] = useState<'link' | 'header'>('link');
-  const [formData, setFormData] = useState<Partial<ScoutLink>>({});
+  const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
+  const [formData, setFormData] = useState<any>({});
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [toast, setToast] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
 
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
 
   useEffect(() => {
-    const saved = localStorage.getItem('scout_links_data');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setLinks(parsed.links || DEFAULT_LINKS);
-      setSettings(parsed.settings || settings);
+    const params = new URLSearchParams(window.location.search);
+    const data = params.get('data');
+    if (darkMode) document.documentElement.classList.add('dark');
+
+    if (data) {
+      try {
+        const decodedString = atob(decodeURIComponent(data));
+        const decoded = JSON.parse(decodedString);
+        setLinks(decoded.l.map((l: any) => ({
+          id: l.i, title: l.t, url: l.u, imageUrl: l.img, iconName: l.icon || 'Tent',
+          zoom: l.z || 1, offsetX: l.ox || 0, offsetY: l.oy || 0
+        })));
+        if (decoded.s) {
+          setSettings({
+            headerTitle: decoded.s.ht || DEFAULT_SETTINGS.headerTitle,
+            headerSubtitle: decoded.s.hs || DEFAULT_SETTINGS.headerSubtitle,
+            headerLogoUrl: decoded.s.hl || DEFAULT_SETTINGS.headerLogoUrl,
+            headerLogoZoom: decoded.s.hz || DEFAULT_SETTINGS.headerLogoZoom,
+            headerLogoOffsetX: decoded.s.hox || DEFAULT_SETTINGS.headerLogoOffsetX,
+            headerLogoOffsetY: decoded.s.hoy || DEFAULT_SETTINGS.headerLogoOffsetY,
+          });
+        }
+        setIsDataLoaded(true);
+      } catch (e) { 
+        setLinks(DEFAULT_LINKS);
+        setIsDataLoaded(true);
+      }
     } else {
-      setLinks(DEFAULT_LINKS);
+      const localLinks = localStorage.getItem('cubScoutLinks');
+      const localSettings = localStorage.getItem('cubScoutSettings');
+      if (localLinks) setLinks(JSON.parse(localLinks));
+      else setLinks(DEFAULT_LINKS);
+      if (localSettings) setSettings(JSON.parse(localSettings));
+      setIsDataLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('scout_links_data', JSON.stringify({ links, settings }));
-  }, [links, settings]);
+    if (isDataLoaded) {
+      localStorage.setItem('cubScoutLinks', JSON.stringify(links));
+      localStorage.setItem('cubScoutSettings', JSON.stringify(settings));
+    }
+  }, [links, settings, isDataLoaded]);
 
-  const handleIconSearch = async () => {
+  const handleSearchImages = async () => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
-    setSearchResults([]);
-    
-    const apiKey = "";
-    const prompt = `Find 12 high-quality transparent PNG logo/icon image URLs for "${searchQuery}" related to Boy Scouts of America or Cub Scouts. Return ONLY a valid JSON array of strings containing the direct image URLs. No other text.`;
-
+    const apiKey = ""; 
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts: [{ text: `Provide exactly 8 high-quality logo or icon image URLs for "${searchQuery}" related to Scouting or the specific topic. Return ONLY a valid JSON array of strings. Avoid broken links.` }] }],
           tools: [{ google_search: {} }],
           generationConfig: { responseMimeType: "application/json" }
         })
       });
-
-      const data = await response.json();
-      let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-      
-      // Clean possible markdown if model ignored MimeType instruction
-      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const urls = JSON.parse(text);
-      
-      if (Array.isArray(urls)) {
-        setSearchResults(urls.filter(u => typeof u === 'string' && u.startsWith('http')));
-      } else {
-        setToast("No icons found. Try a broader search.");
-      }
+      const result = await response.json();
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      const urls = JSON.parse(text || "[]");
+      setSearchResults(Array.isArray(urls) ? urls : []);
     } catch (e) {
-      setToast("Search error. Try again later.");
+      setToastMsg("Search failed. Try a different term.");
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleShare = () => {
+    try {
+      const payload = { 
+        l: links.map(l => ({ i: l.id, t: l.title, u: l.url, img: l.imageUrl, icon: l.iconName, z: l.zoom, ox: l.offsetX, oy: l.offsetY })),
+        s: { ht: settings.headerTitle, hs: settings.headerSubtitle, hl: settings.headerLogoUrl, hz: settings.headerLogoZoom, hox: settings.headerLogoOffsetX, hoy: settings.headerLogoOffsetY }
+      };
+      const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+      const shareUrl = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+      
+      const textArea = document.createElement("textarea");
+      textArea.value = shareUrl; 
+      document.body.appendChild(textArea);
+      textArea.select(); 
+      document.execCommand('copy'); 
+      document.body.removeChild(textArea);
+      setToastMsg("Public link copied to clipboard!");
+    } catch (err) { 
+      setToastMsg("Failed to generate link."); 
+    }
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      setIsEditing(true);
+      setIsLoginOpen(false);
+      setPasswordInput('');
+      setToastMsg("Welcome, Admin!");
+    } else {
+      setToastMsg("Incorrect password.");
+    }
+  };
+
+  const logout = () => {
+    setIsAdmin(false);
+    setIsEditing(false);
+    setToastMsg("Logged out.");
+  };
+
+  const handleSaveModal = (e: React.FormEvent) => {
     e.preventDefault();
     if (modalMode === 'link') {
-      const finalUrl = formData.url?.startsWith('http') ? formData.url : `https://${formData.url}`;
-      const newLink = { ...formData, url: finalUrl } as ScoutLink;
-      if (newLink.id) {
-        setLinks(links.map(l => l.id === newLink.id ? newLink : l));
-      } else {
-        setLinks([...links, { ...newLink, id: crypto.randomUUID() }]);
-      }
+      let finalUrl = formData.url.trim();
+      if (!finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+      if (editingLink) setLinks(links.map(l => l.id === editingLink.id ? { ...formData, url: finalUrl } : l));
+      else setLinks([...links, { ...formData, id: crypto.randomUUID(), url: finalUrl }]);
     } else {
       setSettings({
-        ...settings,
-        headerTitle: formData.title || settings.headerTitle,
-        headerSubtitle: (formData as any).subtitle || settings.headerSubtitle,
-        headerLogoUrl: formData.imageUrl || settings.headerLogoUrl,
-        headerLogoZoom: formData.zoom || 1,
-        headerLogoOffsetX: formData.offsetX || 0,
-        headerLogoOffsetY: formData.offsetY || 0,
+        headerTitle: formData.title, headerSubtitle: formData.subtitle,
+        headerLogoUrl: formData.imageUrl, headerLogoZoom: formData.zoom,
+        headerLogoOffsetX: formData.offsetX, headerLogoOffsetY: formData.offsetY
       });
     }
     setIsModalOpen(false);
   };
 
-  const openLinkEditor = (link?: ScoutLink) => {
-    setModalMode('link');
-    setFormData(link || { title: '', url: '', imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0, iconName: 'Tent' });
-    setSearchResults([]);
-    setSearchQuery('');
-    setIsModalOpen(true);
-  };
-
   return (
-    <div className="min-h-screen">
+    <div className={`app-wrapper min-h-screen ${darkMode ? 'dark' : ''}`}>
       <GlobalStyles />
-      
       <header className="bsa-header">
         <div className="header-container">
-          <div className="flex items-center gap-4 relative">
+          <div className="logo-section">
             {isEditing && (
-              <button onClick={() => {
+              <button onClick={() => { 
                 setModalMode('header');
-                setFormData({ title: settings.headerTitle, imageUrl: settings.headerLogoUrl, zoom: settings.headerLogoZoom, offsetX: settings.headerLogoOffsetX, offsetY: settings.headerLogoOffsetY });
+                setFormData({ title: settings.headerTitle, subtitle: settings.headerSubtitle, imageUrl: settings.headerLogoUrl, zoom: settings.headerLogoZoom, offsetX: settings.headerLogoOffsetX, offsetY: settings.headerLogoOffsetY });
                 setIsModalOpen(true);
-              }} className="action-badge absolute -top-2 -left-2 z-50 bg-yellow-400">
-                <Edit2 size={14} className="text-blue-900" />
+              }} className="action-badge" style={{ position: 'absolute', top: '-10px', left: '-10px', zIndex: 110, background: 'var(--bsa-gold)' }}>
+                <Edit2 size={14} color="var(--bsa-blue)" />
               </button>
             )}
             <div className="logo-box">
-              <ResourceImage item={{ imageUrl: settings.headerLogoUrl, zoom: settings.headerLogoZoom, offsetX: settings.headerLogoOffsetX, offsetY: settings.headerLogoOffsetY }} />
+              <GenericImage url={settings.headerLogoUrl} zoom={settings.headerLogoZoom} offsetX={settings.headerLogoOffsetX} offsetY={settings.headerLogoOffsetY} />
             </div>
             <div className="title-group">
               <h1>{settings.headerTitle}</h1>
               <p>{settings.headerSubtitle}</p>
             </div>
           </div>
-          
-          <div className="flex gap-2">
-            {isAdmin ? (
+          <div className="btn-group">
+            <button onClick={() => { setDarkMode(!darkMode); document.documentElement.classList.toggle('dark'); }} className="icon-btn">
+              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            {isAdmin && (
               <>
+                <button onClick={handleShare} className="icon-btn"><Share2 size={16} /> <span>Copy Public Link</span></button>
                 <button onClick={() => setIsEditing(!isEditing)} className={`icon-btn ${isEditing ? 'active' : ''}`}>
-                  <Settings size={16} /> <span>{isEditing ? 'Done' : 'Edit Mode'}</span>
+                  <Settings size={16} /> <span>{isEditing ? 'Exit' : 'Edit'}</span>
                 </button>
-                <button onClick={() => setIsAdmin(false)} className="icon-btn bg-red-600 border-none"><X size={16} /></button>
+                <button onClick={logout} className="icon-btn" style={{ background: '#ef4444' }}><X size={16} /></button>
               </>
-            ) : (
-              <button onClick={() => setIsLoginOpen(true)} className="icon-btn opacity-20 hover:opacity-100 transition-opacity">
-                <Lock size={16} />
-              </button>
             )}
           </div>
         </div>
@@ -395,184 +554,164 @@ export default function App() {
       <main className="main-content">
         <div className="resource-grid">
           {links.map((link) => (
-            <div key={link.id} className="relative">
+            <div key={link.id} style={{ position: 'relative' }}>
               {isEditing && (
-                <div className="absolute -top-2 -right-2 z-10 flex flex-col gap-1">
-                  <button onClick={() => openLinkEditor(link)} className="action-badge bg-blue-600"><Edit2 size={12} color="white" /></button>
-                  <button onClick={() => setLinks(links.filter(l => l.id !== link.id))} className="action-badge bg-red-600"><Trash2 size={12} color="white" /></button>
+                <div style={{ position: 'absolute', top: '-12px', right: '-12px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button onClick={() => {
+                    setModalMode('link');
+                    setFormData({ ...link });
+                    setEditingLink(link);
+                    setIsModalOpen(true);
+                  }} className="action-badge" style={{ background: '#2563eb' }}><Edit2 size={14} color="white" /></button>
+                  <button onClick={() => setLinks(links.filter(l => l.id !== link.id))} className="action-badge" style={{ background: '#dc2626' }}><Trash2 size={14} color="white" /></button>
                 </div>
               )}
-              <a href={isEditing ? undefined : link.url} target="_blank" rel="noreferrer" className="tile-card">
+              <a href={isEditing ? '#' : link.url} target="_blank" rel="noopener noreferrer" className={`tile-card ${isEditing ? 'editing' : ''}`}>
                 <div className="tile-image-area">
-                  <ResourceImage item={link} />
+                  <GenericImage url={link.imageUrl} zoom={link.zoom} offsetX={link.offsetX} offsetY={link.offsetY} iconName={link.iconName} alt={link.title} />
                 </div>
                 <div className="tile-label">{link.title}</div>
               </a>
             </div>
           ))}
           {isEditing && (
-            <button onClick={() => openLinkEditor()} className="tile-card border-dashed border-2 border-slate-300 bg-transparent flex flex-col items-center justify-center gap-2 text-slate-400 min-h-[160px]">
-              <Plus size={32} />
-              <span className="font-bold text-xs">ADD LINK</span>
-            </button>
+            <button onClick={() => {
+              setModalMode('link');
+              setFormData({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 });
+              setEditingLink(null);
+              setIsModalOpen(true);
+            }} className="add-btn"><Plus size={32} /><span>Add Link</span></button>
           )}
         </div>
       </main>
 
-      {/* Login Modal */}
+      <div className="admin-footer">
+        <button onClick={() => isAdmin ? logout() : setIsLoginOpen(true)} className="action-badge" style={{ background: isAdmin ? 'var(--bsa-gold)' : '#64748b' }}>
+          {isAdmin ? <Eye size={16} color="var(--bsa-blue)" /> : <Lock size={16} color="white" />}
+        </button>
+      </div>
+
       {isLoginOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-6">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-sm text-center">
-            <div className="w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: darkMode ? '#1e293b' : 'white', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+            <div style={{ width: '60px', height: '60px', background: 'var(--bsa-blue)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
               <KeyRound color="white" />
             </div>
-            <h2 className="text-xl font-bold mb-2">Admin Access</h2>
-            <p className="text-slate-500 text-sm mb-6">Enter password to unlock editing.</p>
-            <input 
-              type="password" 
-              autoFocus 
-              value={password} 
-              onChange={e => setPassword(e.target.value)}
-              className="w-full p-3 border rounded-xl mb-4 text-center text-lg tracking-widest"
-              onKeyDown={e => {
-                if (e.key === 'Enter' && password === ADMIN_PASSWORD) {
-                  setIsAdmin(true);
-                  setIsEditing(true);
-                  setIsLoginOpen(false);
-                  setPassword('');
-                }
-              }}
-            />
-            <div className="flex gap-2">
-              <button onClick={() => setIsLoginOpen(false)} className="flex-1 p-3 font-bold text-slate-400">Cancel</button>
-              <button onClick={() => {
-                if (password === ADMIN_PASSWORD) {
-                  setIsAdmin(true);
-                  setIsEditing(true);
-                  setIsLoginOpen(false);
-                  setPassword('');
-                } else {
-                  setToast("Incorrect password.");
-                }
-              }} className="flex-2 bg-blue-900 text-white p-3 rounded-xl font-bold">Login</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Editor Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="bg-blue-900 p-5 text-white flex justify-between items-center sticky top-0 z-10">
-              <h3 className="font-bold uppercase tracking-wider">{modalMode === 'link' ? 'Link Editor' : 'Header Editor'}</h3>
-              <button onClick={() => setIsModalOpen(false)}><X /></button>
-            </div>
-            
-            <form onSubmit={handleSave} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase">Label Name</label>
-                  <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-3 border rounded-xl mt-1" />
-                </div>
-
-                {modalMode === 'link' ? (
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase">Target URL</label>
-                    <input required value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full p-3 border rounded-xl mt-1" placeholder="scouting.org" />
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase">Subtitle</label>
-                    <input value={(formData as any).subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value} as any)} className="w-full p-3 border rounded-xl mt-1" />
-                  </div>
-                )}
-
-                <div className="bg-slate-50 p-4 rounded-2xl border">
-                  <label className="text-[10px] font-black text-slate-400 uppercase block mb-3">Graphic Settings</label>
-                  
-                  <div 
-                    className="crop-preview-container"
-                    onMouseDown={e => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
-                    onMouseMove={e => {
-                      if (!dragRef.current.isDragging) return;
-                      const dx = (e.clientX - dragRef.current.startX) / (formData.zoom || 1);
-                      const dy = (e.clientY - dragRef.current.startY) / (formData.zoom || 1);
-                      setFormData(p => ({ ...p, offsetX: (p.offsetX || 0) + dx, offsetY: (p.offsetY || 0) + dy }));
-                      dragRef.current.startX = e.clientX;
-                      dragRef.current.startY = e.clientY;
-                    }}
-                    onMouseUp={() => dragRef.current.isDragging = false}
-                    onMouseLeave={() => dragRef.current.isDragging = false}
-                  >
-                    <ResourceImage item={formData} />
-                  </div>
-
-                  <div className="flex items-center gap-3 mb-6">
-                    <ZoomIn size={16} className="text-slate-400" />
-                    <input type="range" min="0.1" max="5" step="0.1" value={formData.zoom} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} className="flex-1" />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-3.5 text-slate-400" size={16} />
-                      <input 
-                        placeholder="Search for scout icons..." 
-                        className="w-full pl-10 pr-4 py-3 border rounded-xl text-sm"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleIconSearch())}
-                      />
-                    </div>
-                    <button type="button" onClick={handleIconSearch} className="bg-blue-900 text-white px-5 rounded-xl">
-                      {isSearching ? <Loader2 size={18} className="animate-spin" /> : 'Search'}
-                    </button>
-                  </div>
-
-                  {searchResults.length > 0 && (
-                    <div className="image-search-results">
-                      {searchResults.map((url, i) => (
-                        <img 
-                          key={i} 
-                          src={url} 
-                          className="search-thumb" 
-                          alt="Option" 
-                          onClick={() => setFormData({...formData, imageUrl: url, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} 
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {modalMode === 'link' && !searchResults.length && (
-                    <div className="grid grid-cols-5 gap-2 mt-4">
-                      {Object.keys(ICON_MAP).map(name => {
-                        const Icon = ICON_MAP[name];
-                        return (
-                          <button 
-                            key={name}
-                            type="button" 
-                            onClick={() => setFormData({...formData, iconName: name, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})}
-                            className={`p-3 rounded-xl border flex items-center justify-center ${formData.iconName === name ? 'border-blue-900 bg-blue-50' : 'border-slate-200'}`}
-                          >
-                            <Icon size={20} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <button type="submit" className="w-full bg-blue-900 text-white p-4 rounded-2xl font-bold uppercase tracking-widest text-sm shadow-lg">Save Item</button>
+            <h2 style={{ margin: '0 0 10px', fontSize: '20px' }}>Admin Access</h2>
+            <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: '14px' }}>Enter password to manage this page.</p>
+            <form onSubmit={handleLogin}>
+              <input 
+                type="password" 
+                autoFocus
+                placeholder="Password" 
+                value={passwordInput} 
+                onChange={e => setPasswordInput(e.target.value)} 
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '15px', background: 'transparent', color: 'inherit' }}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" onClick={() => setIsLoginOpen(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', background: 'transparent', color: 'inherit' }}>Cancel</button>
+                <button type="submit" style={{ flex: 2, padding: '12px', borderRadius: '12px', background: 'var(--bsa-blue)', color: 'white', fontWeight: 'bold' }}>Login</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {toast && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-full text-sm font-bold z-[500] shadow-2xl animate-bounce">
-          {toast}
-          <button onClick={() => setToast('')} className="ml-4 opacity-50">✕</button>
+      {isModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: darkMode ? '#0f172a' : 'white', borderRadius: '24px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
+            <div style={{ background: 'var(--bsa-blue)', padding: '20px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>{modalMode === 'header' ? 'Header Settings' : 'Link Settings'}</h3>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white' }}><X /></button>
+            </div>
+            <form onSubmit={handleSaveModal} style={{ padding: '25px' }}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b' }}>TITLE</label>
+                <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
+              </div>
+              
+              {modalMode === 'link' ? (
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b' }}>URL</label>
+                  <input required value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
+                </div>
+              ) : (
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b' }}>SUBTITLE</label>
+                  <input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} />
+                </div>
+              )}
+
+              <div style={{ marginBottom: '15px', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '16px', background: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+                <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', display: 'block', marginBottom: '10px' }}>VISUALS (DRAG TO RECENTER)</label>
+                <div 
+                  className="crop-preview-container"
+                  onMouseDown={(e) => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
+                  onMouseMove={(e) => {
+                    if (!dragRef.current.isDragging) return;
+                    const factor = (formData.zoom || 1) * 0.5;
+                    const dx = (e.clientX - dragRef.current.startX) / factor;
+                    const dy = (e.clientY - dragRef.current.startY) / factor;
+                    setFormData((p: any) => ({ ...p, offsetX: (p.offsetX || 0) + dx, offsetY: (p.offsetY || 0) + dy }));
+                    dragRef.current.startX = e.clientX; 
+                    dragRef.current.startY = e.clientY;
+                  }}
+                  onMouseUp={() => dragRef.current.isDragging = false}
+                  onMouseLeave={() => dragRef.current.isDragging = false}
+                >
+                  <GenericImage url={formData.imageUrl} zoom={formData.zoom} offsetX={formData.offsetX} offsetY={formData.offsetY} iconName={formData.iconName} />
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                   <ZoomIn size={18} />
+                   <input type="range" min="0.1" max="5" step="0.05" value={formData.zoom || 1} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} style={{ flex: 1 }} />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <input 
+                    placeholder="Search for scout logos..." 
+                    value={searchQuery} 
+                    onChange={e => setSearchQuery(e.target.value)} 
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSearchImages(); } }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #ddd', background: 'transparent', color: 'inherit' }} 
+                  />
+                  <button type="button" onClick={handleSearchImages} style={{ background: 'var(--bsa-blue)', color: 'white', padding: '12px 18px', borderRadius: '10px' }}>
+                    {isSearching ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
+                  </button>
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="image-search-results">
+                    {searchResults.map((u, i) => (
+                      <img key={i} src={u} alt="Result" className="search-thumb" onClick={() => setFormData({...formData, imageUrl: u, iconName: '', zoom: 1, offsetX: 0, offsetY: 0})} />
+                    ))}
+                  </div>
+                )}
+
+                {modalMode === 'link' && !searchResults.length && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginTop: '10px' }}>
+                    {Object.keys(ICON_MAP).map(n => {
+                      const Icon = ICON_MAP[n];
+                      return (
+                        <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} style={{ padding: '12px', border: formData.iconName === n ? '2px solid var(--bsa-blue)' : '1px solid #ddd', borderRadius: '10px', background: 'transparent', color: 'inherit' }}>
+                          <Icon size={20} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" style={{ width: '100%', padding: '16px', background: 'var(--bsa-blue)', color: 'white', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px' }}>SAVE CHANGES</button>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {toastMsg && (
+        <div style={{ position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(0,0,0,0.9)', color: 'white', padding: '14px 28px', borderRadius: '99px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', zIndex: 500, display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span style={{ fontSize: '14px', fontWeight: '500' }}>{toastMsg}</span>
+          <button onClick={() => setToastMsg('')} style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>✕</button>
         </div>
       )}
     </div>
