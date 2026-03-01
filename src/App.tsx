@@ -83,16 +83,17 @@ const GlobalStyles = () => (
     }
 
     .logo-box {
-      width: 55px;
-      height: 55px;
+      width: 50px;
+      height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
 
     .logo-box img {
-      height: 100%;
-      width: auto;
+      max-height: 100%;
+      max-width: 100%;
       object-fit: contain;
     }
 
@@ -199,6 +200,22 @@ const GlobalStyles = () => (
 
     .icon-btn:hover { background: rgba(255,255,255,0.2); }
     .icon-btn.active { background: var(--bsa-gold); color: var(--bsa-blue); }
+
+    .action-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .action-badge:active { transform: scale(0.9); }
 
     .add-btn {
       border: 3px dashed #cbd5e1;
@@ -401,13 +418,16 @@ export default function App() {
           <div className="logo-section">
             <div className="logo-box">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Cubscouts.svg/1200px-Cubscouts.svg.png" 
-                alt="Logo" 
+                src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" 
+                alt="Cub Scouts Logo"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Cubscouts.svg/1200px-Cubscouts.svg.png";
+                }}
               />
             </div>
             <div className="title-group">
-              <h1>Pack Resources</h1>
-              <p>Cub Scouts of America</p>
+              <h1>Pack 26 Resources</h1>
+              <p>Scouting America</p>
             </div>
           </div>
           
@@ -433,9 +453,21 @@ export default function App() {
           {links.map((link: ScoutLink) => (
             <div key={link.id} style={{ position: 'relative' }}>
               {isEditing && (
-                <div style={{ position: 'absolute', top: '-10px', right: '-10px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button onClick={() => openEditModal(link)} style={{ background: '#2563eb', color: 'white', padding: '8px', borderRadius: '50%', border: '2px solid white', cursor: 'pointer' }}><Edit2 size={12} /></button>
-                  <button onClick={() => handleDelete(link.id)} style={{ background: '#dc2626', color: 'white', padding: '8px', borderRadius: '50%', border: '2px solid white', cursor: 'pointer' }}><Trash2 size={12} /></button>
+                <div style={{ position: 'absolute', top: '-12px', right: '-12px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button 
+                    onClick={() => openEditModal(link)} 
+                    className="action-badge"
+                    style={{ background: '#2563eb' }}
+                  >
+                    <Edit2 size={14} color="white" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(link.id)} 
+                    className="action-badge"
+                    style={{ background: '#dc2626' }}
+                  >
+                    <Trash2 size={14} color="white" />
+                  </button>
                 </div>
               )}
               
@@ -444,7 +476,7 @@ export default function App() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="tile-card"
-                style={isEditing ? { opacity: 0.5 } : {}}
+                style={isEditing ? { opacity: 0.6, cursor: 'default' } : {}}
               >
                 <div className="tile-image-area">
                   <TileImage src={link.imageUrl} alt={link.title} iconName={link.iconName} />
