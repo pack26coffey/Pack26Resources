@@ -30,57 +30,192 @@ const GlobalStyles = () => (
     :root {
       --bsa-blue: #003F87;
       --bsa-gold: #FDC82F;
+      --bg-light: #F8FAFC;
+      --bg-dark: #020617;
     }
+
+    * { box-sizing: border-box; }
+
     #root { 
       max-width: 100% !important; 
       margin: 0 !important; 
       padding: 0 !important; 
-      text-align: left !important;
       width: 100%;
     }
+
     body { 
       margin: 0; 
       padding: 0; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #F8FAFC;
+      background-color: var(--bg-light);
+      color: #1e293b;
     }
-    .dark body { background-color: #020617; }
-    
-    /* Manual Grid Layout Backup */
-    .resource-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 1.5rem;
-      padding: 1rem;
+
+    .dark body { 
+      background-color: var(--bg-dark);
+      color: #f8fafc;
     }
     
-    /* Header styling backup */
     .bsa-header {
       background-color: var(--bsa-blue);
-      border-bottom: 4px solid var(--bsa-gold);
+      border-bottom: 5px solid var(--bsa-gold);
       color: white;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 0 1rem;
       position: sticky;
       top: 0;
       z-index: 100;
+      width: 100%;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      height: 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-box {
+      width: 55px;
+      height: 55px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-box img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .title-group h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-style: italic;
+      line-height: 1;
+    }
+
+    .title-group p {
+      margin: 2px 0 0 0;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #bfdbfe;
+    }
+
+    .main-content {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 24px;
     }
 
     .tile-card {
       background: white;
-      border-radius: 1.5rem;
+      border-radius: 1.25rem;
       overflow: hidden;
       border: 1px solid #e2e8f0;
-      transition: transform 0.2s;
+      transition: all 0.2s ease;
       text-decoration: none;
       color: inherit;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
-    .tile-card:hover { transform: translateY(-4px); }
-    .dark .tile-card { background: #0f172a; border-color: #1e293b; color: white; }
+
+    .dark .tile-card { 
+      background: #0f172a; 
+      border-color: #1e293b; 
+      color: white; 
+    }
+
+    .tile-card:hover { 
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .tile-image-area {
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #f1f5f9;
+    }
+
+    .dark .tile-image-area { background: #1e293b; }
+
+    .tile-image-area img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .tile-label {
+      padding: 16px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+      text-transform: uppercase;
+      border-top: 1px solid #f1f5f9;
+    }
+    
+    .dark .tile-label { border-top-color: #1e293b; }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .icon-btn:hover { background: rgba(255,255,255,0.2); }
+    .icon-btn.active { background: var(--bsa-gold); color: var(--bsa-blue); }
+
+    .add-btn {
+      border: 3px dashed #cbd5e1;
+      background: transparent;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 1.25rem;
+    }
+
+    .dark .add-btn { border-color: #334155; color: #94a3b8; }
   `}</style>
 );
 
@@ -102,9 +237,9 @@ const DEFAULT_LINKS: ScoutLink[] = [
   },
   {
     id: '2',
-    title: 'Boy Scouts of America',
+    title: 'Boy Scouts',
     url: 'https://www.scouting.org/',
-    imageUrl: 'https://www.scouting.org/wp-content/themes/bsa-master/images/fleur-de-lis.png',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Cubscouts.svg/1200px-Cubscouts.svg.png',
     iconName: 'Shield'
   }
 ];
@@ -133,21 +268,18 @@ const TileImage = ({ src, alt, iconName }: { src: string; alt: string; iconName?
   
   if ((!src || error) || (!src && iconName)) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-slate-800 text-[#003F87] dark:text-blue-400 min-h-[150px]">
+      <div className="w-full h-full flex items-center justify-center text-[#003F87] dark:text-blue-400">
         <IconComponent size={48} strokeWidth={1.5} />
       </div>
     );
   }
   
   return (
-    <div className="w-full h-full flex items-center justify-center p-6 bg-white dark:bg-slate-200 min-h-[150px]">
-      <img 
-        src={src} 
-        alt={alt} 
-        className="max-w-full max-h-[120px] object-contain" 
-        onError={() => setError(true)}
-      />
-    </div>
+    <img 
+      src={src} 
+      alt={alt} 
+      onError={() => setError(true)}
+    />
   );
 };
 
@@ -162,8 +294,6 @@ export default function App() {
   const [formData, setFormData] = useState<ScoutLink>({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent' });
   
   const [toastMsg, setToastMsg] = useState('');
-
-  const appId = typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : 'Local Dev';
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('scoutTheme');
@@ -264,49 +394,49 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-slate-950' : 'bg-[#F8FAFC]'} pb-20`}>
+    <div className={`app-wrapper ${darkMode ? 'dark' : ''}`}>
       <GlobalStyles />
       
-      <header className="bsa-header dark:bg-slate-900 text-white sticky top-0 z-30 shadow-lg border-b-4 border-[#FDC82F] w-full">
-        <div className="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
-            <div className="bg-[#003F87] dark:bg-slate-900 flex-shrink-0 w-16 h-16 flex items-center justify-center overflow-hidden">
+      <header className="bsa-header">
+        <div className="header-container">
+          <div className="logo-section">
+            <div className="logo-box">
               <img 
                 src="https://upload.wikimedia.org/wikipedia/en/thumb/5/53/Cubscouts.svg/1200px-Cubscouts.svg.png" 
-                alt="Cub Scouts Logo" 
-                className="w-full h-full object-contain scale-[1.1]" 
+                alt="Logo" 
               />
             </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase italic leading-none">Pack Resources</h1>
-              <p className="text-[10px] uppercase tracking-widest text-blue-200 dark:text-slate-400 font-bold opacity-80 mt-1">Cub Scouts of America</p>
+            <div className="title-group">
+              <h1>Pack Resources</h1>
+              <p>Cub Scouts of America</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <button onClick={toggleDarkMode} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20">
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+          <div className="btn-group">
+            <button onClick={toggleDarkMode} className="icon-btn">
+              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <button onClick={handleShare} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20">
-              <Share2 size={16} /> 
-              <span className="hidden sm:inline uppercase">Share</span>
+            <button onClick={handleShare} className="icon-btn">
+              <Share2 size={16} /> <span>Share</span>
             </button>
-            <button onClick={() => setIsEditing(!isEditing)} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${isEditing ? 'bg-[#FDC82F] text-[#003F87]' : 'bg-white text-[#003F87]'}`}>
-              <Settings size={16} /> 
-              <span className="hidden sm:inline uppercase">{isEditing ? 'Done' : 'Edit'}</span>
+            <button 
+              onClick={() => setIsEditing(!isEditing)} 
+              className={`icon-btn ${isEditing ? 'active' : ''}`}
+            >
+              <Settings size={16} /> <span>{isEditing ? 'Done' : 'Edit'}</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 mt-12 w-full">
+      <main className="main-content">
         <div className="resource-grid">
           {links.map((link: ScoutLink) => (
-            <div key={link.id} className="relative">
+            <div key={link.id} style={{ position: 'relative' }}>
               {isEditing && (
-                <div className="absolute -top-3 -right-3 z-20 flex flex-col gap-2">
-                  <button onClick={() => openEditModal(link)} className="bg-blue-600 text-white p-2 rounded-full shadow-xl border-2 border-white"><Edit2 size={14} /></button>
-                  <button onClick={() => handleDelete(link.id)} className="bg-red-600 text-white p-2 rounded-full shadow-xl border-2 border-white"><Trash2 size={14} /></button>
+                <div style={{ position: 'absolute', top: '-10px', right: '-10px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button onClick={() => openEditModal(link)} style={{ background: '#2563eb', color: 'white', padding: '8px', borderRadius: '50%', border: '2px solid white', cursor: 'pointer' }}><Edit2 size={12} /></button>
+                  <button onClick={() => handleDelete(link.id)} style={{ background: '#dc2626', color: 'white', padding: '8px', borderRadius: '50%', border: '2px solid white', cursor: 'pointer' }}><Trash2 size={12} /></button>
                 </div>
               )}
               
@@ -314,73 +444,51 @@ export default function App() {
                 href={isEditing ? '#' : link.url} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className={`tile-card h-full ${isEditing ? 'opacity-60 border-dashed border-blue-400' : ''}`}
+                className="tile-card"
+                style={isEditing ? { opacity: 0.5 } : {}}
               >
-                <div className="aspect-square w-full relative bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center overflow-hidden">
+                <div className="tile-image-area">
                   <TileImage src={link.imageUrl} alt={link.title} iconName={link.iconName} />
                 </div>
-                <div className="p-4 text-center border-t border-slate-100 dark:border-slate-800">
-                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-sm uppercase tracking-wide">
-                    {link.title}
-                  </span>
+                <div className="tile-label">
+                  {link.title}
                 </div>
               </a>
             </div>
           ))}
 
           {isEditing && (
-            <button onClick={openAddModal} className="tile-card flex flex-col items-center justify-center gap-4 border-4 border-dashed border-slate-200 dark:border-slate-800 min-h-[220px]">
-              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl">
-                <Plus size={32} strokeWidth={2.5} />
-              </div>
-              <span className="font-black uppercase text-xs tracking-widest">Add Link</span>
+            <button onClick={openAddModal} className="add-btn">
+              <Plus size={32} />
+              <span style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase' }}>Add Link</span>
             </button>
           )}
         </div>
-
-        {isEditing && (
-          <div className="mt-20 p-6 bg-blue-50 dark:bg-slate-900/50 rounded-3xl border-2 border-blue-100 dark:border-slate-800 flex items-center gap-4 text-blue-600 dark:text-blue-400">
-            <Terminal size={24} />
-            <div className="text-xs font-mono">
-              <p className="font-bold uppercase mb-1">StackBlitz Environment Debug</p>
-              <p>App ID: {appId}</p>
-              <p className="mt-2 text-slate-500 italic">If Tailwind fails to load, the "GlobalStyles" CSS backup will maintain the layout.</p>
-            </div>
-          </div>
-        )}
       </main>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden border dark:border-slate-800">
-            <div className="bg-[#003F87] dark:bg-slate-800 p-6 text-white flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <Settings className="text-[#FDC82F]" size={24} />
-                <h2 className="text-xl font-black uppercase italic">Link Settings</h2>
-              </div>
-              <button onClick={() => setIsModalOpen(false)}><X size={24} /></button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyCenter: 'center', padding: '20px' }}>
+          <div style={{ background: darkMode ? '#0f172a' : 'white', borderRadius: '24px', width: '100%', maxWidth: '500px', margin: 'auto', overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <div style={{ background: '#003F87', padding: '20px', color: 'white', display: 'flex', justifyContent: 'space-between' }}>
+              <h2 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontSize: '1.2rem' }}>Link Settings</h2>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
             </div>
-            
-            <form onSubmit={handleSave} className="p-8 space-y-6">
-              <div className="space-y-4">
-                <input required placeholder="Resource Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 outline-none font-semibold dark:text-white" />
-                <input required placeholder="Web Address (URL)" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 outline-none font-semibold dark:text-white" />
-                <div className="grid grid-cols-5 gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700">
-                  {Object.keys(ICON_MAP).map(name => {
-                    const Icon = ICON_MAP[name];
-                    return (
-                      <button key={name} type="button" onClick={() => setFormData({...formData, iconName: name, imageUrl: ''})} className={`p-3 rounded-xl flex items-center justify-center transition-all ${formData.iconName === name && !formData.imageUrl ? 'bg-[#003F87] text-white shadow-lg' : 'bg-white dark:bg-slate-700 text-slate-400'}`}>
-                        <Icon size={20} />
-                      </button>
-                    );
-                  })}
-                </div>
-                <input placeholder="Image URL (optional)" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl px-5 py-3.5 outline-none font-semibold dark:text-white" />
+            <form onSubmit={handleSave} style={{ padding: '30px' }}>
+              <input required placeholder="Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: '12px', marginBottom: '15px', borderRadius: '12px', border: '1px solid #ddd' }} />
+              <input required placeholder="URL" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} style={{ width: '100%', padding: '12px', marginBottom: '15px', borderRadius: '12px', border: '1px solid #ddd' }} />
+              <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: 'bold', color: '#666' }}>SELECT AN ICON:</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                {Object.keys(ICON_MAP).map(name => {
+                  const Icon = ICON_MAP[name];
+                  return (
+                    <button key={name} type="button" onClick={() => setFormData({...formData, iconName: name, imageUrl: ''})} style={{ padding: '10px', borderRadius: '8px', border: formData.iconName === name ? '2px solid #003F87' : '1px solid #ddd', background: formData.iconName === name ? '#eff6ff' : 'white', cursor: 'pointer' }}>
+                      <Icon size={18} />
+                    </button>
+                  );
+                })}
               </div>
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 font-bold uppercase tracking-widest text-slate-400">Cancel</button>
-                <button type="submit" className="flex-[2] bg-[#003F87] dark:bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl">Save</button>
-              </div>
+              <input placeholder="Or Image URL" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})} style={{ width: '100%', padding: '12px', marginBottom: '20px', borderRadius: '12px', border: '1px solid #ddd' }} />
+              <button type="submit" style={{ width: '100%', padding: '15px', background: '#003F87', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE CHANGES</button>
             </form>
           </div>
         </div>
