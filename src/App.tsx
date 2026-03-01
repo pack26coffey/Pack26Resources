@@ -3,10 +3,10 @@ import {
   Settings, Plus, Edit2, Trash2, Tent, Calendar, MapPin, 
   Info, BookOpen, Camera, MessageSquare, Shield, Star, 
   Globe, X, Sun, Moon, ZoomIn, Lock, Eye, KeyRound, 
-  Link as LinkIcon, Cloud 
+  Link as LinkIcon, Cloud, ExternalLink
 } from 'lucide-react';
 
-// --- TYPE DEFINITIONS FOR GLOBAL WINDOW ---
+// --- TYPES & GLOBALS ---
 declare global {
   interface Window {
     firebase: any;
@@ -16,89 +16,164 @@ declare global {
   }
 }
 
+interface ScoutLink {
+  id: string;
+  title: string;
+  url: string;
+  imageUrl: string;
+  iconName?: string;
+  zoom?: number;
+  offsetX?: number;
+  offsetY?: number;
+}
+
+interface AppSettings {
+  headerTitle: string;
+  headerSubtitle: string;
+  headerLogoUrl: string;
+  headerLogoZoom: number;
+  headerLogoOffsetX: number;
+  headerLogoOffsetY: number;
+}
+
+const ICON_MAP: Record<string, any> = { Tent, Calendar, MapPin, Info, BookOpen, Camera, MessageSquare, Shield, Star, Globe };
+const ADMIN_PASSWORD = "scout123";
+
+// --- STYLES ---
 const GlobalStyles = () => (
   <style>{`
-    :root { --bsa-blue: #003F87; --bsa-gold: #FDC82F; --bg-light: #F8FAFC; --bg-dark: #020617; }
-    #root { width: 100%; margin: 0; padding: 0; }
-    body { 
-      margin: 0; padding: 0; 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-light); color: #1e293b; transition: background-color 0.3s ease;
+    :root {
+      --bsa-blue: #003F87;
+      --bsa-red: #CE1126;
+      --bsa-gold: #FDC82F;
+      --bg-light: #f1f5f9;
+      --bg-dark: #0f172a;
     }
-    .dark body { background-color: var(--bg-dark); color: #f8fafc; }
-    .bsa-header {
-      background-color: var(--bsa-blue); border-bottom: 5px solid var(--bsa-gold);
-      color: white; padding: 0 1rem; position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg-light);
+      transition: background-color 0.3s ease;
     }
-    .header-container {
-      max-width: 1100px; margin: 0 auto; height: 80px;
-      display: flex; justify-content: space-between; align-items: center;
+
+    .dark body {
+      background-color: var(--bg-dark);
+      color: #f8fafc;
     }
-    .logo-box {
-      width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
-      overflow: hidden; border-radius: 8px; background: rgba(255,255,255,0.1); position: relative;
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
     }
-    .tile-card {
-      background: white; border-radius: 1.25rem; overflow: hidden; border: 1px solid #e2e8f0;
-      transition: all 0.2s ease; text-decoration: none; color: inherit;
-      display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      position: relative; height: 100%;
+
+    .scout-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0,0,0,0.05);
+      position: relative;
+      aspect-ratio: 1/1;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
-    .dark .tile-card { background: #1e293b; border-color: #334155; color: white; }
-    .tile-image-area {
-      aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
-      background: #f1f5f9; overflow: hidden; position: relative; width: 100%;
+
+    .dark .scout-card {
+      background: #1e293b;
+      border-color: rgba(255,255,255,0.05);
     }
-    .dark .tile-image-area { background: #0f172a; }
-    .tile-label {
-      padding: 16px; text-align: center; font-weight: 800; font-size: 14px;
-      text-transform: uppercase; border-top: 1px solid #f1f5f9; flex-grow: 1;
-      display: flex; align-items: center; justify-content: center;
+
+    .scout-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
-    .dark .tile-label { border-top-color: #334155; }
-    .action-badge {
-      width: 32px; height: 32px; border-radius: 50%; display: flex;
-      align-items: center; justify-content: center; border: 2px solid white;
-      cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+    .image-container {
+      width: 100%;
+      height: 70%;
+      position: relative;
+      overflow: hidden;
+      border-radius: 1rem;
+      margin-bottom: 0.75rem;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dark .image-container {
+      background: #0f172a;
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      color: var(--bsa-blue);
+    }
+
+    .dark .card-title {
+      color: #94a3b8;
+    }
+
+    .admin-badge {
+      position: absolute;
+      top: -0.5rem;
+      right: -0.5rem;
+      display: flex;
+      gap: 0.25rem;
+      z-index: 20;
+    }
+
+    .icon-btn {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
   `}</style>
 );
 
-const ADMIN_PASSWORD = "scout123";
-
-interface ScoutLink {
-  id: string; title: string; url: string; imageUrl: string;
-  iconName?: string; zoom?: number; offsetX?: number; offsetY?: number;
-}
-
-interface AppSettings {
-  headerTitle: string; headerSubtitle: string; headerLogoUrl: string;
-  headerLogoZoom: number; headerLogoOffsetX: number; headerLogoOffsetY: number;
-}
-
-const ICON_MAP: Record<string, any> = { Tent, Calendar, MapPin, Info, BookOpen, Camera, MessageSquare, Shield, Star, Globe };
-
-const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, alt, iconName }: any) => {
+const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, iconName }: any) => {
   const [error, setError] = useState(false);
   const IconComponent = iconName && ICON_MAP[iconName] ? ICON_MAP[iconName] : Tent;
   
   if ((!url || error) || (!url && iconName)) {
     return (
-      <div className="w-full h-full flex items-center justify-center p-4 text-inherit opacity-70">
-        <IconComponent size="60%" strokeWidth={1.5} />
+      <div className="text-blue-900/20 dark:text-white/10">
+        <IconComponent size={64} strokeWidth={1.5} />
       </div>
     );
   }
   
   return (
     <img 
-      src={url} alt={alt || "Resource"} 
+      src={url} 
       onError={() => setError(true)}
       style={{
-        position: 'absolute', top: '50%', left: '50%',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
         transform: `translate(-50%, -50%) translate(${offsetX}%, ${offsetY}%) scale(${zoom})`,
-        maxWidth: 'none', height: 'auto', transition: 'none'
+        maxWidth: 'none',
+        height: '100%',
+        objectFit: 'contain'
       }}
     />
   );
@@ -107,16 +182,16 @@ const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, alt, iconName }
 export default function App() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [links, setLinks] = useState<ScoutLink[]>([]);
   const [settings, setSettings] = useState<AppSettings>({
-    headerTitle: 'Pack Resources',
-    headerSubtitle: 'Cub Scouts of America',
+    headerTitle: 'Scout Pack Resources',
+    headerSubtitle: 'Troop 101 • Cub Scout Pack 505',
     headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
     headerLogoZoom: 1, headerLogoOffsetX: 0, headerLogoOffsetY: 0
   });
-  
-  const [isEditing, setIsEditing] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -124,26 +199,25 @@ export default function App() {
   const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [toastMsg, setToastMsg] = useState('');
-
+  
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
 
+  // --- INITIALIZATION & CLOUD FETCH ---
   useEffect(() => {
     const initApp = async () => {
       if (!window.firebase) return;
-
       const configStr = window.__firebase_config;
       const config = configStr ? JSON.parse(configStr) : {};
       const appId = window.__app_id || 'scout-links';
-
       const firebase = window.firebase;
+      
       if (!firebase.apps.length) firebase.initializeApp(config);
       
       const auth = firebase.auth();
       const db = firebase.firestore();
 
-      const token = window.__initial_auth_token;
-      if (token) {
-        await auth.signInWithCustomToken(token).catch(() => auth.signInAnonymously());
+      if (window.__initial_auth_token) {
+        await auth.signInWithCustomToken(window.__initial_auth_token).catch(() => auth.signInAnonymously());
       } else {
         await auth.signInAnonymously();
       }
@@ -162,7 +236,6 @@ export default function App() {
         }
       });
     };
-
     initApp();
   }, []);
 
@@ -175,9 +248,10 @@ export default function App() {
         links: newLinks,
         settings: newSettings
       });
-      setToastMsg("Saved successfully!");
+      setToastMsg("Cloud Saved");
+      setTimeout(() => setToastMsg(''), 2000);
     } catch (err) {
-      setToastMsg("Error saving to cloud.");
+      setToastMsg("Save Error");
     }
   };
 
@@ -188,9 +262,6 @@ export default function App() {
       setIsEditing(true);
       setIsLoginOpen(false);
       setPasswordInput('');
-      setToastMsg("Admin Access Granted");
-    } else {
-      setToastMsg("Incorrect password.");
     }
   };
 
@@ -200,13 +271,12 @@ export default function App() {
     let updatedSettings = { ...settings };
 
     if (modalMode === 'link') {
-      let finalUrl = (formData.url || '').trim();
-      if (finalUrl && !finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
-      
+      let url = (formData.url || '').trim();
+      if (url && !url.startsWith('http')) url = 'https://' + url;
       if (editingLink) {
-        updatedLinks = links.map(l => l.id === editingLink.id ? { ...formData, url: finalUrl } : l);
+        updatedLinks = links.map(l => l.id === editingLink.id ? { ...formData, url } : l);
       } else {
-        updatedLinks = [...links, { ...formData, id: crypto.randomUUID(), url: finalUrl }];
+        updatedLinks = [...links, { ...formData, id: crypto.randomUUID(), url }];
       }
     } else {
       updatedSettings = {
@@ -215,207 +285,231 @@ export default function App() {
         headerLogoOffsetX: formData.offsetX, headerLogoOffsetY: formData.offsetY
       };
     }
-    
     saveData(updatedLinks, updatedSettings);
     setIsModalOpen(false);
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen ${darkMode ? 'dark text-white' : 'text-slate-900'}`}>
       <GlobalStyles />
-      <header className="bsa-header">
-        <div className="header-container">
-          <div className="flex items-center gap-3 relative">
-            {isEditing && (
-              <button onClick={() => { 
-                setModalMode('header');
-                setFormData({ title: settings.headerTitle, subtitle: settings.headerSubtitle, imageUrl: settings.headerLogoUrl, zoom: settings.headerLogoZoom, offsetX: settings.headerLogoOffsetX, offsetY: settings.headerLogoOffsetY });
-                setIsModalOpen(true);
-              }} className="action-badge absolute -top-2 -left-2 z-20 bg-yellow-400">
-                <Edit2 size={14} color="#003F87" />
-              </button>
-            )}
-            <div className="logo-box">
+      
+      {/* --- HEADER (Original Styling) --- */}
+      <header className="bg-white dark:bg-slate-900 border-b-4 border-yellow-400 shadow-xl px-6 py-8 relative">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-3xl bg-slate-50 dark:bg-slate-800 shadow-inner flex items-center justify-center overflow-hidden border-2 border-slate-100 dark:border-slate-700">
               <GenericImage url={settings.headerLogoUrl} zoom={settings.headerLogoZoom} offsetX={settings.headerLogoOffsetX} offsetY={settings.headerLogoOffsetY} />
             </div>
-            <div>
-              <h1 className="text-xl font-black italic uppercase leading-tight m-0">{settings.headerTitle}</h1>
-              <p className="text-[10px] uppercase tracking-wider text-blue-200 m-0">{settings.headerSubtitle}</p>
-            </div>
+            {isEditing && (
+              <button 
+                onClick={() => {
+                  setModalMode('header');
+                  setFormData({ title: settings.headerTitle, subtitle: settings.headerSubtitle, imageUrl: settings.headerLogoUrl, zoom: settings.headerLogoZoom, offsetX: settings.headerLogoOffsetX, offsetY: settings.headerLogoOffsetY });
+                  setIsModalOpen(true);
+                }}
+                className="absolute -bottom-2 -right-2 p-2 bg-blue-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform"
+              >
+                <Edit2 size={16} />
+              </button>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg bg-white/10 border border-white/20 text-white">
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+
+          <div className="text-center md:text-left flex-1">
+            <h1 className="text-4xl md:text-5xl font-black text-blue-900 dark:text-blue-400 uppercase tracking-tighter mb-1">
+              {settings.headerTitle}
+            </h1>
+            <p className="text-lg font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-center md:justify-start gap-2">
+              <Star size={18} className="text-yellow-500 fill-yellow-500" />
+              {settings.headerSubtitle}
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all"
+            >
+              {darkMode ? <Sun /> : <Moon />}
             </button>
             {isAdmin && (
-               <button onClick={() => setIsEditing(!isEditing)} className={`flex items-center gap-2 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-tighter ${isEditing ? 'bg-yellow-400 text-blue-900' : 'bg-white/10 text-white'}`}>
-                  <Settings size={16} /> <span>{isEditing ? 'Exit' : 'Edit'}</span>
-               </button>
+              <button 
+                onClick={() => setIsEditing(!isEditing)}
+                className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-black uppercase tracking-widest transition-all ${isEditing ? 'bg-yellow-400 text-blue-900 shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+              >
+                <Settings size={20} />
+                <span className="hidden sm:inline">{isEditing ? 'Finish' : 'Edit'}</span>
+              </button>
             )}
           </div>
         </div>
       </header>
 
-      <main className="max-w-[1100px] mx-auto py-10 px-5">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      {/* --- GRID (Original Styling) --- */}
+      <main className="max-w-7xl mx-auto py-12">
+        <div className="bento-grid">
           {links.map((link) => (
             <div key={link.id} className="relative group">
               {isEditing && (
-                <div className="absolute -top-3 -right-3 z-30 flex flex-col gap-2">
+                <div className="admin-badge">
                   <button onClick={() => {
                     setModalMode('link');
                     setFormData({ ...link });
                     setEditingLink(link);
                     setIsModalOpen(true);
-                  }} className="action-badge bg-blue-600"><Edit2 size={14} color="white" /></button>
+                  }} className="icon-btn bg-blue-600 text-white"><Edit2 size={12} /></button>
                   <button onClick={() => {
                     const updated = links.filter(l => l.id !== link.id);
                     saveData(updated, settings);
-                  }} className="action-badge bg-red-600"><Trash2 size={14} color="white" /></button>
+                  }} className="icon-btn bg-red-600 text-white"><Trash2 size={12} /></button>
                 </div>
               )}
-              <a href={isEditing ? '#' : link.url} target="_blank" rel="noopener noreferrer" className="tile-card">
-                <div className="tile-image-area">
+              <a href={isEditing ? '#' : link.url} target="_blank" rel="noopener noreferrer" className="scout-card">
+                <div className="image-container">
                   <GenericImage url={link.imageUrl} zoom={link.zoom} offsetX={link.offsetX} offsetY={link.offsetY} iconName={link.iconName} />
                 </div>
-                <div className="tile-label">{link.title}</div>
+                <div className="card-title">{link.title}</div>
+                {!isEditing && <ExternalLink size={12} className="absolute bottom-4 right-4 opacity-20" />}
               </a>
             </div>
           ))}
+
           {isEditing && (
-            <button onClick={() => {
-              setModalMode('link');
-              setFormData({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 });
-              setEditingLink(null);
-              setIsModalOpen(true);
-            }} className="flex flex-col items-center justify-center min-h-[180px] border-2 border-dashed border-slate-300 rounded-3xl text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-colors">
-              <Plus size={40} />
-              <span className="font-bold text-xs uppercase mt-2">Add Link</span>
+            <button 
+              onClick={() => {
+                setModalMode('link');
+                setFormData({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 });
+                setEditingLink(null);
+                setIsModalOpen(true);
+              }}
+              className="scout-card border-dashed border-2 border-slate-300 dark:border-slate-700 bg-transparent opacity-60 hover:opacity-100 hover:border-blue-500"
+            >
+              <Plus size={48} className="text-slate-400 mb-2" />
+              <div className="font-black text-slate-400 uppercase text-[10px] tracking-widest">Add Resource</div>
             </button>
           )}
         </div>
       </main>
 
-      <div className="fixed bottom-6 right-6 z-50">
-        <button onClick={() => isAdmin ? setIsAdmin(false) : setIsLoginOpen(true)} className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 ${isAdmin ? 'bg-yellow-400' : 'bg-slate-500'}`}>
-          {isAdmin ? <Eye size={20} color="#003F87" /> : <Lock size={20} color="white" />}
+      {/* --- LOCK/EYE TOGGLE --- */}
+      <div className="fixed bottom-8 right-8 z-[100]">
+        <button 
+          onClick={() => isAdmin ? setIsAdmin(false) : setIsLoginOpen(true)}
+          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 ${isAdmin ? 'bg-yellow-400 rotate-[360deg]' : 'bg-blue-900'}`}
+        >
+          {isAdmin ? <Eye color="#003F87" size={24} /> : <Lock color="white" size={24} />}
         </button>
       </div>
 
+      {/* --- LOGIN MODAL --- */}
       {isLoginOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
-          <div className={`${darkMode ? 'bg-slate-800 text-white' : 'bg-white'} p-8 rounded-3xl w-full max-w-sm shadow-2xl`}>
-             <div className="w-16 h-16 bg-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
-               <KeyRound color="white" size={32} />
-             </div>
-             <h2 className="text-2xl font-black text-center mb-1">Admin Portal</h2>
-             <p className="text-sm text-slate-500 text-center mb-6">Access Link Management Tools</p>
-             <form onSubmit={handleLogin}>
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[300] flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-slate-800 p-10 rounded-[2.5rem] w-full max-w-sm shadow-2xl border-b-8 border-blue-900">
+             <KeyRound className="mx-auto mb-4 text-blue-900" size={48} />
+             <h2 className="text-2xl font-black text-center mb-8 uppercase tracking-tighter">Leader Access</h2>
+             <form onSubmit={handleLogin} className="space-y-4">
                 <input 
-                  type="password" autoFocus placeholder="Enter Admin Password" 
+                  type="password" autoFocus placeholder="Leader Password" 
                   value={passwordInput} onChange={e => setPasswordInput(e.target.value)} 
-                  className="w-full p-4 rounded-xl border border-slate-200 mb-4 bg-transparent font-bold text-center"
+                  className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-slate-900 border-none font-bold text-center"
                 />
-                <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setIsLoginOpen(false)} className="p-4 border border-slate-200 rounded-xl font-bold">Cancel</button>
-                  <button type="submit" className="p-4 bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30">Verify</button>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setIsLoginOpen(false)} className="flex-1 p-4 font-bold opacity-50">Cancel</button>
+                  <button type="submit" className="flex-1 p-4 bg-blue-900 text-white font-black rounded-2xl">Enter</button>
                 </div>
              </form>
           </div>
         </div>
       )}
 
+      {/* --- EDIT MODAL --- */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[400] flex items-center justify-center p-4">
-          <div className={`${darkMode ? 'bg-slate-900 text-white' : 'bg-white'} rounded-[2rem] w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col`}>
-            <div className="bg-blue-800 p-6 text-white flex justify-between items-center">
-              <h3 className="uppercase font-black tracking-widest text-lg">{modalMode === 'header' ? 'Customize Header' : (editingLink ? 'Edit Link' : 'Create New Link')}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X /></button>
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[400] flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="bg-blue-900 p-8 text-white flex justify-between items-center">
+              <h3 className="font-black uppercase tracking-widest">{modalMode === 'header' ? 'Header Settings' : 'Link Settings'}</h3>
+              <button onClick={() => setIsModalOpen(false)}><X /></button>
             </div>
-            <form onSubmit={handleSaveModal} className="p-6 overflow-y-auto">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Display Title</label>
-                  <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-transparent" />
-                </div>
-                
-                {modalMode === 'link' ? (
+            
+            <form onSubmit={handleSaveModal} className="p-8 overflow-y-auto space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Destination URL</label>
-                    <input required value={formData.url || ''} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-transparent" placeholder="scoutbook.scouting.org" />
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-[10px] font-black text-slate-500 uppercase block mb-1">Subtitle Line</label>
-                    <input value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-transparent" />
-                  </div>
-                )}
-
-                <div className="p-5 border border-slate-100 dark:border-slate-800 rounded-3xl bg-slate-50 dark:bg-slate-800/30">
-                  <label className="text-[10px] font-black text-slate-400 block mb-4 text-center uppercase tracking-widest">Image Preview & Framing</label>
-                  <div 
-                    className="w-32 h-32 mx-auto rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border-2 border-blue-600 relative cursor-move mb-4"
-                    onMouseDown={(e) => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
-                    onMouseMove={(e) => {
-                      if (!dragRef.current.isDragging) return;
-                      const dx = (e.clientX - dragRef.current.startX) / (formData.zoom || 1);
-                      const dy = (e.clientY - dragRef.current.startY) / (formData.zoom || 1);
-                      setFormData((p: any) => ({ ...p, offsetX: (p.offsetX || 0) + dx, offsetY: (p.offsetY || 0) + dy }));
-                      dragRef.current.startX = e.clientX; dragRef.current.startY = e.clientY;
-                    }}
-                    onMouseUp={() => dragRef.current.isDragging = false}
-                    onMouseLeave={() => dragRef.current.isDragging = false}
-                  >
-                    <GenericImage url={formData.imageUrl} zoom={formData.zoom} offsetX={formData.offsetX} offsetY={formData.offsetY} iconName={formData.iconName} />
+                    <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Display Name</label>
+                    <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-bold" />
                   </div>
                   
-                  <div className="flex items-center gap-4 mb-4">
-                     <ZoomIn size={18} className="text-slate-400" />
-                     <input type="range" min="0.1" max="5" step="0.05" value={formData.zoom || 1} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} className="flex-1 accent-blue-600" />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="text-[10px] font-black text-slate-500 flex items-center gap-2 mb-1 uppercase tracking-tight"><LinkIcon size={12}/> Link to Logo/Image</label>
-                    <input 
-                      placeholder="Paste image URL here..." 
-                      value={formData.imageUrl || ''} 
-                      onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})}
-                      className="w-full p-3 border border-slate-200 rounded-xl bg-white dark:bg-slate-800 text-sm" 
-                    />
-                  </div>
-
-                  {modalMode === 'link' && (
+                  {modalMode === 'link' ? (
                     <div>
-                      <p className="text-[10px] font-black text-slate-500 mb-2 uppercase text-center">OR SELECT A BSA PRESET ICON</p>
-                      <div className="flex flex-wrap justify-center gap-2">
-                        {Object.keys(ICON_MAP).map(n => {
-                          const Icon = ICON_MAP[n];
-                          return (
-                            <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: '', zoom: 1, offsetX: 0, offsetY: 0})} className={`w-10 h-10 border rounded-lg flex items-center justify-center transition-all ${formData.iconName === n ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 text-slate-400 hover:border-slate-400'}`}>
-                              <Icon size={18} />
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">URL</label>
+                      <input required value={formData.url || ''} onChange={e => setFormData({...formData, url: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-medium" placeholder="example.com" />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Subtitle</label>
+                      <input value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl font-medium" />
                     </div>
                   )}
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Image URL</label>
+                    <input 
+                      value={formData.imageUrl || ''} 
+                      onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})}
+                      className="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-sm" 
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-[2rem] flex flex-col items-center">
+                   <div className="w-32 h-32 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden relative border-4 border-blue-900/10 mb-6 cursor-move"
+                     onMouseDown={(e) => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
+                     onMouseMove={(e) => {
+                       if (!dragRef.current.isDragging) return;
+                       const dx = (e.clientX - dragRef.current.startX);
+                       const dy = (e.clientY - dragRef.current.startY);
+                       setFormData((p: any) => ({ ...p, offsetX: (p.offsetX || 0) + dx, offsetY: (p.offsetY || 0) + dy }));
+                       dragRef.current.startX = e.clientX; dragRef.current.startY = e.clientY;
+                     }}
+                     onMouseUp={() => dragRef.current.isDragging = false}
+                     onMouseLeave={() => dragRef.current.isDragging = false}
+                   >
+                     <GenericImage url={formData.imageUrl} zoom={formData.zoom} offsetX={formData.offsetX} offsetY={formData.offsetY} iconName={formData.iconName} />
+                   </div>
+                   <div className="w-full flex items-center gap-3">
+                     <ZoomIn size={16} />
+                     <input type="range" min="0.1" max="5" step="0.1" value={formData.zoom || 1} onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} className="flex-1 accent-blue-900" />
+                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex gap-3">
-                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-4 border border-slate-200 rounded-2xl font-bold uppercase text-xs tracking-widest">Discard</button>
-                 <button type="submit" className="flex-[2] p-4 bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20">Save Changes</button>
+              {modalMode === 'link' && (
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-center text-[10px] font-black text-slate-400 uppercase mb-4">Or Use Scout Icon</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {Object.keys(ICON_MAP).map(n => {
+                      const Icon = ICON_MAP[n];
+                      return (
+                        <button key={n} type="button" onClick={() => setFormData({...formData, iconName: n, imageUrl: ''})} className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.iconName === n ? 'bg-blue-900 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200'}`}>
+                          <Icon size={20} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4 pt-4">
+                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-5 font-bold uppercase tracking-widest text-sm">Cancel</button>
+                 <button type="submit" className="flex-[2] p-5 bg-blue-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20">Apply Changes</button>
               </div>
             </form>
           </div>
         </div>
       )}
-      
+
       {toastMsg && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl flex items-center gap-4 z-[500] shadow-2xl animate-bounce">
-          <Cloud size={16} className="text-blue-400" />
-          <span className="text-sm font-bold">{toastMsg}</span>
-          <button onClick={() => setToastMsg('')} className="opacity-50">✕</button>
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-blue-900 text-white px-8 py-4 rounded-full font-black uppercase tracking-widest text-xs z-[1000] shadow-2xl flex items-center gap-3">
+          <Cloud size={16} /> {toastMsg}
         </div>
       )}
     </div>
