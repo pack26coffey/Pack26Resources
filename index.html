@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pack 26 Resources</title>
+    <title>Pack Resources</title>
     
     <script>
         tailwind = {
@@ -26,39 +26,34 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .scout-card { 
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
+        .scout-card { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .bento-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 1.5rem;
         }
         
-        .preview-container {
+        .image-viewport {
             overflow: hidden;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: none;
+            touch-action: none; /* Crucial for touch dragging */
         }
-        .preview-image {
+        .draggable-img {
             position: absolute;
             transform-origin: center center;
             user-select: none;
             -webkit-user-drag: none;
+            will-change: transform;
         }
         
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
+        /* Custom Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
+            height: 20px; width: 20px;
             border-radius: 50%;
             background: #FDC82F;
             cursor: pointer;
@@ -66,418 +61,855 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #cbd5e1;
-            border-radius: 2px;
+            width: 100%; height: 4px; cursor: pointer;
+            background: #cbd5e1; border-radius: 2px;
         }
-        .dark input[type=range]::-webkit-slider-runnable-track {
-            background: #334155;
+        .dark input[type=range]::-webkit-slider-runnable-track { background: #334155; }
+        
+        /* Loading Spinner */
+        #loading-overlay {
+            position: fixed; inset: 0; background: white; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
         }
+        .dark #loading-overlay { background: #020617; }
+        
+        /* Hide scrollbar for modals but allow scroll */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300">
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300">
+    
+    <!-- Initial Loading Screen -->
+    <div id="loading-overlay">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-bsa-blue dark:border-slate-800 dark:border-t-bsa-gold mb-4"></div>
+        <p class="text-slate-500 font-bold tracking-widest uppercase text-sm animate-pulse">Syncing Data...</p>
+    </div>
+
     <div id="app" class="min-h-screen pb-24">
+        
         <!-- Header Section -->
-        <header class="bg-slate-50 dark:bg-slate-900 border-b-8 border-yellow-400 shadow-xl px-6 py-10 transition-colors duration-300 relative">
+        <header class="bg-white dark:bg-slate-900 border-b-8 border-bsa-gold shadow-lg px-6 py-10 transition-colors duration-300 relative">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8 relative">
                 
-                <div class="w-32 h-32 rounded-3xl bg-white dark:bg-slate-800 flex items-center justify-center p-0 border-4 border-slate-200 dark:border-slate-700 shadow-inner relative group overflow-hidden">
-                    <img id="header-logo" src="" class="absolute origin-center" alt="Logo">
+                <!-- Header Logo Display -->
+                <div class="w-32 h-32 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-0 border-4 border-slate-200 dark:border-slate-700 shadow-inner relative group image-viewport">
+                    <!-- Default fallback SVG if no image is set -->
+                    <svg id="header-logo-fallback" class="w-16 h-16 text-slate-300 dark:text-slate-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <img id="header-logo" src="" class="draggable-img" alt="Pack Logo" style="display:none;">
                 </div>
-
+                
+                <!-- Header Text Display -->
                 <div class="text-center md:text-left flex-1 relative">
-                    <h1 id="header-title" class="text-4xl md:text-6xl font-black text-[#003F87] dark:text-blue-400 uppercase tracking-tighter"></h1>
-                    <p id="header-subtitle" class="text-lg font-bold text-slate-400 uppercase tracking-widest mt-2"></p>
+                    <h1 id="header-title" class="text-4xl md:text-5xl lg:text-6xl font-black text-bsa-blue dark:text-white uppercase tracking-tighter">Loading...</h1>
+                    <p id="header-subtitle" class="text-lg font-bold text-slate-400 dark:text-bsa-gold uppercase tracking-widest mt-2">Please wait</p>
                     
-                    <button id="edit-header-btn" onclick="openHeaderModal()" class="hidden absolute -top-4 -right-4 md:-right-12 md:top-2 bg-blue-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
+                    <!-- Admin Edit Header Button -->
+                    <button id="edit-header-btn" onclick="openHeaderModal()" class="hidden absolute -top-4 -right-4 md:-right-12 md:top-2 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95 z-10">
                         <i data-lucide="edit-3" class="w-5 h-5"></i>
                     </button>
                 </div>
-
-                <div class="flex gap-3">
-                    <button id="theme-toggle" class="p-4 rounded-2xl bg-yellow-400 text-[#003F87] hover:bg-yellow-300 hover:scale-105 transition-all shadow-lg border-2 border-transparent dark:border-[#003F87]">
+                
+                <!-- Theme Toggle -->
+                <div class="flex gap-3 absolute top-0 right-0 md:relative">
+                    <button id="theme-toggle" class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all shadow-sm">
                         <i data-lucide="moon" id="theme-icon" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Links Gallery -->
+        <!-- Main Content (Links Grid) -->
         <main class="max-w-6xl mx-auto py-12 px-6">
             <div id="links-container" class="bento-grid">
-                <!-- Content generated by JS -->
+                <!-- Links injected here by JS -->
             </div>
         </main>
 
-        <!-- Admin Access Button -->
+        <!-- Fixed Admin Lock Button -->
         <div class="fixed bottom-8 right-8 z-40">
-            <button id="lock-btn" class="w-16 h-16 rounded-2xl bg-[#003F87] flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 border-2 border-white/20">
-                <i data-lucide="lock" id="lock-icon" class="text-white w-6 h-6"></i>
+            <button id="lock-btn" onclick="toggleAdminState()" class="w-16 h-16 rounded-2xl bg-bsa-blue dark:bg-slate-800 flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 border-2 border-white/10 group">
+                <i data-lucide="lock" id="lock-icon" class="text-white dark:text-slate-300 w-7 h-7 group-hover:text-bsa-gold transition-colors"></i>
             </button>
         </div>
 
-        <!-- Leader Login Modal -->
-        <div id="modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border-t-8 border-blue-900 text-center relative">
+        <!-- ================= MODALS ================= -->
+
+        <!-- 1. Login Modal -->
+        <div id="login-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border-t-8 border-bsa-blue transform scale-95 transition-transform duration-300" id="login-modal-content">
                 <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="shield-check" class="text-blue-900 dark:text-blue-400 w-8 h-8"></i>
+                    <i data-lucide="shield-check" class="text-bsa-blue dark:text-blue-400 w-8 h-8"></i>
                 </div>
-                <h2 class="text-2xl font-black uppercase mb-2 dark:text-white">Leader Access</h2>
-                <p class="text-slate-400 text-sm mb-4">Enter the pack password to edit</p>
+                <h2 class="text-2xl font-black uppercase mb-2 text-center dark:text-white">Leader Access</h2>
+                <p class="text-slate-500 text-sm mb-4 text-center">Enter the leader password to edit</p>
+                <p id="login-error" class="text-red-500 text-xs font-bold mb-4 hidden uppercase text-center bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">Incorrect password!</p>
                 
-                <p id="login-error" class="text-red-500 text-xs font-bold mb-4 hidden uppercase">Incorrect password!</p>
-                
-                <input type="password" id="pass-input" placeholder="••••••••" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 mb-6 text-center font-bold outline-none focus:ring-2 focus:ring-blue-900 dark:focus:ring-blue-500 dark:text-white">
+                <input type="password" id="pass-input" placeholder="••••••••" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 mb-6 text-center font-bold outline-none focus:ring-2 focus:ring-bsa-blue dark:focus:ring-blue-500 dark:text-white transition-all">
                 
                 <div class="flex gap-3">
-                    <button id="cancel-btn" class="flex-1 py-3 text-slate-400 font-bold uppercase text-xs hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors">Cancel</button>
-                    <button id="login-btn" class="flex-[2] py-3 bg-blue-900 text-white rounded-xl font-bold uppercase text-sm hover:bg-blue-800 shadow-lg transition-colors">Login</button>
+                    <button onclick="closeModal('login-modal')" class="flex-1 py-3 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
+                    <button onclick="attemptLogin()" class="flex-[2] py-3 bg-bsa-blue text-white rounded-xl font-bold uppercase text-sm hover:bg-blue-800 shadow-lg transition-transform active:scale-95">Unlock</button>
                 </div>
             </div>
         </div>
 
-        <!-- Edit Header Modal -->
-        <div id="header-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-blue-500 my-8">
-                <h2 class="text-2xl font-black uppercase mb-6 text-blue-500">Edit Header</h2>
+        <!-- 2. Edit Header Modal -->
+        <div id="header-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto opacity-0 transition-opacity duration-300">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-bsa-blue my-8 transform scale-95 transition-transform duration-300" id="header-modal-content">
+                <h2 class="text-2xl font-black uppercase mb-6 text-bsa-blue dark:text-white">Edit Header</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Main Title</label>
-                            <input type="text" id="edit-header-title" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                            <input type="text" id="edit-header-title" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-blue dark:text-white transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Subtitle</label>
-                            <input type="text" id="edit-header-subtitle" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                            <input type="text" id="edit-header-subtitle" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-blue dark:text-white transition-all">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Logo URL</label>
-                            <input type="text" id="edit-header-img" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Logo Image URL</label>
+                            <input type="text" id="edit-header-img" onchange="updatePreviewImage('header-preview-image', this.value)" placeholder="https://..." class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-blue dark:text-white transition-all text-sm">
                         </div>
                     </div>
-
-                    <div class="flex flex-col items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-3 w-full text-center">Header Logo Editor (Drag to Move)</label>
-                        <div class="preview-container w-32 h-32 bg-white dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 mb-4 cursor-move shadow-inner" id="header-preview-box">
-                            <img id="header-preview-image" src="" class="preview-image pointer-events-none" alt="Preview">
+                    
+                    <div class="flex flex-col items-center bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-4 w-full text-center">Adjust Logo (Drag & Zoom)</label>
+                        
+                        <div class="image-viewport w-32 h-32 bg-white dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 mb-6 cursor-move shadow-inner" id="header-preview-box">
+                            <span id="header-preview-placeholder" class="text-xs text-slate-400 font-bold text-center px-2">No Image</span>
+                            <img id="header-preview-image" src="" class="draggable-img" alt="Preview" style="display:none;">
                         </div>
-                        <div class="w-full px-2">
-                            <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase mb-1">
-                                <span>Smaller</span>
-                                <span>Larger</span>
-                            </div>
-                            <input type="range" id="header-scale-slider" min="0.2" max="3" step="0.1" value="1">
+                        
+                        <div class="w-full flex items-center gap-3">
+                            <i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i>
+                            <input type="range" id="header-scale-slider" min="0.2" max="3" step="0.05" value="1">
+                            <i data-lucide="zoom-in" class="w-4 h-4 text-slate-400"></i>
                         </div>
                     </div>
                 </div>
                 
                 <div class="flex gap-3">
-                    <button onclick="closeHeaderModal()" class="flex-1 py-4 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
-                    <button onclick="saveHeader()" class="flex-[2] py-4 bg-blue-500 text-white rounded-xl font-black uppercase text-sm hover:bg-blue-600 shadow-lg">Save Changes</button>
+                    <button onclick="closeModal('header-modal')" class="flex-1 py-4 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
+                    <button onclick="saveHeader()" class="flex-[2] py-4 bg-bsa-blue text-white rounded-xl font-black uppercase text-sm hover:bg-blue-800 shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Header
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Edit/Add Link Modal -->
-        <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-yellow-400 my-8">
-                <h2 id="edit-modal-title" class="text-2xl font-black uppercase mb-6 text-[#003F87] dark:text-yellow-400">Add Link</h2>
+        <!-- 3. Edit/Add Link Modal -->
+        <div id="edit-link-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto opacity-0 transition-opacity duration-300">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-bsa-gold my-8 transform scale-95 transition-transform duration-300" id="edit-link-modal-content">
                 
-                <input type="hidden" id="edit-index">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="edit-modal-title" class="text-2xl font-black uppercase text-slate-800 dark:text-white">Add Link</h2>
+                    <!-- Delete button (only visible when editing) -->
+                    <button id="btn-trigger-delete" onclick="promptDeleteLink()" class="hidden p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <input type="hidden" id="edit-link-id">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Button Title</label>
-                            <input type="text" id="edit-title" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-yellow-400 dark:text-white text-sm">
+                            <input type="text" id="edit-link-title" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-gold dark:text-white transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Web Address (URL)</label>
-                            <input type="text" id="edit-url" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-yellow-400 dark:text-white text-sm">
+                            <input type="url" id="edit-link-url" placeholder="https://" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-gold dark:text-white transition-all text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Image URL</label>
-                            <input type="text" id="edit-img" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-yellow-400 dark:text-white text-sm">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Background Image URL</label>
+                            <input type="text" id="edit-link-img" onchange="updatePreviewImage('link-preview-image', this.value)" placeholder="https://" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-gold dark:text-white transition-all text-sm">
                         </div>
                     </div>
-
-                    <div class="flex flex-col items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-3 w-full text-center">Icon Editor (Drag to Move)</label>
-                        <div class="preview-container w-32 h-32 bg-white dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 mb-4 cursor-move shadow-inner" id="preview-box">
-                            <img id="preview-image" src="" class="preview-image pointer-events-none" alt="Preview">
-                        </div>
-                        <div class="w-full px-2">
-                            <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase mb-1">
-                                <span>Smaller</span>
-                                <span>Larger</span>
+                    
+                    <div class="flex flex-col items-center bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-4 w-full text-center">Adjust Image (Drag & Zoom)</label>
+                        
+                        <!-- Mini Card Preview -->
+                        <div class="image-viewport w-48 h-32 bg-slate-200 dark:bg-slate-900 rounded-xl mb-6 cursor-move shadow-inner relative group" id="link-preview-box">
+                            <span id="link-preview-placeholder" class="text-xs text-slate-400 font-bold text-center px-2 absolute inset-0 flex items-center justify-center">No Image</span>
+                            <img id="link-preview-image" src="" class="draggable-img" alt="Preview" style="display:none;">
+                            
+                            <!-- Card Overlay Mockup -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none rounded-xl"></div>
+                            <div class="absolute bottom-3 left-3 right-3 pointer-events-none">
+                                <span id="link-preview-title" class="text-white font-bold text-sm block truncate shadow-sm">Card Title</span>
                             </div>
-                            <input type="range" id="scale-slider" min="0.2" max="3" step="0.1" value="1">
+                        </div>
+                        
+                        <div class="w-full flex items-center gap-3">
+                            <i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i>
+                            <input type="range" id="link-scale-slider" min="0.2" max="3" step="0.05" value="1">
+                            <i data-lucide="zoom-in" class="w-4 h-4 text-slate-400"></i>
                         </div>
                     </div>
                 </div>
                 
                 <div class="flex gap-3">
-                    <button onclick="closeEditModal()" class="flex-1 py-4 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
-                    <button onclick="saveLink()" class="flex-[2] py-4 bg-yellow-400 text-[#003F87] rounded-xl font-black uppercase text-sm hover:bg-yellow-300 shadow-lg">Save Link</button>
+                    <button onclick="closeModal('edit-link-modal')" class="flex-1 py-4 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
+                    <button onclick="saveLink()" class="flex-[2] py-4 bg-bsa-gold text-slate-900 rounded-xl font-black uppercase text-sm hover:bg-yellow-500 shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Link
+                    </button>
                 </div>
             </div>
         </div>
+
+        <!-- 4. Delete Confirmation Modal -->
+        <div id="delete-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm hidden items-center justify-center z-[60] p-4 opacity-0 transition-opacity duration-300">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border-t-8 border-red-500 text-center transform scale-95 transition-transform duration-300" id="delete-modal-content">
+                <div class="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                    <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-black uppercase mb-2 dark:text-white">Delete Link?</h2>
+                <p class="text-slate-500 text-sm mb-8">This action cannot be undone. Are you sure you want to remove this resource?</p>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('delete-modal')" class="flex-1 py-3 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold uppercase text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                    <button onclick="confirmDeleteLink()" class="flex-1 py-3 bg-red-500 text-white font-bold uppercase text-sm rounded-xl hover:bg-red-600 shadow-lg transition-transform active:scale-95">Delete</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <script>
-        // --- STATE & DATA ---
-        let darkMode = localStorage.getItem('theme') === 'dark';
-        let isAdmin = false;
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // CONFIG & INITIALIZATION
+        // ==========================================
         
-        const defaultHeader = {
-            title: 'Pack 26 Resources',
-            subtitle: 'Scouting America',
-            logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
-            scale: 1, x: 0, y: 0
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Mock config for local testing if env vars missing
+            apiKey: "mock-key", projectId: "mock-project", appId: "mock-app-id"
         };
-        let headerData = JSON.parse(localStorage.getItem('pack26Header')) || defaultHeader;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scout-links-live-v1';
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        const defaultLinks = [
-            { title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: 'https://help.scoutbook.scouting.org/wp-content/uploads/2019/11/SB-logo-2.png', scale: 1, x: 0, y: 0 },
-            { title: 'Scout Shop', url: 'https://www.scoutshop.org/', img: 'https://www.scouting.org/wp-content/themes/bsa-master/images/fleur-de-lis.png', scale: 1, x: 0, y: 0 },
-            { title: 'Scout Life', url: 'https://scoutlife.org/', img: 'https://scoutlife.org/wp-content/uploads/2020/08/sl-logo-2020.png', scale: 1, x: 0, y: 0 }
-        ];
-        let scoutLinks = JSON.parse(localStorage.getItem('pack26Links')) || defaultLinks;
-
-        function saveToStorage() {
-            localStorage.setItem('pack26Links', JSON.stringify(scoutLinks));
-            localStorage.setItem('pack26Header', JSON.stringify(headerData));
-        }
-
-        // --- UNIFIED IMAGE EDITOR LOGIC ---
-        let editorState = {
-            target: 'link', // 'link' or 'header'
-            scale: 1, x: 0, y: 0,
-            isDragging: false,
-            startX: 0, startY: 0
-        };
-
-        const elements = {
-            link: {
-                previewImg: document.getElementById('preview-image'),
-                previewBox: document.getElementById('preview-box'),
-                scaleSlider: document.getElementById('scale-slider'),
-                inputImg: document.getElementById('edit-img')
-            },
-            header: {
-                previewImg: document.getElementById('header-preview-image'),
-                previewBox: document.getElementById('header-preview-box'),
-                scaleSlider: document.getElementById('header-scale-slider'),
-                inputImg: document.getElementById('edit-header-img')
+        // State Variables
+        window.AppState = {
+            isAdmin: false,
+            currentUser: null,
+            headerData: null,
+            linksData: [],
+            activeDeleteId: null,
+            dragState: {
+                active: null, // 'header' or 'link'
+                isDragging: false,
+                startX: 0, startY: 0,
+                currX: 0, currY: 0,
+                scale: 1,
+                imgElement: null
             }
         };
 
-        function applyEditorTransform() {
-            const el = elements[editorState.target].previewImg;
-            el.style.transform = `translate(${editorState.x}px, ${editorState.y}px) scale(${editorState.scale})`;
-            el.style.height = "100%";
-        }
+        // Paths based on Strict Rules
+        const HEADER_DOC_PATH = `artifacts/${appId}/public/data/settings/header`;
+        const LINKS_COLLECTION_PATH = `artifacts/${appId}/public/data/links`;
 
-        // Setup Listeners for both editors
-        ['link', 'header'].forEach(type => {
-            const cfg = elements[type];
-            cfg.inputImg.addEventListener('input', e => cfg.previewImg.src = e.target.value || 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png');
-            cfg.scaleSlider.addEventListener('input', e => { 
-                if (editorState.target === type) {
-                    editorState.scale = parseFloat(e.target.value); 
-                    applyEditorTransform(); 
+        // ==========================================
+        // AUTHENTICATION & SYNC (RULE 3)
+        // ==========================================
+        
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
                 }
-            });
-
-            cfg.previewBox.addEventListener('mousedown', e => {
-                editorState.target = type;
-                editorState.isDragging = true;
-                editorState.startX = e.clientX - editorState.x;
-                editorState.startY = e.clientY - editorState.y;
-            });
-
-            cfg.previewBox.addEventListener('touchstart', e => {
-                editorState.target = type;
-                editorState.isDragging = true;
-                editorState.startX = e.touches[0].clientX - editorState.x;
-                editorState.startY = e.touches[0].clientY - editorState.y;
-            }, {passive: false});
-        });
-
-        window.addEventListener('mousemove', e => {
-            if (!editorState.isDragging) return;
-            editorState.x = e.clientX - editorState.startX;
-            editorState.y = e.clientY - editorState.startY;
-            applyEditorTransform();
-        });
-
-        window.addEventListener('touchmove', e => {
-            if (!editorState.isDragging) return;
-            e.preventDefault();
-            editorState.x = e.touches[0].clientX - editorState.startX;
-            editorState.y = e.touches[0].clientY - editorState.startY;
-            applyEditorTransform();
-        }, {passive: false});
-
-        window.addEventListener('mouseup', () => editorState.isDragging = false);
-        window.addEventListener('touchend', () => editorState.isDragging = false);
-
-        // --- REORDERING ---
-        function moveTile(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= scoutLinks.length) return;
-            const item = scoutLinks.splice(index, 1)[0];
-            scoutLinks.splice(newIndex, 0, item);
-            saveToStorage(); updateUI();
+            } catch (error) {
+                console.error("Auth initialization failed:", error);
+                hideLoading(); // At least let them see empty state
+            }
         }
 
-        // --- UI RENDERER ---
-        function updateUI() {
-            document.documentElement.classList.toggle('dark', darkMode);
-            document.getElementById('theme-icon').setAttribute('data-lucide', darkMode ? 'sun' : 'moon');
-
-            // Header Render
-            const h = headerData;
-            const headerLogo = document.getElementById('header-logo');
-            document.getElementById('header-title').innerText = h.title;
-            document.getElementById('header-subtitle').innerText = h.subtitle;
-            headerLogo.src = h.logo;
-            headerLogo.style.transform = `translate(${h.x}px, ${h.y}px) scale(${h.scale})`;
-            headerLogo.style.height = "100%";
-
-            document.getElementById('edit-header-btn').classList.toggle('hidden', !isAdmin);
-            const lockBtn = document.getElementById('lock-btn');
-            const lockIcon = document.getElementById('lock-icon');
-            lockIcon.setAttribute('data-lucide', isAdmin ? 'unlock' : 'lock');
-            lockBtn.className = isAdmin ? "w-16 h-16 rounded-2xl bg-yellow-400 flex items-center justify-center shadow-2xl hover:scale-110" : "w-16 h-16 rounded-2xl bg-[#003F87] flex items-center justify-center shadow-2xl hover:scale-110";
-
-            // Grid Render
-            const container = document.getElementById('links-container');
-            let html = scoutLinks.map((link, index) => `
-                <div class="relative group h-full">
-                    ${isAdmin ? `
-                    <div class="absolute -top-3 -left-3 -right-3 z-10 flex justify-between pointer-events-none">
-                        <div class="flex gap-1 pointer-events-auto">
-                            ${index > 0 ? `<button onclick="moveTile(${index}, -1)" class="p-2 bg-slate-800 text-white rounded-lg shadow-xl hover:bg-blue-500"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>` : '<div class="w-8"></div>'}
-                            ${index < scoutLinks.length - 1 ? `<button onclick="moveTile(${index}, 1)" class="p-2 bg-slate-800 text-white rounded-lg shadow-xl hover:bg-blue-500"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>` : ''}
-                        </div>
-                        <div class="flex gap-1 pointer-events-auto">
-                            <button onclick="openEditModal(${index})" class="p-2 bg-blue-500 text-white rounded-lg shadow-xl hover:scale-110"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                            <button onclick="deleteLink(${index})" class="p-2 bg-red-500 text-white rounded-lg shadow-xl hover:scale-110"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>
-                    ` : ''}
-                    <a href="${isAdmin ? 'javascript:void(0)' : link.url}" target="${isAdmin ? '_self' : '_blank'}" class="scout-card block h-full bg-slate-50 dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg flex flex-col items-center border border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:-translate-y-1 transition-all">
-                        <div class="w-full aspect-square bg-white dark:bg-slate-950 rounded-2xl mb-4 flex items-center justify-center p-0 overflow-hidden relative border border-slate-100 dark:border-slate-800/50">
-                            <img src="${link.img}" class="max-w-none absolute origin-center pointer-events-none" style="transform: translate(${link.x}px, ${link.y}px) scale(${link.scale}); height: 100%;">
-                        </div>
-                        <span class="font-black uppercase text-xs tracking-[0.2em] text-blue-900 dark:text-blue-400 text-center line-clamp-1">${link.title}</span>
-                    </a>
-                </div>
-            `).join('');
-
-            if (isAdmin) {
-                html += `<button onclick="openAddModal()" class="bg-transparent border-4 border-dashed border-slate-300 dark:border-slate-700 p-6 rounded-[2rem] flex flex-col items-center justify-center min-h-[200px] hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-500 group h-full">
-                    <div class="p-4 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 mb-4 transition-colors"><i data-lucide="plus" class="w-8 h-8"></i></div>
-                    <span class="font-black uppercase text-xs tracking-[0.2em]">Add New Link</span>
-                </button>`;
+        onAuthStateChanged(auth, (user) => {
+            AppState.currentUser = user;
+            if (user) {
+                setupRealtimeListeners();
+            } else {
+                hideLoading();
             }
-            container.innerHTML = html;
+        });
+
+        // Initialize App
+        lucide.createIcons();
+        initTheme();
+        initAuth();
+
+        function setupRealtimeListeners() {
+            if (!AppState.currentUser) return;
+
+            // 1. Listen to Header Data
+            const headerRef = doc(db, HEADER_DOC_PATH);
+            onSnapshot(headerRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    AppState.headerData = docSnap.data();
+                    renderHeader();
+                } else {
+                    // Seed initial data if empty
+                    seedInitialHeader();
+                }
+                checkLoadingState();
+            }, (error) => {
+                console.error("Header sync error:", error);
+            });
+
+            // 2. Listen to Links Collection
+            const linksRef = collection(db, LINKS_COLLECTION_PATH);
+            onSnapshot(linksRef, (snapshot) => {
+                const links = [];
+                snapshot.forEach(doc => {
+                    links.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sort links by 'order' or creation date in memory (Rule 2)
+                links.sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt - b.createdAt));
+                
+                AppState.linksData = links;
+                renderLinks();
+                checkLoadingState();
+            }, (error) => {
+                console.error("Links sync error:", error);
+            });
+        }
+
+        let loadedCounts = 0;
+        function checkLoadingState() {
+            loadedCounts++;
+            if (loadedCounts >= 2) {
+                hideLoading();
+            }
+        }
+
+        async function seedInitialHeader() {
+            const defaultHeader = {
+                title: "Pack 26 Resources",
+                subtitle: "Cub Scouts • Pickerington, OH",
+                logoUrl: "",
+                scale: 1,
+                offsetX: 0,
+                offsetY: 0
+            };
+            try {
+                await setDoc(doc(db, HEADER_DOC_PATH), defaultHeader);
+            } catch (e) {
+                console.warn("Could not seed header (might lack permissions initially)");
+                AppState.headerData = defaultHeader;
+                renderHeader();
+            }
+        }
+
+        // ==========================================
+        // UI RENDERING
+        // ==========================================
+
+        function renderHeader() {
+            if (!AppState.headerData) return;
+            const h = AppState.headerData;
+            
+            document.getElementById('header-title').textContent = h.title || 'Welcome';
+            document.getElementById('header-subtitle').textContent = h.subtitle || '';
+            
+            const logoImg = document.getElementById('header-logo');
+            const fallback = document.getElementById('header-logo-fallback');
+            
+            if (h.logoUrl && h.logoUrl.trim() !== "") {
+                logoImg.src = h.logoUrl;
+                logoImg.style.display = 'block';
+                fallback.style.display = 'none';
+                
+                const scale = h.scale || 1;
+                const tx = h.offsetX || 0;
+                const ty = h.offsetY || 0;
+                logoImg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+            } else {
+                logoImg.style.display = 'none';
+                fallback.style.display = 'block';
+            }
+        }
+
+        function renderLinks() {
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+
+            AppState.linksData.forEach(link => {
+                const card = document.createElement('a');
+                card.href = link.url || '#';
+                card.target = "_blank";
+                card.className = "scout-card relative rounded-[2rem] overflow-hidden group h-40 bg-slate-200 dark:bg-slate-800 shadow-lg hover:shadow-xl hover:-translate-y-1 block image-viewport";
+                
+                // Background Image
+                if (link.imageUrl && link.imageUrl.trim() !== '') {
+                    const img = document.createElement('img');
+                    img.src = link.imageUrl;
+                    img.className = "absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110";
+                    
+                    // Apply custom crop styling
+                    const scale = link.scale || 1;
+                    const tx = link.offsetX || 0;
+                    const ty = link.offsetY || 0;
+                    // Note: We use object-position / object-fit differently here for the end result, 
+                    // but to match the drag effect perfectly we apply the transform.
+                    // For a cleaner look on the card, we wrap the img in a transform container.
+                    img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+                    img.style.transformOrigin = 'center center';
+                    
+                    card.appendChild(img);
+                } else {
+                    // Fallback pattern
+                    const pattern = document.createElement('div');
+                    pattern.className = "absolute inset-0 bg-bsa-blue opacity-10 dark:opacity-20 flex items-center justify-center";
+                    pattern.innerHTML = `<i data-lucide="link" class="w-12 h-12 text-bsa-blue dark:text-white opacity-50"></i>`;
+                    card.appendChild(pattern);
+                }
+
+                // Overlay & Title
+                const overlay = document.createElement('div');
+                overlay.className = "absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent flex flex-col justify-end p-5";
+                
+                const title = document.createElement('h3');
+                title.className = "text-white font-bold text-lg leading-tight tracking-wide";
+                title.textContent = link.title || 'Untitled Link';
+                
+                overlay.appendChild(title);
+                card.appendChild(overlay);
+
+                // Edit Button (Admin Only)
+                if (AppState.isAdmin) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = "absolute top-3 right-3 p-2 bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-white rounded-xl shadow-lg hover:bg-bsa-gold dark:hover:bg-bsa-gold hover:text-slate-900 transition-colors z-20 backdrop-blur-sm";
+                    editBtn.innerHTML = `<i data-lucide="edit-2" class="w-4 h-4"></i>`;
+                    editBtn.onclick = (e) => {
+                        e.preventDefault(); // Prevent navigating to the link
+                        openLinkModal(link);
+                    };
+                    card.appendChild(editBtn);
+                }
+
+                container.appendChild(card);
+            });
+
+            // Add "New Link" Button if Admin
+            if (AppState.isAdmin) {
+                const addCard = document.createElement('button');
+                addCard.onclick = () => openLinkModal(null);
+                addCard.className = "scout-card relative rounded-[2rem] overflow-hidden group h-40 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-300 dark:border-slate-700 hover:border-bsa-blue dark:hover:border-bsa-gold flex flex-col items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all";
+                addCard.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-bsa-blue dark:group-hover:bg-bsa-gold group-hover:text-white text-slate-400 transition-colors">
+                        <i data-lucide="plus" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-bold text-slate-500 group-hover:text-bsa-blue dark:group-hover:text-bsa-gold uppercase tracking-wider">Add Link</span>
+                `;
+                container.appendChild(addCard);
+            }
+
             lucide.createIcons();
         }
 
-        // --- MODAL TRIGGERS ---
-        function openHeaderModal() {
-            editorState.target = 'header';
-            editorState.scale = headerData.scale || 1;
-            editorState.x = headerData.x || 0;
-            editorState.y = headerData.y || 0;
-            
-            document.getElementById('edit-header-title').value = headerData.title;
-            document.getElementById('edit-header-subtitle').value = headerData.subtitle;
-            document.getElementById('edit-header-img').value = headerData.logo;
-            document.getElementById('header-preview-image').src = headerData.logo;
-            document.getElementById('header-scale-slider').value = editorState.scale;
-            
-            applyEditorTransform();
-            document.getElementById('header-modal').style.display = 'flex';
-        }
+        // ==========================================
+        // APP LOGIC & ADMIN STATE
+        // ==========================================
 
-        function openAddModal() {
-            editorState.target = 'link';
-            editorState.scale = 1; editorState.x = 0; editorState.y = 0;
-            document.getElementById('edit-modal-title').innerText = "Add New Link";
-            document.getElementById('edit-index').value = "";
-            document.getElementById('edit-title').value = "";
-            document.getElementById('edit-url').value = "";
-            document.getElementById('edit-img').value = "";
-            document.getElementById('preview-image').src = "https://cdn-icons-png.flaticon.com/512/3652/3652191.png";
-            document.getElementById('scale-slider').value = 1;
-            applyEditorTransform();
-            document.getElementById('edit-modal').style.display = 'flex';
-        }
+        window.toggleAdminState = function() {
+            if (AppState.isAdmin) {
+                // Logout
+                AppState.isAdmin = false;
+                document.getElementById('lock-icon').setAttribute('data-lucide', 'lock');
+                document.getElementById('lock-btn').classList.remove('bg-red-500', 'border-red-400');
+                document.getElementById('lock-btn').classList.add('bg-bsa-blue', 'border-white/10');
+                document.getElementById('edit-header-btn').classList.add('hidden');
+                renderLinks();
+                lucide.createIcons();
+            } else {
+                // Show Login
+                document.getElementById('pass-input').value = '';
+                document.getElementById('login-error').classList.add('hidden');
+                openModal('login-modal');
+                setTimeout(() => document.getElementById('pass-input').focus(), 100);
+            }
+        };
 
-        function openEditModal(index) {
-            const link = scoutLinks[index];
-            editorState.target = 'link';
-            editorState.scale = link.scale || 1;
-            editorState.x = link.x || 0;
-            editorState.y = link.y || 0;
-            document.getElementById('edit-modal-title').innerText = "Edit Link";
-            document.getElementById('edit-index').value = index;
-            document.getElementById('edit-title').value = link.title;
-            document.getElementById('edit-url').value = link.url;
-            document.getElementById('edit-img').value = link.img;
-            document.getElementById('preview-image').src = link.img;
-            document.getElementById('scale-slider').value = editorState.scale;
-            applyEditorTransform();
-            document.getElementById('edit-modal').style.display = 'flex';
-        }
+        window.attemptLogin = function() {
+            const pass = document.getElementById('pass-input').value;
+            if (pass === 'pack26') {
+                AppState.isAdmin = true;
+                closeModal('login-modal');
+                
+                // Update UI for Admin
+                document.getElementById('lock-icon').setAttribute('data-lucide', 'unlock');
+                document.getElementById('lock-btn').classList.remove('bg-bsa-blue');
+                document.getElementById('lock-btn').classList.add('bg-red-500', 'border-red-400');
+                document.getElementById('edit-header-btn').classList.remove('hidden');
+                
+                renderLinks();
+                lucide.createIcons();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+                const input = document.getElementById('pass-input');
+                input.classList.add('animate-bounce');
+                setTimeout(() => input.classList.remove('animate-bounce'), 500);
+            }
+        };
 
-        function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
-        function closeHeaderModal() { document.getElementById('header-modal').style.display = 'none'; }
-
-        function saveHeader() {
-            headerData = {
-                title: document.getElementById('edit-header-title').value,
-                subtitle: document.getElementById('edit-header-subtitle').value,
-                logo: document.getElementById('edit-header-img').value,
-                scale: editorState.scale, x: editorState.x, y: editorState.y
-            };
-            saveToStorage(); closeHeaderModal(); updateUI();
-        }
-
-        function saveLink() {
-            const index = document.getElementById('edit-index').value;
-            const newLink = {
-                title: document.getElementById('edit-title').value || "New Link",
-                url: document.getElementById('edit-url').value || "#",
-                img: document.getElementById('edit-img').value || "https://cdn-icons-png.flaticon.com/512/3652/3652191.png",
-                scale: editorState.scale, x: editorState.x, y: editorState.y
-            };
-            if (index === "") scoutLinks.push(newLink); else scoutLinks[index] = newLink;
-            saveToStorage(); closeEditModal(); updateUI();
-        }
-
-        function deleteLink(index) { if (confirm("Delete this link?")) { scoutLinks.splice(index, 1); saveToStorage(); updateUI(); } }
-
-        // --- AUTH & THEME ---
-        document.getElementById('theme-toggle').addEventListener('click', () => { darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); updateUI(); });
-        document.getElementById('lock-btn').addEventListener('click', () => { 
-            if (isAdmin) { isAdmin = false; updateUI(); } 
-            else { document.getElementById('modal').style.display = 'flex'; document.getElementById('pass-input').focus(); }
-        });
-        document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('modal').style.display = 'none');
-        document.getElementById('login-btn').addEventListener('click', () => {
-            if (document.getElementById('pass-input').value === "CoRf121") { isAdmin = true; document.getElementById('modal').style.display = 'none'; updateUI(); }
-            else document.getElementById('login-error').classList.remove('hidden');
-            document.getElementById('pass-input').value = '';
+        // Handle Enter key for login
+        document.getElementById('pass-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') attemptLogin();
         });
 
-        window.onload = () => { if (darkMode) document.documentElement.classList.add('dark'); updateUI(); };
+
+        // ==========================================
+        // MODAL MANAGEMENT
+        // ==========================================
+
+        window.openModal = function(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + '-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Trigger reflow
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            if(content) content.classList.remove('scale-95');
+        };
+
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + '-content');
+            modal.classList.add('opacity-0');
+            if(content) content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300); // Matches duration-300
+        };
+
+        // ==========================================
+        // HEADER EDITING
+        // ==========================================
+
+        window.openHeaderModal = function() {
+            const h = AppState.headerData || {};
+            document.getElementById('edit-header-title').value = h.title || '';
+            document.getElementById('edit-header-subtitle').value = h.subtitle || '';
+            document.getElementById('edit-header-img').value = h.logoUrl || '';
+            
+            // Setup Preview
+            setupDragAndScale(
+                'header', 
+                h.logoUrl, 
+                h.offsetX || 0, 
+                h.offsetY || 0, 
+                h.scale || 1
+            );
+
+            openModal('header-modal');
+        };
+
+        window.saveHeader = async function() {
+            if (!AppState.currentUser) return;
+            
+            const btn = document.querySelector('#header-modal button.bg-bsa-blue');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div> Saving...`;
+            btn.disabled = true;
+
+            const newData = {
+                title: document.getElementById('edit-header-title').value.trim(),
+                subtitle: document.getElementById('edit-header-subtitle').value.trim(),
+                logoUrl: document.getElementById('edit-header-img').value.trim(),
+                offsetX: AppState.dragState.currX,
+                offsetY: AppState.dragState.currY,
+                scale: AppState.dragState.scale,
+                updatedAt: serverTimestamp()
+            };
+
+            try {
+                await setDoc(doc(db, HEADER_DOC_PATH), newData, { merge: true });
+                closeModal('header-modal');
+            } catch (error) {
+                console.error("Error saving header:", error);
+                alert("Failed to save changes."); // Fallback error
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        };
+
+
+        // ==========================================
+        // LINK EDITING
+        // ==========================================
+
+        window.openLinkModal = function(linkData) {
+            const isEditing = !!linkData;
+            document.getElementById('edit-modal-title').textContent = isEditing ? 'Edit Link' : 'Add Link';
+            
+            const delBtn = document.getElementById('btn-trigger-delete');
+            if (isEditing) {
+                delBtn.classList.remove('hidden');
+                document.getElementById('edit-link-id').value = linkData.id;
+            } else {
+                delBtn.classList.add('hidden');
+                document.getElementById('edit-link-id').value = '';
+            }
+
+            document.getElementById('edit-link-title').value = linkData ? (linkData.title || '') : '';
+            document.getElementById('edit-link-url').value = linkData ? (linkData.url || '') : '';
+            document.getElementById('edit-link-img').value = linkData ? (linkData.imageUrl || '') : '';
+
+            // Update mockup title
+            const titleInput = document.getElementById('edit-link-title');
+            const mockupTitle = document.getElementById('link-preview-title');
+            mockupTitle.textContent = linkData ? (linkData.title || 'Card Title') : 'Card Title';
+            
+            // Realtime update of mockup title
+            titleInput.oninput = (e) => {
+                mockupTitle.textContent = e.target.value || 'Card Title';
+            };
+
+            // Setup Preview
+            setupDragAndScale(
+                'link', 
+                linkData ? linkData.imageUrl : '', 
+                linkData ? (linkData.offsetX || 0) : 0, 
+                linkData ? (linkData.offsetY || 0) : 0, 
+                linkData ? (linkData.scale || 1) : 1
+            );
+
+            openModal('edit-link-modal');
+        };
+
+        window.saveLink = async function() {
+            if (!AppState.currentUser) return;
+
+            const id = document.getElementById('edit-link-id').value;
+            const btn = document.querySelector('#edit-link-modal button.bg-bsa-gold');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-2 border-slate-900 border-t-transparent"></div> Saving...`;
+            btn.disabled = true;
+
+            const linkData = {
+                title: document.getElementById('edit-link-title').value.trim(),
+                url: document.getElementById('edit-link-url').value.trim(),
+                imageUrl: document.getElementById('edit-link-img').value.trim(),
+                offsetX: AppState.dragState.currX,
+                offsetY: AppState.dragState.currY,
+                scale: AppState.dragState.scale,
+                updatedAt: serverTimestamp()
+            };
+
+            try {
+                if (id) {
+                    // Update existing
+                    await updateDoc(doc(db, LINKS_COLLECTION_PATH, id), linkData);
+                } else {
+                    // Add new (append to end)
+                    const currentLinks = AppState.linksData;
+                    const maxOrder = currentLinks.length > 0 ? Math.max(...currentLinks.map(l => l.order || 0)) : 0;
+                    linkData.order = maxOrder + 1;
+                    linkData.createdAt = serverTimestamp();
+                    
+                    await addDoc(collection(db, LINKS_COLLECTION_PATH), linkData);
+                }
+                closeModal('edit-link-modal');
+            } catch (error) {
+                console.error("Error saving link:", error);
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        };
+
+        // ==========================================
+        // DELETING LINKS (Custom Confirm)
+        // ==========================================
+
+        window.promptDeleteLink = function() {
+            AppState.activeDeleteId = document.getElementById('edit-link-id').value;
+            closeModal('edit-link-modal');
+            setTimeout(() => {
+                openModal('delete-modal');
+            }, 300);
+        };
+
+        window.confirmDeleteLink = async function() {
+            if (!AppState.currentUser || !AppState.activeDeleteId) return;
+
+            const btn = document.querySelector('#delete-modal button.bg-red-500');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `Deleting...`;
+            btn.disabled = true;
+
+            try {
+                await deleteDoc(doc(db, LINKS_COLLECTION_PATH, AppState.activeDeleteId));
+                closeModal('delete-modal');
+                AppState.activeDeleteId = null;
+            } catch (error) {
+                console.error("Error deleting link:", error);
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        };
+
+        // ==========================================
+        // DRAG AND SCALE LOGIC FOR PREVIEWS
+        // ==========================================
+
+        window.updatePreviewImage = function(imgId, url) {
+            const img = document.getElementById(imgId);
+            const placeholderId = imgId.replace('-image', '-placeholder');
+            const placeholder = document.getElementById(placeholderId);
+            
+            if (url && url.trim() !== '') {
+                img.src = url;
+                img.style.display = 'block';
+                if(placeholder) placeholder.style.display = 'none';
+                
+                // Reset transform if it's a new image load
+                AppState.dragState.currX = 0;
+                AppState.dragState.currY = 0;
+                AppState.dragState.scale = 1;
+                document.getElementById(AppState.dragState.active + '-scale-slider').value = 1;
+                applyTransform();
+            } else {
+                img.style.display = 'none';
+                img.src = '';
+                if(placeholder) placeholder.style.display = 'flex';
+            }
+        };
+
+        function setupDragAndScale(type, url, tx, ty, scale) {
+            AppState.dragState.active = type;
+            AppState.dragState.currX = parseFloat(tx) || 0;
+            AppState.dragState.currY = parseFloat(ty) || 0;
+            AppState.dragState.scale = parseFloat(scale) || 1;
+            
+            const imgId = `${type}-preview-image`;
+            const sliderId = `${type}-scale-slider`;
+            const boxId = `${type}-preview-box`;
+            
+            AppState.dragState.imgElement = document.getElementById(imgId);
+            const slider = document.getElementById(sliderId);
+            const box = document.getElementById(boxId);
+            
+            slider.value = AppState.dragState.scale;
+            updatePreviewImage(imgId, url);
+            applyTransform();
+
+            // Clean up old listeners
+            box.onmousedown = null; box.ontouchstart = null;
+            window.onmousemove = null; window.ontouchmove = null;
+            window.onmouseup = null; window.ontouchend = null;
+            slider.oninput = null;
+
+            // Setup new listeners
+            slider.oninput = (e) => {
+                AppState.dragState.scale = parseFloat(e.target.value);
+                applyTransform();
+            };
+
+            const startDrag = (e) => {
+                if (e.target.tagName === 'INPUT') return; // Don't block slider
+                e.preventDefault();
+                AppState.dragState.isDragging = true;
+                
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                
+                AppState.dragState.startX = clientX - AppState.dragState.currX;
+                AppState.dragState.startY = clientY - AppState.dragState.currY;
+                box.style.cursor = 'grabbing';
+            };
+
+            const moveDrag = (e) => {
+                if (!AppState.dragState.isDragging) return;
+                e.preventDefault();
+                
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                
+                AppState.dragState.currX = clientX - AppState.dragState.startX;
+                AppState.dragState.currY = clientY - AppState.dragState.startY;
+                applyTransform();
+            };
+
+            const endDrag = () => {
+                AppState.dragState.isDragging = false;
+                box.style.cursor = 'move';
+            };
+
+            box.addEventListener('mousedown', startDrag);
+            box.addEventListener('touchstart', startDrag, {passive: false});
+            
+            window.addEventListener('mousemove', moveDrag);
+            window.addEventListener('touchmove', moveDrag, {passive: false});
+            
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('touchend', endDrag);
+        }
+
+        function applyTransform() {
+            if (AppState.dragState.imgElement) {
+                const { currX, currY, scale } = AppState.dragState;
+                AppState.dragState.imgElement.style.transform = `translate(${currX}px, ${currY}px) scale(${scale})`;
+            }
+        }
+
+
+        // ==========================================
+        // UTILS (Theme, Loading)
+        // ==========================================
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if(overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
+            }
+        }
+
+        function initTheme() {
+            const toggleBtn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-icon');
+            
+            // Check local storage or system preference
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                icon.setAttribute('data-lucide', 'sun');
+            } else {
+                document.documentElement.classList.remove('dark');
+                icon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+
+            toggleBtn.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                localStorage.theme = isDark ? 'dark' : 'light';
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+            });
+        }
     </script>
 </body>
 </html>
