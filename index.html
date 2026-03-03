@@ -1,915 +1,711 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pack Resources</title>
-    
-    <script>
-        tailwind = {
-            config: {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            bsa: { blue: '#003F87', gold: '#FDC82F' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .scout-card { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .image-viewport {
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: none; /* Crucial for touch dragging */
-        }
-        .draggable-img {
-            position: absolute;
-            transform-origin: center center;
-            user-select: none;
-            -webkit-user-drag: none;
-            will-change: transform;
-        }
-        
-        /* Custom Sliders */
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 20px; width: 20px;
-            border-radius: 50%;
-            background: #FDC82F;
-            cursor: pointer;
-            margin-top: -8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; cursor: pointer;
-            background: #cbd5e1; border-radius: 2px;
-        }
-        .dark input[type=range]::-webkit-slider-runnable-track { background: #334155; }
-        
-        /* Loading Spinner */
-        #loading-overlay {
-            position: fixed; inset: 0; background: white; z-index: 100;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
-        }
-        .dark #loading-overlay { background: #020617; }
-        
-        /* Hide scrollbar for modals but allow scroll */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-</head>
-<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300">
-    
-    <!-- Initial Loading Screen -->
-    <div id="loading-overlay">
-        <div class="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-bsa-blue dark:border-slate-800 dark:border-t-bsa-gold mb-4"></div>
-        <p class="text-slate-500 font-bold tracking-widest uppercase text-sm animate-pulse">Syncing Data...</p>
-    </div>
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Settings, Plus, Edit2, Trash2, Tent, Calendar, MapPin, 
+  Info, BookOpen, Camera, MessageSquare, Shield, Star, 
+  Globe, X, Sun, Moon, ZoomIn, Lock, Eye, KeyRound, 
+  Cloud, ExternalLink
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
 
-    <div id="app" class="min-h-screen pb-24">
+// --- GLOBALS & TYPES ---
+const ICON_MAP: Record<string, any> = { 
+  Tent, Calendar, MapPin, Info, BookOpen, Camera, 
+  MessageSquare, Shield, Star, Globe 
+};
+
+// Security: In a real app, this would be handled via Firebase Auth providers,
+// but for this simplified "Leader Access" model, we use a shared credential.
+const ADMIN_PASSWORD = "CoRf121";
+
+// Default links to show if the database is empty or still loading
+const INITIAL_LINKS: ScoutLink[] = [
+  { id: '1', title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', imageUrl: '', iconName: 'BookOpen', zoom: 1, offsetX: 0, offsetY: 0 },
+  { id: '2', title: 'Pack Calendar', url: '#', imageUrl: '', iconName: 'Calendar', zoom: 1, offsetX: 0, offsetY: 0 },
+  { id: '3', title: 'Uniform Guide', url: 'https://www.scoutshop.org/', imageUrl: '', iconName: 'Shield', zoom: 1, offsetX: 0, offsetY: 0 }
+];
+
+interface ScoutLink {
+  id: string;
+  title: string;
+  url: string;
+  imageUrl: string;
+  iconName?: string;
+  zoom?: number;
+  offsetX?: number;
+  offsetY?: number;
+}
+
+interface AppSettings {
+  headerTitle: string;
+  headerSubtitle: string;
+  headerLogoUrl: string;
+  headerLogoZoom: number;
+  headerLogoOffsetX: number;
+  headerLogoOffsetY: number;
+}
+
+// --- STYLES ---
+const GlobalStyles = () => (
+  <style>{`
+    :root {
+      --bsa-blue: #003F87;
+      --bsa-red: #CE1126;
+      --bsa-gold: #FDC82F;
+    }
+    
+    body { 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+      background-color: #f8fafc; 
+      transition: background-color 0.3s ease;
+    }
+
+    .dark body { 
+      background-color: #0f172a; 
+      color: #f8fafc; 
+    }
+    
+    .bento-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+      gap: 1.5rem; 
+      padding: 2rem; 
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .scout-card {
+      background: white; 
+      border-radius: 2.5rem; 
+      padding: 1.5rem; 
+      display: flex; 
+      flex-direction: column;
+      align-items: center; 
+      text-align: center; 
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid rgba(0,0,0,0.05); 
+      position: relative; 
+      aspect-ratio: 1/1; 
+      text-decoration: none;
+      color: inherit; 
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    .dark .scout-card { 
+      background: #1e293b; 
+      border-color: rgba(255,255,255,0.05); 
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .scout-card:hover { 
+      transform: translateY(-12px) scale(1.02); 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      border-color: var(--bsa-blue);
+    }
+
+    .dark .scout-card:hover {
+      border-color: #38bdf8;
+    }
+    
+    .image-container { 
+      width: 100%; 
+      height: 70%; 
+      position: relative; 
+      overflow: hidden; 
+      border-radius: 2rem; 
+      margin-bottom: 1rem; 
+      background: #f1f5f9; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      transition: background 0.3s ease;
+    }
+
+    .dark .image-container { 
+      background: #0f172a; 
+    }
+    
+    .card-title { 
+      font-weight: 800; 
+      font-size: 0.9rem; 
+      text-transform: uppercase; 
+      letter-spacing: 0.1em; 
+      color: var(--bsa-blue); 
+      margin-top: 0.5rem;
+    }
+
+    .dark .card-title { 
+      color: #cbd5e1; 
+    }
+    
+    .admin-badge { 
+      position: absolute; 
+      top: 1rem; 
+      right: 1rem; 
+      display: flex; 
+      gap: 0.5rem; 
+      z-index: 30; 
+    }
+
+    .icon-btn { 
+      width: 2.75rem; 
+      height: 2.75rem; 
+      border-radius: 1.2rem; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border: none; 
+      cursor: pointer; 
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .icon-btn:hover { 
+      transform: scale(1.15) rotate(5deg); 
+    }
+
+    /* Custom range slider styling */
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #003F87;
+      cursor: pointer;
+      margin-top: -6px; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+  `}</style>
+);
+
+const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, iconName }: any) => {
+  const [error, setError] = useState(false);
+  const IconComponent = iconName && ICON_MAP[iconName] ? ICON_MAP[iconName] : Tent;
+  
+  if ((!url || error) || (!url && iconName)) {
+    return (
+      <div className="text-blue-900/10 dark:text-white/5 transition-colors">
+        <IconComponent size={80} strokeWidth={1.2} />
+      </div>
+    );
+  }
+  
+  return (
+    <img 
+      src={url} 
+      alt=""
+      onError={() => setError(true)}
+      className="pointer-events-none select-none"
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: `translate(-50%, -50%) translate(${offsetX}%, ${offsetY}%) scale(${zoom})`,
+        maxWidth: 'none',
+        height: '100%',
+        objectFit: 'contain'
+      }}
+    />
+  );
+};
+
+// --- FIREBASE INIT ---
+const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = window.__app_id || 'scout-links-pro-v1';
+
+export default function App() {
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [links, setLinks] = useState<ScoutLink[]>(INITIAL_LINKS);
+  const [settings, setSettings] = useState<AppSettings>({
+    headerTitle: 'Pack Resources',
+    headerSubtitle: 'Scouting America',
+    headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
+    headerLogoZoom: 1, headerLogoOffsetX: 0, headerLogoOffsetY: 0
+  });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [modalMode, setModalMode] = useState<'link' | 'header'>('link');
+  const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
+  const [formData, setFormData] = useState<any>({});
+  const [toastMsg, setToastMsg] = useState('');
+  
+  const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
+
+  // --- AUTH FLOW ---
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+          await signInWithCustomToken(auth, window.__initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.error("Authentication system failed", e);
+      }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  // --- DATA SYNC ---
+  useEffect(() => {
+    if (!user) return;
+    
+    // Path: /artifacts/{appId}/public/data/config
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+    
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.links) setLinks(data.links);
+        if (data.settings) setSettings(data.settings);
+      }
+    }, (err) => {
+      console.error("Firestore Permission or Connection Issue:", err);
+      // We don't toast here to avoid annoying users if they are just browsing
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const saveData = async (newLinks: ScoutLink[], newSettings: AppSettings) => {
+    if (!user) {
+      setToastMsg("Waiting for connection...");
+      return;
+    }
+    try {
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+      await setDoc(docRef, {
+        links: newLinks,
+        settings: newSettings,
+        updatedAt: Date.now()
+      });
+      setToastMsg("Sync Complete");
+      setTimeout(() => setToastMsg(''), 2000);
+    } catch (err) {
+      console.error("Write Error:", err);
+      setToastMsg("Permission Denied: Leader access required");
+    }
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      setIsEditing(true);
+      setIsLoginOpen(false);
+      setPasswordInput('');
+      setToastMsg("Leader Access Granted");
+      setTimeout(() => setToastMsg(''), 2000);
+    } else {
+      setToastMsg("Incorrect Password");
+    }
+  };
+
+  const handleSaveModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    let updatedLinks = [...links];
+    let updatedSettings = { ...settings };
+
+    if (modalMode === 'link') {
+      let url = (formData.url || '').trim();
+      if (url && !url.startsWith('http')) url = 'https://' + url;
+      if (editingLink) {
+        updatedLinks = links.map(l => l.id === editingLink.id ? { ...formData, url } : l);
+      } else {
+        updatedLinks = [...links, { ...formData, id: crypto.randomUUID(), url }];
+      }
+    } else {
+      updatedSettings = {
+        headerTitle: formData.title, 
+        headerSubtitle: formData.subtitle,
+        headerLogoUrl: formData.imageUrl, 
+        headerLogoZoom: formData.zoom,
+        headerLogoOffsetX: formData.offsetX, 
+        headerLogoOffsetY: formData.offsetY
+      };
+    }
+    saveData(updatedLinks, updatedSettings);
+    setIsModalOpen(false);
+  };
+
+  return (
+    <div className={darkMode ? 'dark' : ''}>
+      <GlobalStyles />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-700">
         
-        <!-- Header Section -->
-        <header class="bg-white dark:bg-slate-900 border-b-8 border-bsa-gold shadow-lg px-6 py-10 transition-colors duration-300 relative">
-            <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8 relative">
-                
-                <!-- Header Logo Display -->
-                <div class="w-32 h-32 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-0 border-4 border-slate-200 dark:border-slate-700 shadow-inner relative group image-viewport">
-                    <!-- Default fallback SVG if no image is set -->
-                    <svg id="header-logo-fallback" class="w-16 h-16 text-slate-300 dark:text-slate-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <img id="header-logo" src="" class="draggable-img" alt="Pack Logo" style="display:none;">
-                </div>
-                
-                <!-- Header Text Display -->
-                <div class="text-center md:text-left flex-1 relative">
-                    <h1 id="header-title" class="text-4xl md:text-5xl lg:text-6xl font-black text-bsa-blue dark:text-white uppercase tracking-tighter">Loading...</h1>
-                    <p id="header-subtitle" class="text-lg font-bold text-slate-400 dark:text-bsa-gold uppercase tracking-widest mt-2">Please wait</p>
-                    
-                    <!-- Admin Edit Header Button -->
-                    <button id="edit-header-btn" onclick="openHeaderModal()" class="hidden absolute -top-4 -right-4 md:-right-12 md:top-2 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95 z-10">
-                        <i data-lucide="edit-3" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                
-                <!-- Theme Toggle -->
-                <div class="flex gap-3 absolute top-0 right-0 md:relative">
-                    <button id="theme-toggle" class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all shadow-sm">
-                        <i data-lucide="moon" id="theme-icon" class="w-6 h-6"></i>
-                    </button>
-                </div>
+        {/* --- HEADER --- */}
+        <header className="bg-white dark:bg-slate-900 border-b-[12px] border-yellow-400 shadow-2xl px-6 py-12 relative overflow-hidden transition-colors duration-500">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-900/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
+            <div className="relative group">
+              <div className="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner flex items-center justify-center overflow-hidden border-8 border-white dark:border-slate-700 transition-all duration-500">
+                <GenericImage 
+                  url={settings.headerLogoUrl} 
+                  zoom={settings.headerLogoZoom} 
+                  offsetX={settings.headerLogoOffsetX} 
+                  offsetY={settings.headerLogoOffsetY} 
+                />
+              </div>
+              {isEditing && (
+                <button 
+                  onClick={() => {
+                    setModalMode('header');
+                    setFormData({ 
+                      title: settings.headerTitle, 
+                      subtitle: settings.headerSubtitle, 
+                      imageUrl: settings.headerLogoUrl, 
+                      zoom: settings.headerLogoZoom, 
+                      offsetX: settings.headerLogoOffsetX, 
+                      offsetY: settings.headerLogoOffsetY 
+                    });
+                    setIsModalOpen(true);
+                  }}
+                  className="absolute -bottom-3 -right-3 p-4 bg-blue-600 text-white rounded-2xl shadow-2xl hover:scale-110 transition-transform active:scale-90"
+                >
+                  <Edit2 size={20} />
+                </button>
+              )}
             </div>
+
+            <div className="text-center md:text-left flex-1">
+              <h1 className="text-6xl md:text-8xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-3 leading-none transition-colors duration-500">
+                {settings.headerTitle}
+              </h1>
+              <div className="text-2xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-4">
+                <Star size={24} className="text-yellow-500 fill-yellow-500 animate-pulse" />
+                {settings.headerSubtitle}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setDarkMode(!darkMode)} 
+                className="p-6 rounded-[2rem] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-lg active:scale-95"
+              >
+                {darkMode ? <Sun size={28} /> : <Moon size={28} />}
+              </button>
+              {isAdmin && (
+                <button 
+                  onClick={() => setIsEditing(!isEditing)}
+                  className={`flex items-center gap-4 px-10 py-6 rounded-[2rem] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 ${isEditing ? 'bg-yellow-400 text-blue-900 scale-105 border-4 border-blue-900/10' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+                >
+                  <Settings size={28} className={isEditing ? 'animate-spin-slow' : ''} />
+                  <span className="hidden sm:inline">{isEditing ? 'Save' : 'Admin'}</span>
+                </button>
+              )}
+            </div>
+          </div>
         </header>
 
-        <!-- Main Content (Links Grid) -->
-        <main class="max-w-6xl mx-auto py-12 px-6">
-            <div id="links-container" class="bento-grid">
-                <!-- Links injected here by JS -->
-            </div>
+        {/* --- MAIN GRID --- */}
+        <main className="max-w-7xl mx-auto py-20 px-6">
+          <div className="bento-grid">
+            {links.map((link) => (
+              <div key={link.id} className="relative group">
+                {isEditing && (
+                  <div className="admin-badge">
+                    <button 
+                      onClick={() => { 
+                        setModalMode('link'); 
+                        setFormData({ ...link }); 
+                        setEditingLink(link); 
+                        setIsModalOpen(true); 
+                      }} 
+                      className="icon-btn bg-blue-600 text-white"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button 
+                      onClick={() => saveData(links.filter(l => l.id !== link.id), settings)} 
+                      className="icon-btn bg-red-600 text-white"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                )}
+                <a 
+                  href={isEditing ? undefined : link.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="scout-card"
+                >
+                  <div className="image-container">
+                    <GenericImage 
+                      url={link.imageUrl} 
+                      zoom={link.zoom} 
+                      offsetX={link.offsetX} 
+                      offsetY={link.offsetY} 
+                      iconName={link.iconName} 
+                    />
+                  </div>
+                  <div className="card-title">{link.title}</div>
+                  {!isEditing && (
+                    <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-20 transition-opacity">
+                      <ExternalLink size={18} />
+                    </div>
+                  )}
+                </a>
+              </div>
+            ))}
+            
+            {isEditing && (
+              <button 
+                onClick={() => { 
+                  setModalMode('link'); 
+                  setFormData({ 
+                    id: '', title: '', url: '', imageUrl: '', 
+                    iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 
+                  }); 
+                  setEditingLink(null); 
+                  setIsModalOpen(true); 
+                }}
+                className="scout-card border-dashed border-4 border-slate-200 dark:border-slate-800 bg-transparent shadow-none opacity-40 hover:opacity-100 hover:border-blue-500 hover:bg-white dark:hover:bg-slate-900"
+              >
+                <Plus size={80} className="text-slate-400 mb-2 transition-transform group-hover:rotate-90" />
+                <div className="font-black text-slate-400 uppercase text-sm tracking-widest">Add Tile</div>
+              </button>
+            )}
+          </div>
         </main>
 
-        <!-- Fixed Admin Lock Button -->
-        <div class="fixed bottom-8 right-8 z-40">
-            <button id="lock-btn" onclick="toggleAdminState()" class="w-16 h-16 rounded-2xl bg-bsa-blue dark:bg-slate-800 flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 border-2 border-white/10 group">
-                <i data-lucide="lock" id="lock-icon" class="text-white dark:text-slate-300 w-7 h-7 group-hover:text-bsa-gold transition-colors"></i>
-            </button>
+        {/* --- FLOATING AUTH LOCK --- */}
+        <div className="fixed bottom-12 right-12 z-[100]">
+          <button 
+            onClick={() => isAdmin ? setIsAdmin(false) : setIsLoginOpen(true)}
+            className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all active:scale-75 hover:rotate-12 ${isAdmin ? 'bg-yellow-400 border-4 border-blue-900' : 'bg-blue-900 hover:bg-blue-800'}`}
+          >
+            {isAdmin ? <Eye className="text-blue-900" size={40} /> : <Lock className="text-white" size={40} />}
+          </button>
         </div>
 
-        <!-- ================= MODALS ================= -->
-
-        <!-- 1. Login Modal -->
-        <div id="login-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border-t-8 border-bsa-blue transform scale-95 transition-transform duration-300" id="login-modal-content">
-                <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="shield-check" class="text-bsa-blue dark:text-blue-400 w-8 h-8"></i>
-                </div>
-                <h2 class="text-2xl font-black uppercase mb-2 text-center dark:text-white">Leader Access</h2>
-                <p class="text-slate-500 text-sm mb-4 text-center">Enter the leader password to edit</p>
-                <p id="login-error" class="text-red-500 text-xs font-bold mb-4 hidden uppercase text-center bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">Incorrect password!</p>
-                
-                <input type="password" id="pass-input" placeholder="••••••••" class="w-full p-4 rounded-xl bg-slate-100 dark:bg-slate-800 mb-6 text-center font-bold outline-none focus:ring-2 focus:ring-bsa-blue dark:focus:ring-blue-500 dark:text-white transition-all">
-                
-                <div class="flex gap-3">
-                    <button onclick="closeModal('login-modal')" class="flex-1 py-3 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
-                    <button onclick="attemptLogin()" class="flex-[2] py-3 bg-bsa-blue text-white rounded-xl font-bold uppercase text-sm hover:bg-blue-800 shadow-lg transition-transform active:scale-95">Unlock</button>
-                </div>
+        {/* --- LOGIN MODAL --- */}
+        {isLoginOpen && (
+          <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-2xl z-[300] flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-slate-900 p-14 rounded-[4rem] w-full max-w-md shadow-2xl border-t-[16px] border-blue-900">
+               <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-8">
+                <KeyRound className="text-blue-900 dark:text-blue-400" size={48} />
+               </div>
+               <h2 className="text-4xl font-black text-center mb-10 uppercase tracking-tighter text-slate-800 dark:text-white">Leader Access</h2>
+               <form onSubmit={handleLogin} className="space-y-8">
+                  <input 
+                    type="password" 
+                    autoFocus 
+                    placeholder="Enter Access Key" 
+                    value={passwordInput} 
+                    onChange={e => setPasswordInput(e.target.value)} 
+                    className="w-full p-8 rounded-[2rem] bg-slate-100 dark:bg-slate-800 border-4 border-transparent focus:border-blue-900 outline-none font-black text-2xl text-center transition-all" 
+                  />
+                  <div className="flex gap-6">
+                    <button 
+                      type="button" 
+                      onClick={() => setIsLoginOpen(false)} 
+                      className="flex-1 p-6 font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest text-sm transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="flex-[2] p-6 bg-blue-900 text-white font-black rounded-3xl uppercase tracking-widest text-lg shadow-xl hover:shadow-blue-900/20 transition-all active:scale-95"
+                    >
+                      Unlock
+                    </button>
+                  </div>
+               </form>
             </div>
-        </div>
+          </div>
+        )}
 
-        <!-- 2. Edit Header Modal -->
-        <div id="header-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto opacity-0 transition-opacity duration-300">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-bsa-blue my-8 transform scale-95 transition-transform duration-300" id="header-modal-content">
-                <h2 class="text-2xl font-black uppercase mb-6 text-bsa-blue dark:text-white">Edit Header</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Main Title</label>
-                            <input type="text" id="edit-header-title" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-blue dark:text-white transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Subtitle</label>
-                            <input type="text" id="edit-header-subtitle" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-blue dark:text-white transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Logo Image URL</label>
-                            <input type="text" id="edit-header-img" onchange="updatePreviewImage('header-preview-image', this.value)" placeholder="https://..." class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-blue dark:text-white transition-all text-sm">
-                        </div>
+        {/* --- CUSTOMIZATION MODAL --- */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-2xl z-[400] flex items-center justify-center p-6 animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-slate-900 rounded-[4rem] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-b-[16px] border-blue-900">
+              <div className="bg-blue-900 p-12 text-white flex justify-between items-center">
+                <div>
+                  <h3 className="text-3xl font-black uppercase tracking-[0.2em] mb-1">
+                    {modalMode === 'header' ? 'Identity' : 'Tile Editor'}
+                  </h3>
+                  <p className="text-blue-300 font-bold uppercase tracking-widest text-xs">Customize your pack presence</p>
+                </div>
+                <button 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="w-16 h-16 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X size={32} />
+                </button>
+              </div>
+              
+              <form onSubmit={handleSaveModal} className="p-12 overflow-y-auto space-y-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div className="space-y-8">
+                    <div className="group">
+                      <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
+                        Display Name
+                      </label>
+                      <input 
+                        required 
+                        value={formData.title} 
+                        onChange={e => setFormData({...formData, title: e.target.value})} 
+                        className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] font-bold border-4 border-transparent focus:border-blue-900/20 outline-none transition-all" 
+                      />
                     </div>
+
+                    {modalMode === 'link' ? (
+                      <div className="group">
+                        <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
+                          Web Address (URL)
+                        </label>
+                        <input 
+                          required 
+                          value={formData.url || ''} 
+                          onChange={e => setFormData({...formData, url: e.target.value})} 
+                          className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] font-medium transition-all" 
+                          placeholder="e.g. scouting.org" 
+                        />
+                      </div>
+                    ) : (
+                      <div className="group">
+                        <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
+                          Motto / Subtitle
+                        </label>
+                        <input 
+                          value={formData.subtitle || ''} 
+                          onChange={e => setFormData({...formData, subtitle: e.target.value})} 
+                          className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] transition-all" 
+                        />
+                      </div>
+                    )}
                     
-                    <div class="flex flex-col items-center bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-4 w-full text-center">Adjust Logo (Drag & Zoom)</label>
-                        
-                        <div class="image-viewport w-32 h-32 bg-white dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 mb-6 cursor-move shadow-inner" id="header-preview-box">
-                            <span id="header-preview-placeholder" class="text-xs text-slate-400 font-bold text-center px-2">No Image</span>
-                            <img id="header-preview-image" src="" class="draggable-img" alt="Preview" style="display:none;">
-                        </div>
-                        
-                        <div class="w-full flex items-center gap-3">
-                            <i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i>
-                            <input type="range" id="header-scale-slider" min="0.2" max="3" step="0.05" value="1">
-                            <i data-lucide="zoom-in" class="w-4 h-4 text-slate-400"></i>
-                        </div>
+                    <div className="group">
+                      <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
+                        Logo/Image Link
+                      </label>
+                      <input 
+                        value={formData.imageUrl || ''} 
+                        onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})} 
+                        className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] text-sm font-mono transition-all" 
+                        placeholder="https://..."
+                      />
                     </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center">
+                     <label className="text-xs font-black uppercase text-slate-400 mb-6 block tracking-widest">Live Preview</label>
+                     <div 
+                       className="w-56 h-56 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-2xl cursor-move active:cursor-grabbing group"
+                       onMouseDown={(e) => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
+                       onMouseMove={(e) => {
+                         if (!dragRef.current.isDragging) return;
+                         const dx = (e.clientX - dragRef.current.startX) * 0.5;
+                         const dy = (e.clientY - dragRef.current.startY) * 0.5;
+                         setFormData((p: any) => ({ 
+                           ...p, 
+                           offsetX: (p.offsetX || 0) + dx, 
+                           offsetY: (p.offsetY || 0) + dy 
+                         }));
+                         dragRef.current.startX = e.clientX; 
+                         dragRef.current.startY = e.clientY;
+                       }}
+                       onMouseUp={() => dragRef.current.isDragging = false}
+                       onMouseLeave={() => dragRef.current.isDragging = false}
+                     >
+                       <GenericImage 
+                        url={formData.imageUrl} 
+                        zoom={formData.zoom} 
+                        offsetX={formData.offsetX} 
+                        offsetY={formData.offsetY} 
+                        iconName={formData.iconName} 
+                       />
+                       <div className="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/5 transition-colors pointer-events-none"></div>
+                     </div>
+                     <div className="w-full mt-10 space-y-4">
+                       <div className="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest">
+                         <span>Zoom Control</span>
+                         <span className="text-blue-600">{(formData.zoom || 1).toFixed(1)}x</span>
+                       </div>
+                       <input 
+                        type="range" 
+                        min="0.2" 
+                        max="4" 
+                        step="0.05" 
+                        value={formData.zoom || 1} 
+                        onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} 
+                        className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer" 
+                       />
+                       <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest">
+                        Drag the image above to reposition
+                       </p>
+                     </div>
+                  </div>
                 </div>
-                
-                <div class="flex gap-3">
-                    <button onclick="closeModal('header-modal')" class="flex-1 py-4 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
-                    <button onclick="saveHeader()" class="flex-[2] py-4 bg-bsa-blue text-white rounded-xl font-black uppercase text-sm hover:bg-blue-800 shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
-                        <i data-lucide="save" class="w-4 h-4"></i> Save Header
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <!-- 3. Edit/Add Link Modal -->
-        <div id="edit-link-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto opacity-0 transition-opacity duration-300">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-2xl shadow-2xl border-t-8 border-bsa-gold my-8 transform scale-95 transition-transform duration-300" id="edit-link-modal-content">
-                
-                <div class="flex justify-between items-center mb-6">
-                    <h2 id="edit-modal-title" class="text-2xl font-black uppercase text-slate-800 dark:text-white">Add Link</h2>
-                    <!-- Delete button (only visible when editing) -->
-                    <button id="btn-trigger-delete" onclick="promptDeleteLink()" class="hidden p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
-                </div>
-
-                <input type="hidden" id="edit-link-id">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Button Title</label>
-                            <input type="text" id="edit-link-title" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-gold dark:text-white transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Web Address (URL)</label>
-                            <input type="url" id="edit-link-url" placeholder="https://" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-gold dark:text-white transition-all text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Background Image URL</label>
-                            <input type="text" id="edit-link-img" onchange="updatePreviewImage('link-preview-image', this.value)" placeholder="https://" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-bsa-gold dark:text-white transition-all text-sm">
-                        </div>
+                {modalMode === 'link' && (
+                  <div className="pt-10 border-t-4 border-slate-50 dark:border-slate-800">
+                    <label className="text-xs font-black uppercase text-slate-400 mb-6 block tracking-widest text-center">Or Use an Icon Template</label>
+                    <div className="flex flex-wrap justify-center gap-4">
+                      {Object.keys(ICON_MAP).map(n => {
+                        const Icon = ICON_MAP[n];
+                        return (
+                          <button 
+                            key={n} 
+                            type="button" 
+                            onClick={() => setFormData({...formData, iconName: n, imageUrl: ''})} 
+                            className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all active:scale-90 ${formData.iconName === n ? 'bg-blue-900 text-white scale-110 shadow-xl ring-4 ring-blue-900/20' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                          >
+                            <Icon size={28} />
+                          </button>
+                        );
+                      })}
                     </div>
-                    
-                    <div class="flex flex-col items-center bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-4 w-full text-center">Adjust Image (Drag & Zoom)</label>
-                        
-                        <!-- Mini Card Preview -->
-                        <div class="image-viewport w-48 h-32 bg-slate-200 dark:bg-slate-900 rounded-xl mb-6 cursor-move shadow-inner relative group" id="link-preview-box">
-                            <span id="link-preview-placeholder" class="text-xs text-slate-400 font-bold text-center px-2 absolute inset-0 flex items-center justify-center">No Image</span>
-                            <img id="link-preview-image" src="" class="draggable-img" alt="Preview" style="display:none;">
-                            
-                            <!-- Card Overlay Mockup -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none rounded-xl"></div>
-                            <div class="absolute bottom-3 left-3 right-3 pointer-events-none">
-                                <span id="link-preview-title" class="text-white font-bold text-sm block truncate shadow-sm">Card Title</span>
-                            </div>
-                        </div>
-                        
-                        <div class="w-full flex items-center gap-3">
-                            <i data-lucide="zoom-out" class="w-4 h-4 text-slate-400"></i>
-                            <input type="range" id="link-scale-slider" min="0.2" max="3" step="0.05" value="1">
-                            <i data-lucide="zoom-in" class="w-4 h-4 text-slate-400"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex gap-3">
-                    <button onclick="closeModal('edit-link-modal')" class="flex-1 py-4 text-slate-500 font-bold uppercase text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancel</button>
-                    <button onclick="saveLink()" class="flex-[2] py-4 bg-bsa-gold text-slate-900 rounded-xl font-black uppercase text-sm hover:bg-yellow-500 shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
-                        <i data-lucide="save" class="w-4 h-4"></i> Save Link
-                    </button>
-                </div>
-            </div>
-        </div>
+                  </div>
+                )}
 
-        <!-- 4. Delete Confirmation Modal -->
-        <div id="delete-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm hidden items-center justify-center z-[60] p-4 opacity-0 transition-opacity duration-300">
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border-t-8 border-red-500 text-center transform scale-95 transition-transform duration-300" id="delete-modal-content">
-                <div class="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-                    <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                <div className="flex gap-6 pt-6">
+                   <button 
+                    type="button" 
+                    onClick={() => setIsModalOpen(false)} 
+                    className="flex-1 p-8 font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+                   >
+                    Discard
+                   </button>
+                   <button 
+                    type="submit" 
+                    className="flex-[2] p-8 bg-blue-900 text-white rounded-[2rem] font-black uppercase tracking-[0.25em] shadow-2xl hover:bg-blue-800 transition-all active:scale-95"
+                   >
+                    Update Content
+                   </button>
                 </div>
-                <h2 class="text-2xl font-black uppercase mb-2 dark:text-white">Delete Link?</h2>
-                <p class="text-slate-500 text-sm mb-8">This action cannot be undone. Are you sure you want to remove this resource?</p>
-                <div class="flex gap-3">
-                    <button onclick="closeModal('delete-modal')" class="flex-1 py-3 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold uppercase text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
-                    <button onclick="confirmDeleteLink()" class="flex-1 py-3 bg-red-500 text-white font-bold uppercase text-sm rounded-xl hover:bg-red-600 shadow-lg transition-transform active:scale-95">Delete</button>
-                </div>
+              </form>
             </div>
-        </div>
+          </div>
+        )}
 
+        {/* --- TOAST NOTIFICATIONS --- */}
+        {toastMsg && (
+          <div className="fixed top-12 left-1/2 -translate-x-1/2 bg-blue-900/95 backdrop-blur-xl text-white px-12 py-6 rounded-full font-black uppercase tracking-widest text-sm z-[1000] shadow-2xl flex items-center gap-5 animate-in slide-in-from-top-10 duration-300">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <Cloud size={18} className="animate-pulse" />
+            </div>
+            {toastMsg}
+          </div>
+        )}
+
+      </div>
     </div>
-
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // ==========================================
-        // CONFIG & INITIALIZATION
-        // ==========================================
-        
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Mock config for local testing if env vars missing
-            apiKey: "mock-key", projectId: "mock-project", appId: "mock-app-id"
-        };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scout-links-live-v1';
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // State Variables
-        window.AppState = {
-            isAdmin: false,
-            currentUser: null,
-            headerData: null,
-            linksData: [],
-            activeDeleteId: null,
-            dragState: {
-                active: null, // 'header' or 'link'
-                isDragging: false,
-                startX: 0, startY: 0,
-                currX: 0, currY: 0,
-                scale: 1,
-                imgElement: null
-            }
-        };
-
-        // Paths based on Strict Rules
-        const HEADER_DOC_PATH = `artifacts/${appId}/public/data/settings/header`;
-        const LINKS_COLLECTION_PATH = `artifacts/${appId}/public/data/links`;
-
-        // ==========================================
-        // AUTHENTICATION & SYNC (RULE 3)
-        // ==========================================
-        
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth initialization failed:", error);
-                hideLoading(); // At least let them see empty state
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            AppState.currentUser = user;
-            if (user) {
-                setupRealtimeListeners();
-            } else {
-                hideLoading();
-            }
-        });
-
-        // Initialize App
-        lucide.createIcons();
-        initTheme();
-        initAuth();
-
-        function setupRealtimeListeners() {
-            if (!AppState.currentUser) return;
-
-            // 1. Listen to Header Data
-            const headerRef = doc(db, HEADER_DOC_PATH);
-            onSnapshot(headerRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    AppState.headerData = docSnap.data();
-                    renderHeader();
-                } else {
-                    // Seed initial data if empty
-                    seedInitialHeader();
-                }
-                checkLoadingState();
-            }, (error) => {
-                console.error("Header sync error:", error);
-            });
-
-            // 2. Listen to Links Collection
-            const linksRef = collection(db, LINKS_COLLECTION_PATH);
-            onSnapshot(linksRef, (snapshot) => {
-                const links = [];
-                snapshot.forEach(doc => {
-                    links.push({ id: doc.id, ...doc.data() });
-                });
-                
-                // Sort links by 'order' or creation date in memory (Rule 2)
-                links.sort((a, b) => (a.order || 0) - (b.order || 0) || (a.createdAt - b.createdAt));
-                
-                AppState.linksData = links;
-                renderLinks();
-                checkLoadingState();
-            }, (error) => {
-                console.error("Links sync error:", error);
-            });
-        }
-
-        let loadedCounts = 0;
-        function checkLoadingState() {
-            loadedCounts++;
-            if (loadedCounts >= 2) {
-                hideLoading();
-            }
-        }
-
-        async function seedInitialHeader() {
-            const defaultHeader = {
-                title: "Pack 26 Resources",
-                subtitle: "Cub Scouts • Pickerington, OH",
-                logoUrl: "",
-                scale: 1,
-                offsetX: 0,
-                offsetY: 0
-            };
-            try {
-                await setDoc(doc(db, HEADER_DOC_PATH), defaultHeader);
-            } catch (e) {
-                console.warn("Could not seed header (might lack permissions initially)");
-                AppState.headerData = defaultHeader;
-                renderHeader();
-            }
-        }
-
-        // ==========================================
-        // UI RENDERING
-        // ==========================================
-
-        function renderHeader() {
-            if (!AppState.headerData) return;
-            const h = AppState.headerData;
-            
-            document.getElementById('header-title').textContent = h.title || 'Welcome';
-            document.getElementById('header-subtitle').textContent = h.subtitle || '';
-            
-            const logoImg = document.getElementById('header-logo');
-            const fallback = document.getElementById('header-logo-fallback');
-            
-            if (h.logoUrl && h.logoUrl.trim() !== "") {
-                logoImg.src = h.logoUrl;
-                logoImg.style.display = 'block';
-                fallback.style.display = 'none';
-                
-                const scale = h.scale || 1;
-                const tx = h.offsetX || 0;
-                const ty = h.offsetY || 0;
-                logoImg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
-            } else {
-                logoImg.style.display = 'none';
-                fallback.style.display = 'block';
-            }
-        }
-
-        function renderLinks() {
-            const container = document.getElementById('links-container');
-            container.innerHTML = '';
-
-            AppState.linksData.forEach(link => {
-                const card = document.createElement('a');
-                card.href = link.url || '#';
-                card.target = "_blank";
-                card.className = "scout-card relative rounded-[2rem] overflow-hidden group h-40 bg-slate-200 dark:bg-slate-800 shadow-lg hover:shadow-xl hover:-translate-y-1 block image-viewport";
-                
-                // Background Image
-                if (link.imageUrl && link.imageUrl.trim() !== '') {
-                    const img = document.createElement('img');
-                    img.src = link.imageUrl;
-                    img.className = "absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110";
-                    
-                    // Apply custom crop styling
-                    const scale = link.scale || 1;
-                    const tx = link.offsetX || 0;
-                    const ty = link.offsetY || 0;
-                    // Note: We use object-position / object-fit differently here for the end result, 
-                    // but to match the drag effect perfectly we apply the transform.
-                    // For a cleaner look on the card, we wrap the img in a transform container.
-                    img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
-                    img.style.transformOrigin = 'center center';
-                    
-                    card.appendChild(img);
-                } else {
-                    // Fallback pattern
-                    const pattern = document.createElement('div');
-                    pattern.className = "absolute inset-0 bg-bsa-blue opacity-10 dark:opacity-20 flex items-center justify-center";
-                    pattern.innerHTML = `<i data-lucide="link" class="w-12 h-12 text-bsa-blue dark:text-white opacity-50"></i>`;
-                    card.appendChild(pattern);
-                }
-
-                // Overlay & Title
-                const overlay = document.createElement('div');
-                overlay.className = "absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent flex flex-col justify-end p-5";
-                
-                const title = document.createElement('h3');
-                title.className = "text-white font-bold text-lg leading-tight tracking-wide";
-                title.textContent = link.title || 'Untitled Link';
-                
-                overlay.appendChild(title);
-                card.appendChild(overlay);
-
-                // Edit Button (Admin Only)
-                if (AppState.isAdmin) {
-                    const editBtn = document.createElement('button');
-                    editBtn.className = "absolute top-3 right-3 p-2 bg-white/90 dark:bg-slate-800/90 text-slate-800 dark:text-white rounded-xl shadow-lg hover:bg-bsa-gold dark:hover:bg-bsa-gold hover:text-slate-900 transition-colors z-20 backdrop-blur-sm";
-                    editBtn.innerHTML = `<i data-lucide="edit-2" class="w-4 h-4"></i>`;
-                    editBtn.onclick = (e) => {
-                        e.preventDefault(); // Prevent navigating to the link
-                        openLinkModal(link);
-                    };
-                    card.appendChild(editBtn);
-                }
-
-                container.appendChild(card);
-            });
-
-            // Add "New Link" Button if Admin
-            if (AppState.isAdmin) {
-                const addCard = document.createElement('button');
-                addCard.onclick = () => openLinkModal(null);
-                addCard.className = "scout-card relative rounded-[2rem] overflow-hidden group h-40 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-300 dark:border-slate-700 hover:border-bsa-blue dark:hover:border-bsa-gold flex flex-col items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all";
-                addCard.innerHTML = `
-                    <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-bsa-blue dark:group-hover:bg-bsa-gold group-hover:text-white text-slate-400 transition-colors">
-                        <i data-lucide="plus" class="w-6 h-6"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-500 group-hover:text-bsa-blue dark:group-hover:text-bsa-gold uppercase tracking-wider">Add Link</span>
-                `;
-                container.appendChild(addCard);
-            }
-
-            lucide.createIcons();
-        }
-
-        // ==========================================
-        // APP LOGIC & ADMIN STATE
-        // ==========================================
-
-        window.toggleAdminState = function() {
-            if (AppState.isAdmin) {
-                // Logout
-                AppState.isAdmin = false;
-                document.getElementById('lock-icon').setAttribute('data-lucide', 'lock');
-                document.getElementById('lock-btn').classList.remove('bg-red-500', 'border-red-400');
-                document.getElementById('lock-btn').classList.add('bg-bsa-blue', 'border-white/10');
-                document.getElementById('edit-header-btn').classList.add('hidden');
-                renderLinks();
-                lucide.createIcons();
-            } else {
-                // Show Login
-                document.getElementById('pass-input').value = '';
-                document.getElementById('login-error').classList.add('hidden');
-                openModal('login-modal');
-                setTimeout(() => document.getElementById('pass-input').focus(), 100);
-            }
-        };
-
-        window.attemptLogin = function() {
-            const pass = document.getElementById('pass-input').value;
-            if (pass === 'pack26') {
-                AppState.isAdmin = true;
-                closeModal('login-modal');
-                
-                // Update UI for Admin
-                document.getElementById('lock-icon').setAttribute('data-lucide', 'unlock');
-                document.getElementById('lock-btn').classList.remove('bg-bsa-blue');
-                document.getElementById('lock-btn').classList.add('bg-red-500', 'border-red-400');
-                document.getElementById('edit-header-btn').classList.remove('hidden');
-                
-                renderLinks();
-                lucide.createIcons();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-                const input = document.getElementById('pass-input');
-                input.classList.add('animate-bounce');
-                setTimeout(() => input.classList.remove('animate-bounce'), 500);
-            }
-        };
-
-        // Handle Enter key for login
-        document.getElementById('pass-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') attemptLogin();
-        });
-
-
-        // ==========================================
-        // MODAL MANAGEMENT
-        // ==========================================
-
-        window.openModal = function(id) {
-            const modal = document.getElementById(id);
-            const content = document.getElementById(id + '-content');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            // Trigger reflow
-            void modal.offsetWidth;
-            modal.classList.remove('opacity-0');
-            if(content) content.classList.remove('scale-95');
-        };
-
-        window.closeModal = function(id) {
-            const modal = document.getElementById(id);
-            const content = document.getElementById(id + '-content');
-            modal.classList.add('opacity-0');
-            if(content) content.classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }, 300); // Matches duration-300
-        };
-
-        // ==========================================
-        // HEADER EDITING
-        // ==========================================
-
-        window.openHeaderModal = function() {
-            const h = AppState.headerData || {};
-            document.getElementById('edit-header-title').value = h.title || '';
-            document.getElementById('edit-header-subtitle').value = h.subtitle || '';
-            document.getElementById('edit-header-img').value = h.logoUrl || '';
-            
-            // Setup Preview
-            setupDragAndScale(
-                'header', 
-                h.logoUrl, 
-                h.offsetX || 0, 
-                h.offsetY || 0, 
-                h.scale || 1
-            );
-
-            openModal('header-modal');
-        };
-
-        window.saveHeader = async function() {
-            if (!AppState.currentUser) return;
-            
-            const btn = document.querySelector('#header-modal button.bg-bsa-blue');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div> Saving...`;
-            btn.disabled = true;
-
-            const newData = {
-                title: document.getElementById('edit-header-title').value.trim(),
-                subtitle: document.getElementById('edit-header-subtitle').value.trim(),
-                logoUrl: document.getElementById('edit-header-img').value.trim(),
-                offsetX: AppState.dragState.currX,
-                offsetY: AppState.dragState.currY,
-                scale: AppState.dragState.scale,
-                updatedAt: serverTimestamp()
-            };
-
-            try {
-                await setDoc(doc(db, HEADER_DOC_PATH), newData, { merge: true });
-                closeModal('header-modal');
-            } catch (error) {
-                console.error("Error saving header:", error);
-                alert("Failed to save changes."); // Fallback error
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
-        };
-
-
-        // ==========================================
-        // LINK EDITING
-        // ==========================================
-
-        window.openLinkModal = function(linkData) {
-            const isEditing = !!linkData;
-            document.getElementById('edit-modal-title').textContent = isEditing ? 'Edit Link' : 'Add Link';
-            
-            const delBtn = document.getElementById('btn-trigger-delete');
-            if (isEditing) {
-                delBtn.classList.remove('hidden');
-                document.getElementById('edit-link-id').value = linkData.id;
-            } else {
-                delBtn.classList.add('hidden');
-                document.getElementById('edit-link-id').value = '';
-            }
-
-            document.getElementById('edit-link-title').value = linkData ? (linkData.title || '') : '';
-            document.getElementById('edit-link-url').value = linkData ? (linkData.url || '') : '';
-            document.getElementById('edit-link-img').value = linkData ? (linkData.imageUrl || '') : '';
-
-            // Update mockup title
-            const titleInput = document.getElementById('edit-link-title');
-            const mockupTitle = document.getElementById('link-preview-title');
-            mockupTitle.textContent = linkData ? (linkData.title || 'Card Title') : 'Card Title';
-            
-            // Realtime update of mockup title
-            titleInput.oninput = (e) => {
-                mockupTitle.textContent = e.target.value || 'Card Title';
-            };
-
-            // Setup Preview
-            setupDragAndScale(
-                'link', 
-                linkData ? linkData.imageUrl : '', 
-                linkData ? (linkData.offsetX || 0) : 0, 
-                linkData ? (linkData.offsetY || 0) : 0, 
-                linkData ? (linkData.scale || 1) : 1
-            );
-
-            openModal('edit-link-modal');
-        };
-
-        window.saveLink = async function() {
-            if (!AppState.currentUser) return;
-
-            const id = document.getElementById('edit-link-id').value;
-            const btn = document.querySelector('#edit-link-modal button.bg-bsa-gold');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-2 border-slate-900 border-t-transparent"></div> Saving...`;
-            btn.disabled = true;
-
-            const linkData = {
-                title: document.getElementById('edit-link-title').value.trim(),
-                url: document.getElementById('edit-link-url').value.trim(),
-                imageUrl: document.getElementById('edit-link-img').value.trim(),
-                offsetX: AppState.dragState.currX,
-                offsetY: AppState.dragState.currY,
-                scale: AppState.dragState.scale,
-                updatedAt: serverTimestamp()
-            };
-
-            try {
-                if (id) {
-                    // Update existing
-                    await updateDoc(doc(db, LINKS_COLLECTION_PATH, id), linkData);
-                } else {
-                    // Add new (append to end)
-                    const currentLinks = AppState.linksData;
-                    const maxOrder = currentLinks.length > 0 ? Math.max(...currentLinks.map(l => l.order || 0)) : 0;
-                    linkData.order = maxOrder + 1;
-                    linkData.createdAt = serverTimestamp();
-                    
-                    await addDoc(collection(db, LINKS_COLLECTION_PATH), linkData);
-                }
-                closeModal('edit-link-modal');
-            } catch (error) {
-                console.error("Error saving link:", error);
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
-        };
-
-        // ==========================================
-        // DELETING LINKS (Custom Confirm)
-        // ==========================================
-
-        window.promptDeleteLink = function() {
-            AppState.activeDeleteId = document.getElementById('edit-link-id').value;
-            closeModal('edit-link-modal');
-            setTimeout(() => {
-                openModal('delete-modal');
-            }, 300);
-        };
-
-        window.confirmDeleteLink = async function() {
-            if (!AppState.currentUser || !AppState.activeDeleteId) return;
-
-            const btn = document.querySelector('#delete-modal button.bg-red-500');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `Deleting...`;
-            btn.disabled = true;
-
-            try {
-                await deleteDoc(doc(db, LINKS_COLLECTION_PATH, AppState.activeDeleteId));
-                closeModal('delete-modal');
-                AppState.activeDeleteId = null;
-            } catch (error) {
-                console.error("Error deleting link:", error);
-            } finally {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
-        };
-
-        // ==========================================
-        // DRAG AND SCALE LOGIC FOR PREVIEWS
-        // ==========================================
-
-        window.updatePreviewImage = function(imgId, url) {
-            const img = document.getElementById(imgId);
-            const placeholderId = imgId.replace('-image', '-placeholder');
-            const placeholder = document.getElementById(placeholderId);
-            
-            if (url && url.trim() !== '') {
-                img.src = url;
-                img.style.display = 'block';
-                if(placeholder) placeholder.style.display = 'none';
-                
-                // Reset transform if it's a new image load
-                AppState.dragState.currX = 0;
-                AppState.dragState.currY = 0;
-                AppState.dragState.scale = 1;
-                document.getElementById(AppState.dragState.active + '-scale-slider').value = 1;
-                applyTransform();
-            } else {
-                img.style.display = 'none';
-                img.src = '';
-                if(placeholder) placeholder.style.display = 'flex';
-            }
-        };
-
-        function setupDragAndScale(type, url, tx, ty, scale) {
-            AppState.dragState.active = type;
-            AppState.dragState.currX = parseFloat(tx) || 0;
-            AppState.dragState.currY = parseFloat(ty) || 0;
-            AppState.dragState.scale = parseFloat(scale) || 1;
-            
-            const imgId = `${type}-preview-image`;
-            const sliderId = `${type}-scale-slider`;
-            const boxId = `${type}-preview-box`;
-            
-            AppState.dragState.imgElement = document.getElementById(imgId);
-            const slider = document.getElementById(sliderId);
-            const box = document.getElementById(boxId);
-            
-            slider.value = AppState.dragState.scale;
-            updatePreviewImage(imgId, url);
-            applyTransform();
-
-            // Clean up old listeners
-            box.onmousedown = null; box.ontouchstart = null;
-            window.onmousemove = null; window.ontouchmove = null;
-            window.onmouseup = null; window.ontouchend = null;
-            slider.oninput = null;
-
-            // Setup new listeners
-            slider.oninput = (e) => {
-                AppState.dragState.scale = parseFloat(e.target.value);
-                applyTransform();
-            };
-
-            const startDrag = (e) => {
-                if (e.target.tagName === 'INPUT') return; // Don't block slider
-                e.preventDefault();
-                AppState.dragState.isDragging = true;
-                
-                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-                
-                AppState.dragState.startX = clientX - AppState.dragState.currX;
-                AppState.dragState.startY = clientY - AppState.dragState.currY;
-                box.style.cursor = 'grabbing';
-            };
-
-            const moveDrag = (e) => {
-                if (!AppState.dragState.isDragging) return;
-                e.preventDefault();
-                
-                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-                
-                AppState.dragState.currX = clientX - AppState.dragState.startX;
-                AppState.dragState.currY = clientY - AppState.dragState.startY;
-                applyTransform();
-            };
-
-            const endDrag = () => {
-                AppState.dragState.isDragging = false;
-                box.style.cursor = 'move';
-            };
-
-            box.addEventListener('mousedown', startDrag);
-            box.addEventListener('touchstart', startDrag, {passive: false});
-            
-            window.addEventListener('mousemove', moveDrag);
-            window.addEventListener('touchmove', moveDrag, {passive: false});
-            
-            window.addEventListener('mouseup', endDrag);
-            window.addEventListener('touchend', endDrag);
-        }
-
-        function applyTransform() {
-            if (AppState.dragState.imgElement) {
-                const { currX, currY, scale } = AppState.dragState;
-                AppState.dragState.imgElement.style.transform = `translate(${currX}px, ${currY}px) scale(${scale})`;
-            }
-        }
-
-
-        // ==========================================
-        // UTILS (Theme, Loading)
-        // ==========================================
-
-        function hideLoading() {
-            const overlay = document.getElementById('loading-overlay');
-            if(overlay) {
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.remove(), 500);
-            }
-        }
-
-        function initTheme() {
-            const toggleBtn = document.getElementById('theme-toggle');
-            const icon = document.getElementById('theme-icon');
-            
-            // Check local storage or system preference
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-                icon.setAttribute('data-lucide', 'sun');
-            } else {
-                document.documentElement.classList.remove('dark');
-                icon.setAttribute('data-lucide', 'moon');
-            }
-            lucide.createIcons();
-
-            toggleBtn.addEventListener('click', () => {
-                document.documentElement.classList.toggle('dark');
-                const isDark = document.documentElement.classList.contains('dark');
-                localStorage.theme = isDark ? 'dark' : 'light';
-                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-                lucide.createIcons();
-            });
-        }
-    </script>
-</body>
-</html>
+  );
+}
