@@ -112,14 +112,17 @@
                     </button>
                 </div>
 
-                <div class="text-center md:text-left flex-1">
+                <div class="text-center md:text-left flex-1 relative group pr-12">
                     <h1 id="display-title" class="text-6xl md:text-8xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-2 leading-none">
-                        Pack 26
+                        Pack 121
                     </h1>
                     <div class="text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-3">
                         <i data-lucide="star" class="text-yellow-500 fill-yellow-500 w-5 h-5"></i>
                         <span id="display-subtitle">Scouting America</span>
                     </div>
+                    <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
+                        <!-- Icon injected by render() -->
+                    </button>
                 </div>
 
                 <div class="flex gap-4">
@@ -386,11 +389,17 @@
             }
 
             const headerBtn = document.getElementById('edit-header-btn');
+            const textBtn = document.getElementById('edit-text-btn');
             if (isEditing) {
                 headerBtn.classList.remove('hidden');
                 headerBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>';
+                if (textBtn) {
+                    textBtn.classList.remove('hidden');
+                    textBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>';
+                }
             } else {
                 headerBtn.classList.add('hidden');
+                if (textBtn) textBtn.classList.add('hidden');
             }
 
             // Fire Lucide
@@ -414,7 +423,7 @@
                 
                 window.render();
             } else {
-                const pass = prompt("Leader Access Key (Default: CoRf121):");
+                const pass = prompt("Enter Leader Access Key:");
                 if (pass === 'CoRf121') {
                     isAdmin = true;
                     isEditing = false; // Start clean, they must click Admin to edit
