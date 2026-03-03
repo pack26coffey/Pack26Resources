@@ -58,17 +58,6 @@
 
         .dark .image-viewport { background: #1e293b; }
 
-        .admin-btn {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.2s ease;
-        }
-
-        .scout-card:hover .admin-btn {
-            opacity: 1;
-            transform: scale(1);
-        }
-
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -107,8 +96,8 @@
                     <div id="header-logo-container" class="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner flex items-center justify-center overflow-hidden border-8 border-white dark:border-slate-700 transition-all">
                         <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="max-w-none h-full object-contain">
                     </div>
-                    <button onclick="window.openHeaderModal()" class="admin-only absolute -bottom-3 -right-3 p-4 bg-blue-600 text-white rounded-2xl shadow-xl hidden hover:scale-110">
-                        <i data-lucide="edit-3"></i>
+                    <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-3 -right-3 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
+                        <!-- Icon injected by render() -->
                     </button>
                 </div>
 
@@ -117,18 +106,17 @@
                         Pack 121
                     </h1>
                     <div class="text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-3">
-                        <i data-lucide="star" class="text-yellow-500 fill-yellow-500"></i>
+                        <i data-lucide="star" class="text-yellow-500 fill-yellow-500 w-5 h-5"></i>
                         <span id="display-subtitle">Scouting America</span>
                     </div>
                 </div>
 
                 <div class="flex gap-4">
-                    <button onclick="window.toggleDarkMode()" class="p-6 rounded-[2rem] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-lg">
-                        <i data-lucide="moon" id="theme-icon"></i>
+                    <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center">
+                        <!-- Icon injected by render() -->
                     </button>
-                    <button onclick="window.toggleAdminMode()" id="admin-toggle-btn" class="hidden flex items-center gap-3 px-8 py-6 rounded-[2rem] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg">
-                        <i data-lucide="settings"></i>
-                        <span>Admin</span>
+                    <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden">
+                        <!-- Content injected by render() -->
                     </button>
                 </div>
             </div>
@@ -142,9 +130,9 @@
         </main>
 
         <!-- Auth & Footer -->
-        <div class="fixed bottom-12 right-12 z-50">
-            <button onclick="window.handleAuthClick()" id="lock-btn" class="w-20 h-20 rounded-[2rem] flex items-center justify-center bg-blue-900 shadow-2xl transition-all hover:rotate-12 active:scale-90">
-                <i data-lucide="lock" class="text-white" id="lock-icon"></i>
+        <div class="fixed bottom-10 right-10 z-50">
+            <button id="lock-btn" onclick="window.handleAuthClick()">
+                <!-- Icon injected by render() -->
             </button>
         </div>
     </div>
@@ -152,38 +140,38 @@
     <!-- Modals -->
     <div id="modal-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
         <div class="bg-white dark:bg-slate-900 rounded-[4rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-900">
-            <div class="bg-blue-900 p-10 text-white flex justify-between items-center">
-                <h3 id="modal-title" class="text-3xl font-black uppercase tracking-widest">Tile Settings</h3>
-                <button onclick="window.closeModal()" class="p-4 hover:bg-white/10 rounded-full"><i data-lucide="x"></i></button>
+            <div class="bg-blue-900 p-8 text-white flex justify-between items-center">
+                <h3 id="modal-title" class="text-2xl font-black uppercase tracking-widest">Tile Settings</h3>
+                <button onclick="window.closeModal()" class="p-3 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
             </div>
             
-            <div class="p-10 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div class="p-8 md:p-10 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div class="space-y-6">
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Title</label>
-                        <input id="input-title" class="w-full p-5 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 dark:text-white">
+                        <input id="input-title" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all">
                     </div>
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest" id="label-url">URL</label>
-                        <input id="input-url" class="w-full p-5 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none dark:text-white" placeholder="https://...">
+                        <input id="input-url" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none dark:text-white transition-all" placeholder="https://...">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image Source</label>
-                        <input id="input-image" class="w-full p-5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white">
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image Source URL</label>
+                        <input id="input-image" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all">
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center">
-                    <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-2xl cursor-move">
+                    <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing">
                         <img id="preview-img" src="" class="max-w-none h-full object-contain pointer-events-none">
                     </div>
                     <div class="w-full mt-8 space-y-4">
                         <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <span>Zoom</span>
-                            <span id="zoom-val" class="text-blue-600">1.0x</span>
+                            <span id="zoom-val" class="text-blue-600 font-bold">1.0x</span>
                         </div>
                         <input type="range" id="input-zoom" min="0.5" max="4" step="0.01" value="1">
-                        <button onclick="window.saveChanges()" class="w-full py-6 bg-blue-900 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95 mt-4">
+                        <button onclick="window.saveChanges()" class="w-full py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95 mt-2">
                             Save Changes
                         </button>
                     </div>
@@ -192,7 +180,7 @@
         </div>
     </div>
 
-    <!-- Firebase Realtime Sync Logic & Safe Fallback -->
+    <!-- Firebase Realtime Sync Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -207,6 +195,12 @@
         let isEditing = false;
         const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'scout-links-pro';
         
+        // Apply saved theme immediately
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
         // Initialize Links & Settings from Local Storage (Fallbacks)
         let links = JSON.parse(localStorage.getItem('scout_links')) || [
             { id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0 },
@@ -224,7 +218,7 @@
         let isDragging = false;
         let startX, startY;
 
-        // --- Firebase Init (With Safe Fallback) ---
+        // --- Firebase Init ---
         try {
             const fbConfigString = typeof window.__firebase_config !== 'undefined' ? window.__firebase_config : null;
             if (fbConfigString) {
@@ -237,7 +231,7 @@
                 }
             }
         } catch (e) {
-            console.warn("Firebase configuration missing or invalid. Falling back to local storage mode.");
+            console.warn("Falling back to local storage.");
         }
 
         // --- Auth & Sync Loop ---
@@ -254,7 +248,9 @@
             onAuthStateChanged(auth, (user) => {
                 currentUser = user;
                 if (user) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+                    // Critical Fix: Firebase doc() requires an EVEN number of string segments.
+                    // Pattern: artifacts / {appId} / public / data / {collectionName} / {documentName}
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config');
                     onSnapshot(docRef, (snap) => {
                         if (snap.exists()) {
                             const data = snap.data();
@@ -270,17 +266,17 @@
         window.syncToCloud = async function() {
             if (!useFirebase || !currentUser) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config');
                 await setDoc(docRef, { links, settings, updatedAt: Date.now() });
             } catch (error) {
-                console.error("Failed to push updates:", error);
+                console.error("Failed to push updates to cloud:", error);
             }
         };
 
         // --- Core Functions ---
         window.render = function() {
             const grid = document.getElementById('links-grid');
-            if (!grid) return; // Guard clause
+            if (!grid) return;
             
             grid.innerHTML = '';
 
@@ -290,21 +286,21 @@
                 card.innerHTML = `
                     ${isEditing ? `
                         <div class="absolute top-4 right-4 z-20 flex gap-2">
-                            <button onclick="window.editLink(${link.id})" class="p-3 bg-blue-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
-                                <i data-lucide="edit-2"></i>
+                            <button onclick="window.editLink(${link.id})" class="p-2 bg-blue-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
                             </button>
-                            <button onclick="window.deleteLink(${link.id})" class="p-3 bg-red-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
-                                <i data-lucide="trash-2"></i>
+                            <button onclick="window.deleteLink(${link.id})" class="p-2 bg-red-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
                     ` : ''}
-                    <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-8 flex flex-col items-center text-center block h-full">
-                        <div class="image-viewport mb-6">
+                    <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-6 md:p-8 flex flex-col items-center text-center block h-full">
+                        <div class="image-viewport mb-4 md:mb-6">
                             <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
                                  style="transform: translate(${link.x}px, ${link.y}px) scale(${link.zoom}); opacity: ${link.img ? 1 : 0.1}"
                                  class="max-w-none h-full object-contain pointer-events-none">
                         </div>
-                        <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-sm">${link.title}</span>
+                        <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-xs md:text-sm line-clamp-2">${link.title}</span>
                     </a>
                 `;
                 grid.appendChild(card);
@@ -313,25 +309,59 @@
             if (isEditing) {
                 const addBtn = document.createElement('button');
                 addBtn.onclick = window.addNewLink;
-                addBtn.className = 'scout-card border-4 border-dashed border-slate-200 dark:border-slate-800 bg-transparent flex flex-col items-center justify-center p-8 min-h-[300px] opacity-40 hover:opacity-100 hover:border-blue-500 cursor-pointer';
+                addBtn.className = 'scout-card border-4 border-dashed border-slate-200 dark:border-slate-800 bg-transparent flex flex-col items-center justify-center p-8 min-h-[250px] opacity-40 hover:opacity-100 hover:border-blue-500 cursor-pointer transition-all';
                 addBtn.innerHTML = `
-                    <i data-lucide="plus" class="w-16 h-16 text-slate-400 mb-4 pointer-events-none"></i>
-                    <span class="font-black text-slate-400 uppercase tracking-widest pointer-events-none">Add Link</span>
+                    <i data-lucide="plus" class="w-12 h-12 text-slate-400 mb-4 pointer-events-none"></i>
+                    <span class="font-black text-slate-400 uppercase tracking-widest pointer-events-none text-xs">Add Link</span>
                 `;
                 grid.appendChild(addBtn);
             }
 
-            // Sync Header
+            // Sync Header Texts & Logo
             document.getElementById('display-title').innerText = settings.title;
             document.getElementById('display-subtitle').innerText = settings.subtitle;
             const logo = document.getElementById('main-logo');
             logo.src = settings.logo;
             logo.style.transform = `translate(${settings.x}px, ${settings.y}px) scale(${settings.zoom})`;
 
-            // Initialize Lucide Icons
-            if (window.lucide) {
-                window.lucide.createIcons();
+            // Render Dynamic UI Buttons Based on State
+            const isDark = document.documentElement.classList.contains('dark');
+            const themeBtn = document.getElementById('theme-btn');
+            themeBtn.innerHTML = isDark ? '<i data-lucide="sun" class="w-5 h-5"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>';
+
+            const lockBtn = document.getElementById('lock-btn');
+            if (isAdmin) {
+                lockBtn.className = "w-14 h-14 rounded-2xl flex items-center justify-center bg-yellow-400 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="unlock" class="text-blue-900 w-6 h-6"></i>';
+            } else {
+                lockBtn.className = "w-14 h-14 rounded-2xl flex items-center justify-center bg-blue-900 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="lock" class="text-white w-6 h-6"></i>';
             }
+
+            const adminBtn = document.getElementById('admin-toggle-btn');
+            if (isAdmin) {
+                adminBtn.classList.remove('hidden');
+                if (isEditing) {
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-5 h-5 text-blue-900"></i><span class="text-sm">Finish</span>';
+                    adminBtn.className = "flex items-center gap-2 px-5 py-3 rounded-2xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
+                } else {
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-5 h-5"></i><span class="text-sm">Admin</span>';
+                    adminBtn.className = "flex items-center gap-2 px-5 py-3 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
+                }
+            } else {
+                adminBtn.classList.add('hidden');
+            }
+
+            const headerBtn = document.getElementById('edit-header-btn');
+            if (isEditing) {
+                headerBtn.classList.remove('hidden');
+                headerBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>';
+            } else {
+                headerBtn.classList.add('hidden');
+            }
+
+            // Fire Lucide
+            if (window.lucide) window.lucide.createIcons();
             
             // Backup locally
             localStorage.setItem('scout_links', JSON.stringify(links));
@@ -341,22 +371,15 @@
         // --- Admin Actions ---
         window.handleAuthClick = function() {
             if (isAdmin) {
+                // User is signing out
                 isAdmin = false;
-                isEditing = false;
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-                document.getElementById('admin-toggle-btn').classList.add('hidden');
-                document.getElementById('lock-btn').classList.replace('bg-yellow-400', 'bg-blue-900');
-                if (window.lucide) document.getElementById('lock-icon').innerHTML = window.lucide.icons.lock.toSvg();
+                isEditing = false; // Forces Admin mode off
                 window.render();
             } else {
-                const pass = prompt("Leader Access Key:");
+                const pass = prompt("Leader Access Key (Default: CoRf121):");
                 if (pass === 'CoRf121') {
                     isAdmin = true;
-                    isEditing = true;
-                    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                    document.getElementById('admin-toggle-btn').classList.remove('hidden');
-                    document.getElementById('lock-btn').classList.replace('bg-blue-900', 'bg-yellow-400');
-                    if (window.lucide) document.getElementById('lock-icon').innerHTML = window.lucide.icons.unlock.toSvg();
+                    isEditing = false; // Start with clean view, they must click Admin to edit
                     window.render();
                 }
             }
@@ -369,11 +392,9 @@
 
         window.toggleDarkMode = function() {
             document.documentElement.classList.toggle('dark');
-            const icon = document.getElementById('theme-icon');
             const isDark = document.documentElement.classList.contains('dark');
-            if (window.lucide) {
-                icon.innerHTML = isDark ? window.lucide.icons.sun.toSvg() : window.lucide.icons.moon.toSvg();
-            }
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            window.render();
         };
 
         // --- Modal & Drag Logic ---
@@ -442,14 +463,16 @@
                 const link = links.find(l => l.id === currentEditId);
                 if (link) {
                     link.title = document.getElementById('input-title').value;
-                    link.url = document.getElementById('input-url').value;
+                    let safeUrl = document.getElementById('input-url').value.trim();
+                    if (safeUrl && !safeUrl.startsWith('http')) safeUrl = 'https://' + safeUrl;
+                    link.url = safeUrl;
                     link.img = document.getElementById('input-image').value;
                     link.zoom = document.getElementById('input-zoom').value;
                 }
             }
             window.closeModal();
             window.render();
-            window.syncToCloud();
+            window.syncToCloud(); // Save to Firebase on every modal save
         };
 
         // --- Event Listeners ---
@@ -480,7 +503,7 @@
 
         window.addEventListener('mouseup', () => isDragging = false);
 
-        // Init setup ensures render runs regardless of Firebase status
+        // Init setup ensures render runs immediately
         window.onload = () => {
             window.render();
         };
