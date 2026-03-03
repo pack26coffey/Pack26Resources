@@ -58,6 +58,17 @@
 
         .dark .image-viewport { background: #1e293b; }
 
+        .admin-btn {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.2s ease;
+        }
+
+        .scout-card:hover .admin-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -112,7 +123,8 @@
                 </div>
 
                 <div class="flex gap-4">
-                    <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center">
+                    <!-- Reduced size: p-3 and rounded-xl -->
+                    <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center">
                         <!-- Icon injected by render() -->
                     </button>
                     <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden">
@@ -193,7 +205,9 @@
         let currentUser = null;
         let isAdmin = false;
         let isEditing = false;
-        const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'scout-links-pro';
+        
+        // Use the exact Firebase Project ID for clean pathing
+        const appId = 'pack-26-resources';
         
         // Apply saved theme immediately
         const savedTheme = localStorage.getItem('theme');
@@ -208,7 +222,7 @@
             { id: 3, title: 'Uniforms', url: 'https://www.scoutshop.org/', img: '', zoom: 1, x: 0, y: 0 }
         ];
         let settings = JSON.parse(localStorage.getItem('scout_settings')) || {
-            title: 'Pack 121',
+            title: 'Pack 26',
             subtitle: 'Scouting America',
             logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
             zoom: 1, x: 0, y: 0
@@ -218,48 +232,65 @@
         let isDragging = false;
         let startX, startY;
 
-        // --- Firebase Init ---
+        // --- Firebase Init (With hardcoded keys) ---
+        let fbConfig = null;
         try {
-            const fbConfigString = typeof window.__firebase_config !== 'undefined' ? window.__firebase_config : null;
-            if (fbConfigString) {
-                const fbConfig = JSON.parse(fbConfigString);
-                if (fbConfig && fbConfig.apiKey) {
-                    const app = initializeApp(fbConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    useFirebase = true;
-                }
+            if (typeof window.__firebase_config !== 'undefined') {
+                fbConfig = JSON.parse(window.__firebase_config);
             }
-        } catch (e) {
-            console.warn("Falling back to local storage.");
+        } catch (e) {}
+
+        // User's provided Firebase keys:
+        if (!fbConfig || !fbConfig.apiKey) {
+            fbConfig = {
+                apiKey: "AIzaSyCwmME4nKhlE2i6ygpimyuU29F5KOcEB3o",
+                authDomain: "pack-26-resources.firebaseapp.com",
+                projectId: "pack-26-resources",
+                storageBucket: "pack-26-resources.firebasestorage.app",
+                messagingSenderId: "1033254465829",
+                appId: "1:1033254465829:web:e78f1364ea09206568eacc"
+            };
+        }
+
+        if (fbConfig && fbConfig.apiKey) {
+            const app = initializeApp(fbConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            useFirebase = true;
+        } else {
+            console.warn("No Firebase Configuration found. App is running in Local Mode.");
         }
 
         // --- Auth & Sync Loop ---
         if (useFirebase) {
             const initAuth = async () => {
-                if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
-                    await signInWithCustomToken(auth, window.__initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+                try {
+                    if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+                        await signInWithCustomToken(auth, window.__initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (e) {
+                    console.error("Firebase Authentication Failed:", e);
                 }
             };
-            initAuth();
-
-            onAuthStateChanged(auth, (user) => {
-                currentUser = user;
-                if (user) {
-                    // Critical Fix: Firebase doc() requires an EVEN number of string segments.
-                    // Pattern: artifacts / {appId} / public / data / {collectionName} / {documentName}
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config');
-                    onSnapshot(docRef, (snap) => {
-                        if (snap.exists()) {
-                            const data = snap.data();
-                            if (data.links) links = data.links;
-                            if (data.settings) settings = data.settings;
-                            window.render();
-                        }
-                    }, (error) => console.error("Sync Error: ", error));
-                }
+            
+            initAuth().then(() => {
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    if (user) {
+                        // Secure exact path per strict rules requirements
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config');
+                        onSnapshot(docRef, (snap) => {
+                            if (snap.exists()) {
+                                const data = snap.data();
+                                if (data.links) links = data.links;
+                                if (data.settings) settings = data.settings;
+                                window.render();
+                            }
+                        }, (error) => console.error("Sync Error: ", error));
+                    }
+                });
             });
         }
 
@@ -331,22 +362,24 @@
 
             const lockBtn = document.getElementById('lock-btn');
             if (isAdmin) {
-                lockBtn.className = "w-14 h-14 rounded-2xl flex items-center justify-center bg-yellow-400 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
-                lockBtn.innerHTML = '<i data-lucide="unlock" class="text-blue-900 w-6 h-6"></i>';
+                // Reduced size
+                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-yellow-400 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="unlock" class="text-blue-900 w-5 h-5"></i>';
             } else {
-                lockBtn.className = "w-14 h-14 rounded-2xl flex items-center justify-center bg-blue-900 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
-                lockBtn.innerHTML = '<i data-lucide="lock" class="text-white w-6 h-6"></i>';
+                // Reduced size
+                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-blue-900 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="lock" class="text-white w-5 h-5"></i>';
             }
 
             const adminBtn = document.getElementById('admin-toggle-btn');
             if (isAdmin) {
                 adminBtn.classList.remove('hidden');
                 if (isEditing) {
-                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-5 h-5 text-blue-900"></i><span class="text-sm">Finish</span>';
-                    adminBtn.className = "flex items-center gap-2 px-5 py-3 rounded-2xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 text-blue-900"></i><span class="text-xs">Finish</span>';
+                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
                 } else {
-                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-5 h-5"></i><span class="text-sm">Admin</span>';
-                    adminBtn.className = "flex items-center gap-2 px-5 py-3 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4"></i><span class="text-xs">Admin</span>';
+                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
                 }
             } else {
                 adminBtn.classList.add('hidden');
@@ -371,15 +404,20 @@
         // --- Admin Actions ---
         window.handleAuthClick = function() {
             if (isAdmin) {
-                // User is signing out
+                // Sign Out Process
                 isAdmin = false;
-                isEditing = false; // Forces Admin mode off
+                isEditing = false; 
+                
+                // Immediately force UI reset to prevent "stuck" admin mode
+                const adminBtn = document.getElementById('admin-toggle-btn');
+                if (adminBtn) adminBtn.classList.add('hidden');
+                
                 window.render();
             } else {
                 const pass = prompt("Leader Access Key (Default: CoRf121):");
                 if (pass === 'CoRf121') {
                     isAdmin = true;
-                    isEditing = false; // Start with clean view, they must click Admin to edit
+                    isEditing = false; // Start clean, they must click Admin to edit
                     window.render();
                 }
             }
