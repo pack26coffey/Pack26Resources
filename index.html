@@ -3,28 +3,19 @@ import {
   Settings, Plus, Edit2, Trash2, Tent, Calendar, MapPin, 
   Info, BookOpen, Camera, MessageSquare, Shield, Star, 
   Globe, X, Sun, Moon, ZoomIn, Lock, Eye, KeyRound, 
-  Cloud, ExternalLink
+  Cloud, ExternalLink, ChevronRight, LayoutGrid
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
 
-// --- GLOBALS & TYPES ---
+// --- TYPES & CONSTANTS ---
 const ICON_MAP: Record<string, any> = { 
   Tent, Calendar, MapPin, Info, BookOpen, Camera, 
   MessageSquare, Shield, Star, Globe 
 };
 
-// Security: In a real app, this would be handled via Firebase Auth providers,
-// but for this simplified "Leader Access" model, we use a shared credential.
 const ADMIN_PASSWORD = "CoRf121";
-
-// Default links to show if the database is empty or still loading
-const INITIAL_LINKS: ScoutLink[] = [
-  { id: '1', title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', imageUrl: '', iconName: 'BookOpen', zoom: 1, offsetX: 0, offsetY: 0 },
-  { id: '2', title: 'Pack Calendar', url: '#', imageUrl: '', iconName: 'Calendar', zoom: 1, offsetX: 0, offsetY: 0 },
-  { id: '3', title: 'Uniform Guide', url: 'https://www.scoutshop.org/', imageUrl: '', iconName: 'Shield', zoom: 1, offsetX: 0, offsetY: 0 }
-];
 
 interface ScoutLink {
   id: string;
@@ -46,9 +37,24 @@ interface AppSettings {
   headerLogoOffsetY: number;
 }
 
+const INITIAL_LINKS: ScoutLink[] = [
+  { id: '1', title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', imageUrl: '', iconName: 'BookOpen', zoom: 1, offsetX: 0, offsetY: 0 },
+  { id: '2', title: 'Pack Calendar', url: '#', imageUrl: '', iconName: 'Calendar', zoom: 1, offsetX: 0, offsetY: 0 },
+  { id: '3', title: 'Join Scouting', url: 'https://beascout.scouting.org/', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 }
+];
+
+// --- FIREBASE SETUP ---
+const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = window.__app_id || 'scout-links-v2-pro';
+
 // --- STYLES ---
 const GlobalStyles = () => (
   <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
+    
     :root {
       --bsa-blue: #003F87;
       --bsa-red: #CE1126;
@@ -57,140 +63,132 @@ const GlobalStyles = () => (
     
     body { 
       margin: 0; 
-      padding: 0; 
-      font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-      background-color: #f8fafc; 
-      transition: background-color 0.3s ease;
+      font-family: 'Outfit', sans-serif;
+      background-color: #f1f5f9;
+      transition: background-color 0.5s ease;
     }
 
     .dark body { 
-      background-color: #0f172a; 
+      background-color: #020617; 
       color: #f8fafc; 
     }
     
     .bento-grid { 
       display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
       gap: 1.5rem; 
-      padding: 2rem; 
       width: 100%;
-      box-sizing: border-box;
     }
     
     .scout-card {
       background: white; 
-      border-radius: 2.5rem; 
+      border-radius: 2rem; 
       padding: 1.5rem; 
       display: flex; 
       flex-direction: column;
       align-items: center; 
-      text-align: center; 
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      border: 1px solid rgba(0,0,0,0.05); 
+      transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+      border: 1px solid rgba(0,63,135,0.05); 
       position: relative; 
-      aspect-ratio: 1/1; 
+      aspect-ratio: 0.95/1; 
       text-decoration: none;
       color: inherit; 
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
       overflow: hidden;
+      cursor: pointer;
     }
 
     .dark .scout-card { 
-      background: #1e293b; 
+      background: #0f172a; 
       border-color: rgba(255,255,255,0.05); 
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     }
 
     .scout-card:hover { 
-      transform: translateY(-12px) scale(1.02); 
+      transform: translateY(-8px) scale(1.02); 
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
       border-color: var(--bsa-blue);
     }
 
-    .dark .scout-card:hover {
-      border-color: #38bdf8;
-    }
-    
-    .image-container { 
+    .image-viewport { 
       width: 100%; 
-      height: 70%; 
+      height: 75%; 
       position: relative; 
       overflow: hidden; 
-      border-radius: 2rem; 
-      margin-bottom: 1rem; 
-      background: #f1f5f9; 
+      border-radius: 1.5rem; 
+      margin-bottom: 1.25rem; 
+      background: #f8fafc; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      transition: background 0.3s ease;
     }
 
-    .dark .image-container { 
-      background: #0f172a; 
-    }
+    .dark .image-viewport { background: #1e293b; }
     
-    .card-title { 
+    .card-label { 
       font-weight: 800; 
-      font-size: 0.9rem; 
-      text-transform: uppercase; 
-      letter-spacing: 0.1em; 
-      color: var(--bsa-blue); 
-      margin-top: 0.5rem;
+      font-size: 1.1rem; 
+      color: #1e293b; 
+      letter-spacing: -0.01em;
     }
 
-    .dark .card-title { 
-      color: #cbd5e1; 
-    }
+    .dark .card-label { color: #f1f5f9; }
     
-    .admin-badge { 
+    .admin-controls { 
       position: absolute; 
-      top: 1rem; 
-      right: 1rem; 
+      top: 0.75rem; 
+      right: 0.75rem; 
       display: flex; 
       gap: 0.5rem; 
-      z-index: 30; 
+      z-index: 50; 
     }
 
-    .icon-btn { 
-      width: 2.75rem; 
-      height: 2.75rem; 
-      border-radius: 1.2rem; 
+    .btn-circle { 
+      width: 2.5rem; 
+      height: 2.5rem; 
+      border-radius: 50%; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
       border: none; 
       cursor: pointer; 
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-      transition: all 0.2s ease;
-      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
-    .icon-btn:hover { 
-      transform: scale(1.15) rotate(5deg); 
+    .btn-circle:hover { transform: scale(1.1); }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 5px;
+      outline: none;
     }
 
-    /* Custom range slider styling */
+    .dark input[type=range] { background: #334155; }
+
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      height: 20px;
-      width: 20px;
+      width: 18px;
+      height: 18px;
+      background: var(--bsa-blue);
       border-radius: 50%;
-      background: #003F87;
       cursor: pointer;
-      margin-top: -6px; 
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
   `}</style>
 );
 
-const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, iconName }: any) => {
+// --- COMPONENTS ---
+const ImageViewer = ({ url, zoom = 1, offsetX = 0, offsetY = 0, iconName }: any) => {
   const [error, setError] = useState(false);
   const IconComponent = iconName && ICON_MAP[iconName] ? ICON_MAP[iconName] : Tent;
   
   if ((!url || error) || (!url && iconName)) {
     return (
-      <div className="text-blue-900/10 dark:text-white/5 transition-colors">
-        <IconComponent size={80} strokeWidth={1.2} />
+      <div className="text-blue-900/10 dark:text-blue-400/10 transition-colors">
+        <IconComponent size={96} strokeWidth={1.5} />
       </div>
     );
   }
@@ -200,7 +198,7 @@ const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, iconName }: any
       src={url} 
       alt=""
       onError={() => setError(true)}
-      className="pointer-events-none select-none"
+      draggable={false}
       style={{
         position: 'absolute',
         top: '50%',
@@ -214,13 +212,6 @@ const GenericImage = ({ url, zoom = 1, offsetX = 0, offsetY = 0, iconName }: any
   );
 };
 
-// --- FIREBASE INIT ---
-const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = window.__app_id || 'scout-links-pro-v1';
-
 export default function App() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -228,7 +219,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [links, setLinks] = useState<ScoutLink[]>(INITIAL_LINKS);
   const [settings, setSettings] = useState<AppSettings>({
-    headerTitle: 'Pack Resources',
+    headerTitle: 'Pack 121 Resources',
     headerSubtitle: 'Scouting America',
     headerLogoUrl: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
     headerLogoZoom: 1, headerLogoOffsetX: 0, headerLogoOffsetY: 0
@@ -236,126 +227,105 @@ export default function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [modalMode, setModalMode] = useState<'link' | 'header'>('link');
-  const [editingLink, setEditingLink] = useState<ScoutLink | null>(null);
-  const [formData, setFormData] = useState<any>({});
-  const [toastMsg, setToastMsg] = useState('');
+  const [pwd, setPwd] = useState('');
+  const [modalType, setModalType] = useState<'link' | 'header'>('link');
+  const [activeLink, setActiveLink] = useState<ScoutLink | null>(null);
+  const [form, setForm] = useState<any>({});
+  const [status, setStatus] = useState('');
   
-  const dragRef = useRef({ isDragging: false, startX: 0, startY: 0 });
+  const dragRef = useRef({ dragging: false, x: 0, y: 0 });
 
-  // --- AUTH FLOW ---
+  // --- LIFECYCLE ---
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
-          await signInWithCustomToken(auth, window.__initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (e) {
-        console.error("Authentication system failed", e);
+    const authInit = async () => {
+      if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+        await signInWithCustomToken(auth, window.__initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
       }
     };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setUser);
-    return () => unsubscribe();
+    authInit();
+    const unsub = onAuthStateChanged(auth, setUser);
+    return () => unsub();
   }, []);
 
-  // --- DATA SYNC ---
   useEffect(() => {
     if (!user) return;
-    
-    // Path: /artifacts/{appId}/public/data/config
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
-    
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.links) setLinks(data.links);
-        if (data.settings) setSettings(data.settings);
+    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+    const unsub = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.links) setLinks(d.links);
+        if (d.settings) setSettings(d.settings);
       }
-    }, (err) => {
-      console.error("Firestore Permission or Connection Issue:", err);
-      // We don't toast here to avoid annoying users if they are just browsing
-    });
-
-    return () => unsubscribe();
+    }, (err) => console.error("Snapshot error", err));
+    return () => unsub();
   }, [user]);
 
-  const saveData = async (newLinks: ScoutLink[], newSettings: AppSettings) => {
-    if (!user) {
-      setToastMsg("Waiting for connection...");
-      return;
-    }
+  const pushUpdate = async (l: ScoutLink[], s: AppSettings) => {
+    if (!user) return;
     try {
-      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config');
-      await setDoc(docRef, {
-        links: newLinks,
-        settings: newSettings,
-        updatedAt: Date.now()
-      });
-      setToastMsg("Sync Complete");
-      setTimeout(() => setToastMsg(''), 2000);
-    } catch (err) {
-      console.error("Write Error:", err);
-      setToastMsg("Permission Denied: Leader access required");
+      const ref = doc(db, 'artifacts', appId, 'public', 'data', 'config');
+      await setDoc(ref, { links: l, settings: s, ts: Date.now() });
+      setStatus('Changes Saved');
+      setTimeout(() => setStatus(''), 2000);
+    } catch (e) {
+      setStatus('Save Failed');
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const doLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
+    if (pwd === ADMIN_PASSWORD) {
       setIsAdmin(true);
       setIsEditing(true);
       setIsLoginOpen(false);
-      setPasswordInput('');
-      setToastMsg("Leader Access Granted");
-      setTimeout(() => setToastMsg(''), 2000);
+      setPwd('');
+      setStatus('Admin Access Enabled');
+      setTimeout(() => setStatus(''), 2000);
     } else {
-      setToastMsg("Incorrect Password");
+      setStatus('Invalid Key');
     }
   };
 
-  const handleSaveModal = (e: React.FormEvent) => {
+  const handleModalSave = (e: React.FormEvent) => {
     e.preventDefault();
-    let updatedLinks = [...links];
-    let updatedSettings = { ...settings };
+    let l_up = [...links];
+    let s_up = { ...settings };
 
-    if (modalMode === 'link') {
-      let url = (formData.url || '').trim();
-      if (url && !url.startsWith('http')) url = 'https://' + url;
-      if (editingLink) {
-        updatedLinks = links.map(l => l.id === editingLink.id ? { ...formData, url } : l);
+    if (modalType === 'link') {
+      let finalUrl = (form.url || '').trim();
+      if (finalUrl && !finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+      if (activeLink) {
+        l_up = links.map(x => x.id === activeLink.id ? { ...form, url: finalUrl } : x);
       } else {
-        updatedLinks = [...links, { ...formData, id: crypto.randomUUID(), url }];
+        l_up = [...links, { ...form, id: crypto.randomUUID(), url: finalUrl }];
       }
     } else {
-      updatedSettings = {
-        headerTitle: formData.title, 
-        headerSubtitle: formData.subtitle,
-        headerLogoUrl: formData.imageUrl, 
-        headerLogoZoom: formData.zoom,
-        headerLogoOffsetX: formData.offsetX, 
-        headerLogoOffsetY: formData.offsetY
+      s_up = {
+        headerTitle: form.title, 
+        headerSubtitle: form.subtitle,
+        headerLogoUrl: form.imageUrl, 
+        headerLogoZoom: form.zoom,
+        headerLogoOffsetX: form.offsetX, 
+        headerLogoOffsetY: form.offsetY
       };
     }
-    saveData(updatedLinks, updatedSettings);
+    pushUpdate(l_up, s_up);
     setIsModalOpen(false);
   };
 
   return (
     <div className={darkMode ? 'dark' : ''}>
       <GlobalStyles />
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-700">
+      <div className="min-h-screen pb-24 transition-colors duration-500">
         
-        {/* --- HEADER --- */}
-        <header className="bg-white dark:bg-slate-900 border-b-[12px] border-yellow-400 shadow-2xl px-6 py-12 relative overflow-hidden transition-colors duration-500">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-900/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 relative z-10">
-            <div className="relative group">
-              <div className="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner flex items-center justify-center overflow-hidden border-8 border-white dark:border-slate-700 transition-all duration-500">
-                <GenericImage 
+        {/* --- DYNAMIC HEADER --- */}
+        <header className="bg-white dark:bg-slate-900 border-b-8 border-yellow-400 pt-16 pb-20 px-6 relative transition-all shadow-xl">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10">
+            <div className="relative">
+              <div className="w-40 h-40 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 shadow-inner flex items-center justify-center overflow-hidden border-4 border-slate-100 dark:border-slate-700">
+                <ImageViewer 
                   url={settings.headerLogoUrl} 
                   zoom={settings.headerLogoZoom} 
                   offsetX={settings.headerLogoOffsetX} 
@@ -365,8 +335,8 @@ export default function App() {
               {isEditing && (
                 <button 
                   onClick={() => {
-                    setModalMode('header');
-                    setFormData({ 
+                    setModalType('header');
+                    setForm({ 
                       title: settings.headerTitle, 
                       subtitle: settings.headerSubtitle, 
                       imageUrl: settings.headerLogoUrl, 
@@ -376,66 +346,66 @@ export default function App() {
                     });
                     setIsModalOpen(true);
                   }}
-                  className="absolute -bottom-3 -right-3 p-4 bg-blue-600 text-white rounded-2xl shadow-2xl hover:scale-110 transition-transform active:scale-90"
+                  className="absolute -bottom-2 -right-2 p-3 bg-blue-700 text-white rounded-xl shadow-lg hover:scale-110"
                 >
-                  <Edit2 size={20} />
+                  <Edit2 size={18} />
                 </button>
               )}
             </div>
 
             <div className="text-center md:text-left flex-1">
-              <h1 className="text-6xl md:text-8xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-3 leading-none transition-colors duration-500">
+              <h1 className="text-5xl md:text-7xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tight mb-2">
                 {settings.headerTitle}
               </h1>
-              <div className="text-2xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-4">
-                <Star size={24} className="text-yellow-500 fill-yellow-500 animate-pulse" />
+              <div className="text-lg md:text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] flex items-center justify-center md:justify-start gap-3">
+                <Star size={18} className="text-yellow-500 fill-yellow-500" />
                 {settings.headerSubtitle}
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <button 
                 onClick={() => setDarkMode(!darkMode)} 
-                className="p-6 rounded-[2rem] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-lg active:scale-95"
+                className="btn-circle bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
               >
-                {darkMode ? <Sun size={28} /> : <Moon size={28} />}
+                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
               </button>
               {isAdmin && (
                 <button 
                   onClick={() => setIsEditing(!isEditing)}
-                  className={`flex items-center gap-4 px-10 py-6 rounded-[2rem] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 ${isEditing ? 'bg-yellow-400 text-blue-900 scale-105 border-4 border-blue-900/10' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+                  className={`flex items-center gap-3 px-6 py-2 rounded-full font-bold uppercase text-sm tracking-widest transition-all ${isEditing ? 'bg-yellow-400 text-blue-900 shadow-yellow-400/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}
                 >
-                  <Settings size={28} className={isEditing ? 'animate-spin-slow' : ''} />
-                  <span className="hidden sm:inline">{isEditing ? 'Save' : 'Admin'}</span>
+                  <Settings size={18} className={isEditing ? 'animate-spin' : ''} />
+                  {isEditing ? 'Finish' : 'Edit'}
                 </button>
               )}
             </div>
           </div>
         </header>
 
-        {/* --- MAIN GRID --- */}
-        <main className="max-w-7xl mx-auto py-20 px-6">
+        {/* --- LINKS BENTO --- */}
+        <main className="max-w-6xl mx-auto py-16 px-6">
           <div className="bento-grid">
             {links.map((link) => (
               <div key={link.id} className="relative group">
                 {isEditing && (
-                  <div className="admin-badge">
+                  <div className="admin-controls">
                     <button 
                       onClick={() => { 
-                        setModalMode('link'); 
-                        setFormData({ ...link }); 
-                        setEditingLink(link); 
+                        setModalType('link'); 
+                        setForm({ ...link }); 
+                        setActiveLink(link); 
                         setIsModalOpen(true); 
                       }} 
-                      className="icon-btn bg-blue-600 text-white"
+                      className="btn-circle bg-blue-600 text-white"
                     >
-                      <Edit2 size={18} />
+                      <Edit2 size={16} />
                     </button>
                     <button 
-                      onClick={() => saveData(links.filter(l => l.id !== link.id), settings)} 
-                      className="icon-btn bg-red-600 text-white"
+                      onClick={() => pushUpdate(links.filter(x => x.id !== link.id), settings)} 
+                      className="btn-circle bg-red-600 text-white"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 )}
@@ -445,8 +415,8 @@ export default function App() {
                   rel="noopener noreferrer" 
                   className="scout-card"
                 >
-                  <div className="image-container">
-                    <GenericImage 
+                  <div className="image-viewport">
+                    <ImageViewer 
                       url={link.imageUrl} 
                       zoom={link.zoom} 
                       offsetX={link.offsetX} 
@@ -454,10 +424,10 @@ export default function App() {
                       iconName={link.iconName} 
                     />
                   </div>
-                  <div className="card-title">{link.title}</div>
+                  <div className="card-label uppercase">{link.title}</div>
                   {!isEditing && (
-                    <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-20 transition-opacity">
-                      <ExternalLink size={18} />
+                    <div className="mt-4 text-blue-900/40 dark:text-blue-400/40">
+                      <ExternalLink size={16} />
                     </div>
                   )}
                 </a>
@@ -467,241 +437,173 @@ export default function App() {
             {isEditing && (
               <button 
                 onClick={() => { 
-                  setModalMode('link'); 
-                  setFormData({ 
-                    id: '', title: '', url: '', imageUrl: '', 
-                    iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 
-                  }); 
-                  setEditingLink(null); 
+                  setModalType('link'); 
+                  setForm({ id: '', title: '', url: '', imageUrl: '', iconName: 'Tent', zoom: 1, offsetX: 0, offsetY: 0 }); 
+                  setActiveLink(null); 
                   setIsModalOpen(true); 
                 }}
-                className="scout-card border-dashed border-4 border-slate-200 dark:border-slate-800 bg-transparent shadow-none opacity-40 hover:opacity-100 hover:border-blue-500 hover:bg-white dark:hover:bg-slate-900"
+                className="scout-card border-dashed border-2 border-slate-300 dark:border-slate-700 bg-transparent opacity-50 hover:opacity-100 hover:border-blue-500"
               >
-                <Plus size={80} className="text-slate-400 mb-2 transition-transform group-hover:rotate-90" />
-                <div className="font-black text-slate-400 uppercase text-sm tracking-widest">Add Tile</div>
+                <Plus size={48} className="text-slate-400 mb-2" />
+                <div className="font-bold text-slate-400 uppercase text-xs tracking-widest">Add New Link</div>
               </button>
             )}
           </div>
         </main>
 
-        {/* --- FLOATING AUTH LOCK --- */}
-        <div className="fixed bottom-12 right-12 z-[100]">
+        {/* --- LOCK / UNLOCK --- */}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100]">
           <button 
             onClick={() => isAdmin ? setIsAdmin(false) : setIsLoginOpen(true)}
-            className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all active:scale-75 hover:rotate-12 ${isAdmin ? 'bg-yellow-400 border-4 border-blue-900' : 'bg-blue-900 hover:bg-blue-800'}`}
+            className={`px-8 py-4 rounded-full flex items-center gap-4 shadow-2xl transition-all hover:scale-105 active:scale-95 ${isAdmin ? 'bg-yellow-400 text-blue-900 border-2 border-blue-900 font-black' : 'bg-blue-900 text-white font-bold'}`}
           >
-            {isAdmin ? <Eye className="text-blue-900" size={40} /> : <Lock className="text-white" size={40} />}
+            {isAdmin ? <Lock size={20} /> : <KeyRound size={20} />}
+            <span className="uppercase tracking-[0.2em] text-sm">
+              {isAdmin ? 'Exit Admin Mode' : 'Leader Access'}
+            </span>
           </button>
         </div>
 
-        {/* --- LOGIN MODAL --- */}
+        {/* --- MODALS --- */}
         {isLoginOpen && (
-          <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-2xl z-[300] flex items-center justify-center p-6 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-900 p-14 rounded-[4rem] w-full max-w-md shadow-2xl border-t-[16px] border-blue-900">
-               <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-8">
-                <KeyRound className="text-blue-900 dark:text-blue-400" size={48} />
-               </div>
-               <h2 className="text-4xl font-black text-center mb-10 uppercase tracking-tighter text-slate-800 dark:text-white">Leader Access</h2>
-               <form onSubmit={handleLogin} className="space-y-8">
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200] flex items-center justify-center p-6 animate-in fade-in">
+            <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] w-full max-w-sm shadow-2xl text-center">
+               <h2 className="text-2xl font-black mb-8 uppercase tracking-widest text-blue-900 dark:text-blue-500">Security Check</h2>
+               <form onSubmit={doLogin} className="space-y-6">
                   <input 
                     type="password" 
-                    autoFocus 
-                    placeholder="Enter Access Key" 
-                    value={passwordInput} 
-                    onChange={e => setPasswordInput(e.target.value)} 
-                    className="w-full p-8 rounded-[2rem] bg-slate-100 dark:bg-slate-800 border-4 border-transparent focus:border-blue-900 outline-none font-black text-2xl text-center transition-all" 
+                    placeholder="Secret Key" 
+                    value={pwd} 
+                    autoFocus
+                    onChange={e => setPwd(e.target.value)} 
+                    className="w-full p-5 rounded-2xl bg-slate-100 dark:bg-slate-800 outline-none text-center font-bold text-xl" 
                   />
-                  <div className="flex gap-6">
-                    <button 
-                      type="button" 
-                      onClick={() => setIsLoginOpen(false)} 
-                      className="flex-1 p-6 font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest text-sm transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="flex-[2] p-6 bg-blue-900 text-white font-black rounded-3xl uppercase tracking-widest text-lg shadow-xl hover:shadow-blue-900/20 transition-all active:scale-95"
-                    >
-                      Unlock
-                    </button>
+                  <div className="flex gap-4">
+                    <button type="button" onClick={() => setIsLoginOpen(false)} className="flex-1 text-slate-400 font-bold uppercase text-xs">Cancel</button>
+                    <button type="submit" className="flex-1 p-4 bg-blue-900 text-white rounded-2xl font-bold uppercase text-xs">Unlock</button>
                   </div>
                </form>
             </div>
           </div>
         )}
 
-        {/* --- CUSTOMIZATION MODAL --- */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-2xl z-[400] flex items-center justify-center p-6 animate-in zoom-in-95 duration-200">
-            <div className="bg-white dark:bg-slate-900 rounded-[4rem] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-b-[16px] border-blue-900">
-              <div className="bg-blue-900 p-12 text-white flex justify-between items-center">
-                <div>
-                  <h3 className="text-3xl font-black uppercase tracking-[0.2em] mb-1">
-                    {modalMode === 'header' ? 'Identity' : 'Tile Editor'}
-                  </h3>
-                  <p className="text-blue-300 font-bold uppercase tracking-widest text-xs">Customize your pack presence</p>
-                </div>
-                <button 
-                  onClick={() => setIsModalOpen(false)} 
-                  className="w-16 h-16 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-                >
-                  <X size={32} />
+          <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[300] flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+              <div className="p-8 border-b dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 className="text-xl font-black uppercase tracking-widest text-blue-900 dark:text-blue-400">
+                  {modalType === 'header' ? 'Site Identity' : 'Tile Settings'}
+                </h3>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full">
+                  <X size={24} />
                 </button>
               </div>
               
-              <form onSubmit={handleSaveModal} className="p-12 overflow-y-auto space-y-10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                  <div className="space-y-8">
-                    <div className="group">
-                      <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
-                        Display Name
-                      </label>
-                      <input 
-                        required 
-                        value={formData.title} 
-                        onChange={e => setFormData({...formData, title: e.target.value})} 
-                        className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] font-bold border-4 border-transparent focus:border-blue-900/20 outline-none transition-all" 
-                      />
-                    </div>
+              <form onSubmit={handleModalSave} className="p-8 md:p-12 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Label</label>
+                    <input 
+                      required 
+                      value={form.title} 
+                      onChange={e => setForm({...form, title: e.target.value})} 
+                      className="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold" 
+                    />
+                  </div>
 
-                    {modalMode === 'link' ? (
-                      <div className="group">
-                        <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
-                          Web Address (URL)
-                        </label>
-                        <input 
-                          required 
-                          value={formData.url || ''} 
-                          onChange={e => setFormData({...formData, url: e.target.value})} 
-                          className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] font-medium transition-all" 
-                          placeholder="e.g. scouting.org" 
-                        />
-                      </div>
-                    ) : (
-                      <div className="group">
-                        <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
-                          Motto / Subtitle
-                        </label>
-                        <input 
-                          value={formData.subtitle || ''} 
-                          onChange={e => setFormData({...formData, subtitle: e.target.value})} 
-                          className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] transition-all" 
-                        />
-                      </div>
-                    )}
-                    
-                    <div className="group">
-                      <label className="text-xs font-black uppercase text-slate-400 mb-3 block tracking-widest group-focus-within:text-blue-600 transition-colors">
-                        Logo/Image Link
-                      </label>
-                      <input 
-                        value={formData.imageUrl || ''} 
-                        onChange={e => setFormData({...formData, imageUrl: e.target.value, iconName: ''})} 
-                        className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] text-sm font-mono transition-all" 
-                        placeholder="https://..."
-                      />
-                    </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">
+                      {modalType === 'link' ? 'URL' : 'Subtitle'}
+                    </label>
+                    <input 
+                      value={modalType === 'link' ? (form.url || '') : (form.subtitle || '')} 
+                      onChange={e => setForm({...form, [modalType === 'link' ? 'url' : 'subtitle']: e.target.value})} 
+                      className="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-xl" 
+                    />
                   </div>
                   
-                  <div className="flex flex-col items-center">
-                     <label className="text-xs font-black uppercase text-slate-400 mb-6 block tracking-widest">Live Preview</label>
-                     <div 
-                       className="w-56 h-56 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-2xl cursor-move active:cursor-grabbing group"
-                       onMouseDown={(e) => { dragRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY }; }}
-                       onMouseMove={(e) => {
-                         if (!dragRef.current.isDragging) return;
-                         const dx = (e.clientX - dragRef.current.startX) * 0.5;
-                         const dy = (e.clientY - dragRef.current.startY) * 0.5;
-                         setFormData((p: any) => ({ 
-                           ...p, 
-                           offsetX: (p.offsetX || 0) + dx, 
-                           offsetY: (p.offsetY || 0) + dy 
-                         }));
-                         dragRef.current.startX = e.clientX; 
-                         dragRef.current.startY = e.clientY;
-                       }}
-                       onMouseUp={() => dragRef.current.isDragging = false}
-                       onMouseLeave={() => dragRef.current.isDragging = false}
-                     >
-                       <GenericImage 
-                        url={formData.imageUrl} 
-                        zoom={formData.zoom} 
-                        offsetX={formData.offsetX} 
-                        offsetY={formData.offsetY} 
-                        iconName={formData.iconName} 
-                       />
-                       <div className="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/5 transition-colors pointer-events-none"></div>
-                     </div>
-                     <div className="w-full mt-10 space-y-4">
-                       <div className="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest">
-                         <span>Zoom Control</span>
-                         <span className="text-blue-600">{(formData.zoom || 1).toFixed(1)}x</span>
-                       </div>
-                       <input 
-                        type="range" 
-                        min="0.2" 
-                        max="4" 
-                        step="0.05" 
-                        value={formData.zoom || 1} 
-                        onChange={e => setFormData({...formData, zoom: parseFloat(e.target.value)})} 
-                        className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer" 
-                       />
-                       <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest">
-                        Drag the image above to reposition
-                       </p>
-                     </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image URL (Optional)</label>
+                    <input 
+                      value={form.imageUrl || ''} 
+                      onChange={e => setForm({...form, imageUrl: e.target.value, iconName: ''})} 
+                      className="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-mono" 
+                      placeholder="https://..."
+                    />
                   </div>
-                </div>
 
-                {modalMode === 'link' && (
-                  <div className="pt-10 border-t-4 border-slate-50 dark:border-slate-800">
-                    <label className="text-xs font-black uppercase text-slate-400 mb-6 block tracking-widest text-center">Or Use an Icon Template</label>
-                    <div className="flex flex-wrap justify-center gap-4">
-                      {Object.keys(ICON_MAP).map(n => {
-                        const Icon = ICON_MAP[n];
-                        return (
-                          <button 
-                            key={n} 
-                            type="button" 
-                            onClick={() => setFormData({...formData, iconName: n, imageUrl: ''})} 
-                            className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center transition-all active:scale-90 ${formData.iconName === n ? 'bg-blue-900 text-white scale-110 shadow-xl ring-4 ring-blue-900/20' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
-                          >
-                            <Icon size={28} />
-                          </button>
-                        );
-                      })}
+                  {modalType === 'link' && (
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-400 mb-4 block tracking-widest">Or Choose Icon</label>
+                      <div className="flex flex-wrap gap-3">
+                        {Object.keys(ICON_MAP).map(n => {
+                          const Icon = ICON_MAP[n];
+                          return (
+                            <button 
+                              key={n} 
+                              type="button" 
+                              onClick={() => setForm({...form, iconName: n, imageUrl: ''})} 
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${form.iconName === n ? 'bg-blue-900 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
+                            >
+                              <Icon size={20} />
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                <div className="flex gap-6 pt-6">
-                   <button 
-                    type="button" 
-                    onClick={() => setIsModalOpen(false)} 
-                    className="flex-1 p-8 font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+                  )}
+                </div>
+                
+                <div className="flex flex-col items-center">
+                   <label className="text-[10px] font-black uppercase text-slate-400 mb-4 block tracking-widest">Position & Scale</label>
+                   <div 
+                     className="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[2rem] overflow-hidden relative border-4 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing"
+                     onMouseDown={(e) => { dragRef.current = { dragging: true, x: e.clientX, y: e.clientY }; }}
+                     onMouseMove={(e) => {
+                       if (!dragRef.current.dragging) return;
+                       const dx = (e.clientX - dragRef.current.x) * 0.4;
+                       const dy = (e.clientY - dragRef.current.y) * 0.4;
+                       setForm((p: any) => ({ ...p, offsetX: (p.offsetX || 0) + dx, offsetY: (p.offsetY || 0) + dy }));
+                       dragRef.current.x = e.clientX; 
+                       dragRef.current.y = e.clientY;
+                     }}
+                     onMouseUp={() => dragRef.current.dragging = false}
                    >
-                    Discard
-                   </button>
-                   <button 
-                    type="submit" 
-                    className="flex-[2] p-8 bg-blue-900 text-white rounded-[2rem] font-black uppercase tracking-[0.25em] shadow-2xl hover:bg-blue-800 transition-all active:scale-95"
-                   >
-                    Update Content
-                   </button>
+                     <ImageViewer 
+                      url={form.imageUrl} 
+                      zoom={form.zoom} 
+                      offsetX={form.offsetX} 
+                      offsetY={form.offsetY} 
+                      iconName={form.iconName} 
+                     />
+                   </div>
+                   <div className="w-full mt-8 space-y-6">
+                     <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                       <span>Magnification</span>
+                       <span className="text-blue-600">{(form.zoom || 1).toFixed(2)}x</span>
+                     </div>
+                     <input 
+                      type="range" min="0.5" max="3" step="0.01" 
+                      value={form.zoom || 1} 
+                      onChange={e => setForm({...form, zoom: parseFloat(e.target.value)})} 
+                     />
+                     <button 
+                      type="submit" 
+                      className="w-full py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95"
+                     >
+                      Confirm Changes
+                     </button>
+                   </div>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* --- TOAST NOTIFICATIONS --- */}
-        {toastMsg && (
-          <div className="fixed top-12 left-1/2 -translate-x-1/2 bg-blue-900/95 backdrop-blur-xl text-white px-12 py-6 rounded-full font-black uppercase tracking-widest text-sm z-[1000] shadow-2xl flex items-center gap-5 animate-in slide-in-from-top-10 duration-300">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <Cloud size={18} className="animate-pulse" />
-            </div>
-            {toastMsg}
+        {/* --- STATUS TOAST --- */}
+        {status && (
+          <div className="fixed top-8 right-8 bg-blue-900 text-white px-8 py-4 rounded-2xl font-bold uppercase tracking-widest text-xs z-[1000] shadow-2xl animate-in slide-in-from-right">
+            {status}
           </div>
         )}
 
