@@ -98,7 +98,10 @@
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen relative">
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
+
     <div id="app">
         <!-- Header -->
         <header class="bg-white dark:bg-slate-900 border-b-[12px] border-yellow-400 shadow-2xl px-6 py-12 transition-colors">
@@ -234,6 +237,34 @@
         let isDragging = false;
         let startX, startY;
 
+        // --- Custom Toast Notification Function ---
+        window.showToast = function(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-2xl transition-all duration-300 transform translate-y-[-20px] opacity-0 flex items-center gap-2 ${isError ? 'bg-red-600 text-white' : 'bg-green-500 text-white'}`;
+            
+            // Add icon depending on error state
+            const iconName = isError ? 'alert-triangle' : 'cloud';
+            toast.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4"></i> ${message}`;
+            
+            container.appendChild(toast);
+            if (window.lucide) window.lucide.createIcons();
+
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            }, 10);
+
+            // Animate Out
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-20px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        };
+
+
         // --- Firebase Init ---
         let fbConfig = null;
         try {
@@ -274,6 +305,7 @@
                     }
                 } catch (e) {
                     console.error("Firebase Authentication Failed:", e);
+                    alert("⚠️ SYNC BLOCKED:\n\nFirebase 'Anonymous' Authentication is not enabled.\n\nTo fix this:\n1. Go to Firebase Console\n2. Click 'Authentication' in the left menu\n3. Go to the 'Sign-in method' tab\n4. Enable 'Anonymous' and click Save.");
                 }
             };
             
@@ -289,20 +321,34 @@
                                 if (data.links) links = data.links;
                                 if (data.settings) settings = data.settings;
                                 window.render();
+                            } else {
+                                // If database is empty, push initial local data to create the document!
+                                window.syncToCloud(); 
                             }
-                        }, (error) => console.error("Sync Error: ", error));
+                        }, (error) => {
+                            console.error("Sync Error: ", error);
+                            alert("⚠️ FIRESTORE READ BLOCKED:\n\nYour Firebase Database Rules are blocking the app from reading data.\n\nTo fix this:\n1. Go to Firebase Console\n2. Click 'Firestore Database'\n3. Click the 'Rules' tab\n4. Change 'if false;' to 'if true;'\n5. Click Publish.");
+                        });
                     }
                 });
             });
         }
 
         window.syncToCloud = async function() {
-            if (!useFirebase || !currentUser) return;
+            if (!useFirebase) return;
+            
+            if (!currentUser) {
+                alert("⚠️ Cannot sync to cloud. Authentication failed. Please ensure 'Anonymous Sign-in' is enabled in your Firebase Console.");
+                return;
+            }
+
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config');
                 await setDoc(docRef, { links, settings, updatedAt: Date.now() });
+                window.showToast("Cloud Sync Successful!");
             } catch (error) {
                 console.error("Failed to push updates to cloud:", error);
+                alert("⚠️ CLOUD SYNC FAILED! Changes are NOT saving for others.\n\nReason: Firestore Database Rules are blocking writes.\n\nTO FIX THIS:\n1. Go to Firebase Console\n2. Click 'Firestore Database' (left menu)\n3. Click the 'Rules' tab\n4. Change 'allow read, write: if false;' to 'allow read, write: if true;'\n5. Click Publish");
             }
         };
 
