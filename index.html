@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Added SortableJS for Drag and Drop Reordering -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         :root {
             --bsa-blue: #003F87;
@@ -51,6 +53,11 @@
             overflow: hidden; 
             border-radius: 1rem; 
             background: #f1f5f9; 
+            
+            /* Crucial Mobile/Safari Bug Fixes to stop icons from bleeding out */
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+            mask-image: radial-gradient(white, black);
+            transform: translateZ(0);
         }
 
         .dark .image-viewport { background: #1e293b; }
@@ -82,6 +89,16 @@
             from { opacity: 0; transform: scale(0.9) translateY(20px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
+
+        /* Sortable JS Drag Styling */
+        .sortable-ghost {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+        .sortable-drag {
+            cursor: grabbing !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
     </style>
 </head>
 <body class="min-h-screen relative">
@@ -96,7 +113,7 @@
                     <div id="header-logo-container" class="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner overflow-hidden border-8 border-white dark:border-slate-700 transition-all relative">
                         <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
                     </div>
-                    <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-3 -right-3 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
+                    <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-3 -right-3 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20">
                         <!-- Icon injected by render() -->
                     </button>
                 </div>
@@ -169,7 +186,7 @@
                 </div>
 
                 <div class="flex flex-col items-center" id="field-preview">
-                    <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing">
+                    <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
                         <img id="preview-img" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
                     </div>
                     <div class="w-full mt-8 space-y-4" id="field-zoom">
@@ -358,13 +375,14 @@
 
             // Main Category Flex Wrapper (Allows side-by-side 3 across)
             const categoryWrapper = document.createElement('div');
+            categoryWrapper.id = 'category-wrapper';
             categoryWrapper.className = 'flex flex-wrap justify-center gap-6 md:gap-8 items-start w-full';
 
             // Render Each Category Section (Bubble)
             categories.forEach(cat => {
                 const section = document.createElement('div');
-                // The w-full makes it full width on mobile, and standard widths for desktop (up to 3 across)
-                section.className = 'w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-2rem)] min-w-[300px] max-w-lg bg-slate-100 dark:bg-slate-800 rounded-[3rem] p-6 sm:p-8 shadow-xl border border-white dark:border-slate-700 flex flex-col relative';
+                section.className = 'category-section w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-2rem)] min-w-[300px] max-w-lg bg-slate-100 dark:bg-slate-800 rounded-[3rem] p-6 sm:p-8 shadow-xl border border-white dark:border-slate-700 flex flex-col relative';
+                section.dataset.id = cat.id;
 
                 // Category Header
                 const headerFlex = document.createElement('div');
@@ -372,7 +390,8 @@
                 headerFlex.innerHTML = `
                     <h2 class="text-blue-900 dark:text-blue-400 font-black uppercase tracking-widest text-lg">${cat.title}</h2>
                     ${isEditing ? `
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 no-drag">
+                            <button class="category-drag-handle p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700 cursor-move" title="Drag to reorder"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
                             <button onclick="window.editCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                             <button onclick="window.deleteCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-red-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
@@ -382,16 +401,18 @@
 
                 // Grid for links (ALWAYS 3 columns)
                 const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-3 gap-3 sm:gap-4';
+                grid.className = 'link-grid grid grid-cols-3 gap-3 sm:gap-4 min-h-[120px]'; // Min height ensures empty categories can accept drops
+                grid.dataset.categoryId = cat.id;
 
                 const catLinks = links.filter(l => l.categoryId === cat.id);
                 
                 catLinks.forEach(link => {
                     const card = document.createElement('div');
-                    card.className = 'relative group';
+                    card.className = `link-card relative group ${isEditing ? 'cursor-move' : ''}`;
+                    card.dataset.id = link.id;
                     card.innerHTML = `
                         ${isEditing ? `
-                            <div class="absolute top-2 right-2 z-20 flex flex-col gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="absolute top-2 right-2 z-20 flex flex-col gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity no-drag cursor-default">
                                 <button onclick="window.editLink(${link.id})" class="p-1.5 bg-blue-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
                                     <i data-lucide="edit-2" class="w-3 h-3"></i>
                                 </button>
@@ -400,7 +421,7 @@
                                 </button>
                             </div>
                         ` : ''}
-                        <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-3 md:p-4 flex flex-col items-center justify-start text-center block h-full">
+                        <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-3 md:p-4 flex flex-col items-center justify-start text-center block h-full pointer-events-none">
                             <div class="image-viewport mb-3">
                                 <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
                                      style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom || 1}); opacity: ${link.img ? 1 : 0.1}"
@@ -409,13 +430,17 @@
                             <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-[9px] sm:text-[10px] line-clamp-2 leading-tight">${link.title}</span>
                         </a>
                     `;
+                    // Note: We use pointer-events-none on the <a> tag when editing so it doesn't interrupt dragging
+                    if (!isEditing) {
+                        card.querySelector('a').classList.remove('pointer-events-none');
+                    }
                     grid.appendChild(card);
                 });
 
                 if (isEditing) {
                     const addBtn = document.createElement('button');
                     addBtn.onclick = () => window.addNewLink(cat.id);
-                    addBtn.className = 'scout-card border-4 border-dashed border-slate-300 dark:border-slate-700 bg-transparent flex flex-col items-center justify-center p-3 opacity-50 hover:opacity-100 hover:border-blue-500 cursor-pointer transition-all h-full min-h-[120px]';
+                    addBtn.className = 'no-drag scout-card border-4 border-dashed border-slate-300 dark:border-slate-700 bg-transparent flex flex-col items-center justify-center p-3 opacity-50 hover:opacity-100 hover:border-blue-500 cursor-pointer transition-all h-full min-h-[120px] w-full';
                     addBtn.innerHTML = `
                         <i data-lucide="plus" class="w-8 h-8 text-slate-400 mb-2 pointer-events-none"></i>
                         <span class="font-black text-slate-400 uppercase tracking-widest pointer-events-none text-[9px] leading-tight text-center">Add Link</span>
@@ -434,7 +459,7 @@
                 const addCatWrapper = document.createElement('div');
                 addCatWrapper.className = 'mt-12 flex justify-center w-full';
                 addCatWrapper.innerHTML = `
-                    <button onclick="window.addNewCategory()" class="px-8 py-4 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] text-slate-400 font-black uppercase tracking-widest hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center gap-3">
+                    <button onclick="window.addNewCategory()" class="px-8 py-4 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] text-slate-400 font-black uppercase tracking-widest hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center gap-3 shadow-lg">
                         <i data-lucide="plus-circle" class="w-6 h-6"></i> Add New Category
                     </button>
                 `;
@@ -492,6 +517,56 @@
 
             if (window.lucide) window.lucide.createIcons();
             
+            // Initialization of SortableJS logic
+            if (isEditing && window.Sortable) {
+                // Initialize Category Reordering
+                new Sortable(document.getElementById('category-wrapper'), {
+                    animation: 250,
+                    handle: '.category-drag-handle',
+                    easing: "cubic-bezier(1, 0, 0, 1)",
+                    onEnd: function() {
+                        const newCategories = [];
+                        document.querySelectorAll('.category-section').forEach(el => {
+                            const cat = categories.find(c => c.id === el.dataset.id);
+                            if (cat) newCategories.push(cat);
+                        });
+                        categories = newCategories;
+                        window.syncToCloud();
+                    }
+                });
+
+                // Initialize Tile Drag & Drop inside and across Categories
+                document.querySelectorAll('.link-grid').forEach(grid => {
+                    new Sortable(grid, {
+                        group: 'shared-links',
+                        animation: 250,
+                        easing: "cubic-bezier(1, 0, 0, 1)",
+                        filter: '.no-drag', // Stop Add/Edit buttons from being draggable
+                        preventOnFilter: false,
+                        onMove: function (evt) {
+                            // Don't allow placing an item *after* the "Add Link" button
+                            return evt.related.className.indexOf('no-drag') === -1;
+                        },
+                        onEnd: function() {
+                            const newLinks = [];
+                            document.querySelectorAll('.link-grid').forEach(g => {
+                                const catId = g.dataset.categoryId;
+                                g.querySelectorAll('.link-card').forEach(card => {
+                                    const id = parseInt(card.dataset.id);
+                                    const linkObj = links.find(l => l.id === id);
+                                    if (linkObj) {
+                                        linkObj.categoryId = catId; // Assign new category if moved
+                                        newLinks.push(linkObj);
+                                    }
+                                });
+                            });
+                            links = newLinks;
+                            window.syncToCloud();
+                        }
+                    });
+                });
+            }
+
             localStorage.setItem('scout_links', JSON.stringify(links));
             localStorage.setItem('scout_settings', JSON.stringify(settings));
             localStorage.setItem('scout_categories', JSON.stringify(categories));
