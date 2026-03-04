@@ -406,7 +406,7 @@
                         <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-3 md:p-4 flex flex-col items-center justify-start text-center block h-full">
                             <div class="image-viewport mb-3">
                                 <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
-                                     style="transform: translate(${link.x}px, ${link.y}px) scale(${link.zoom}); opacity: ${link.img ? 1 : 0.1}"
+                                     style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom}); opacity: ${link.img ? 1 : 0.1}"
                                      class="max-w-none h-full object-contain pointer-events-none">
                             </div>
                             <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-[9px] sm:text-[10px] line-clamp-2 leading-tight">${link.title}</span>
@@ -449,7 +449,7 @@
             document.getElementById('display-subtitle').innerText = settings.subtitle;
             const logo = document.getElementById('main-logo');
             logo.src = settings.logo;
-            logo.style.transform = `translate(${settings.x}px, ${settings.y}px) scale(${settings.zoom})`;
+            logo.style.transform = `translate(${settings.x || 0}%, ${settings.y || 0}%) scale(${settings.zoom})`;
 
             // Render Dynamic UI Buttons Based on State
             const isDark = document.documentElement.classList.contains('dark');
@@ -665,7 +665,7 @@
             
             let obj = currentEditType === 'header' ? settings : links.find(l => l.id === currentEditId);
             if (obj) {
-                img.style.transform = `translate(${obj.x}px, ${obj.y}px) scale(${zoom})`;
+                img.style.transform = `translate(${obj.x || 0}%, ${obj.y || 0}%) scale(${zoom})`;
             }
         };
 
@@ -714,10 +714,15 @@
             startX = e.clientX;
             startY = e.clientY;
 
+            // Normalize drag based on preview box size (Percentage-based drag)
+            const previewRect = document.getElementById('preview-box').getBoundingClientRect();
+            const percentX = (dx / previewRect.width) * 100;
+            const percentY = (dy / previewRect.height) * 100;
+
             let obj = currentEditType === 'header' ? settings : links.find(l => l.id === currentEditId);
             if (obj) {
-                obj.x += dx;
-                obj.y += dy;
+                obj.x = (obj.x || 0) + percentX;
+                obj.y = (obj.y || 0) + percentY;
                 window.updatePreview();
             }
         });
