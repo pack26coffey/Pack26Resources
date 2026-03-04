@@ -27,10 +27,10 @@
 
         .scout-card {
             background: white; 
-            border-radius: 2.5rem; 
+            border-radius: 1.5rem; 
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(0,63,135,0.05); 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         .dark .scout-card { 
@@ -39,8 +39,8 @@
         }
 
         .scout-card:hover { 
-            transform: translateY(-12px) scale(1.02); 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px) scale(1.02); 
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
             border-color: var(--bsa-blue);
         }
 
@@ -49,7 +49,7 @@
             aspect-ratio: 1 / 1; 
             position: relative; 
             overflow: hidden; 
-            border-radius: 2rem; 
+            border-radius: 1rem; 
             background: #f1f5f9; 
             display: flex; 
             align-items: center; 
@@ -57,17 +57,6 @@
         }
 
         .dark .image-viewport { background: #1e293b; }
-
-        .admin-btn {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.2s ease;
-        }
-
-        .scout-card:hover .admin-btn {
-            opacity: 1;
-            transform: scale(1);
-        }
 
         input[type=range] {
             -webkit-appearance: none;
@@ -140,7 +129,7 @@
         </header>
 
         <!-- Dynamic Content Area -->
-        <main class="max-w-7xl mx-auto py-20 px-6" id="links-container">
+        <main class="max-w-[90rem] mx-auto py-16 sm:py-20 px-4 sm:px-6 flex flex-col items-center" id="links-container">
             <!-- Categories and Links injected here -->
         </main>
 
@@ -370,28 +359,33 @@
             
             container.innerHTML = '';
 
-            // Render Each Category Section
+            // Main Category Flex Wrapper (Allows side-by-side 3 across)
+            const categoryWrapper = document.createElement('div');
+            categoryWrapper.className = 'flex flex-wrap justify-center gap-6 md:gap-8 items-start w-full';
+
+            // Render Each Category Section (Bubble)
             categories.forEach(cat => {
                 const section = document.createElement('div');
-                section.className = 'mb-16';
+                // The w-full makes it full width on mobile, and standard widths for desktop (up to 3 across)
+                section.className = 'w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-2rem)] min-w-[300px] max-w-lg bg-slate-100 dark:bg-slate-800 rounded-[3rem] p-6 sm:p-8 shadow-xl border border-white dark:border-slate-700 flex flex-col relative';
 
-                // Category Header (Bubble)
+                // Category Header
                 const headerFlex = document.createElement('div');
-                headerFlex.className = 'flex items-center gap-4 mb-8';
+                headerFlex.className = 'flex items-center justify-between gap-4 mb-6 px-2';
                 headerFlex.innerHTML = `
-                    <div class="bg-blue-100 dark:bg-slate-800 text-blue-900 dark:text-blue-400 px-6 py-2 rounded-full font-black uppercase tracking-widest text-sm shadow-sm border border-blue-200 dark:border-slate-700">
-                        ${cat.title}
-                    </div>
+                    <h2 class="text-blue-900 dark:text-blue-400 font-black uppercase tracking-widest text-lg">${cat.title}</h2>
                     ${isEditing ? `
-                        <button onclick="window.editCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-800 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="window.deleteCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-800 text-slate-400 hover:text-red-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <div class="flex gap-2">
+                            <button onclick="window.editCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="window.deleteCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-red-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
                     ` : ''}
                 `;
                 section.appendChild(headerFlex);
 
-                // Grid for this category
+                // Grid for links (ALWAYS 3 columns)
                 const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8';
+                grid.className = 'grid grid-cols-3 gap-3 sm:gap-4';
 
                 const catLinks = links.filter(l => l.categoryId === cat.id);
                 
@@ -400,22 +394,22 @@
                     card.className = 'relative group';
                     card.innerHTML = `
                         ${isEditing ? `
-                            <div class="absolute top-4 right-4 z-20 flex gap-2">
-                                <button onclick="window.editLink(${link.id})" class="p-2 bg-blue-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
-                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            <div class="absolute top-2 right-2 z-20 flex flex-col gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="window.editLink(${link.id})" class="p-1.5 bg-blue-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
+                                    <i data-lucide="edit-2" class="w-3 h-3"></i>
                                 </button>
-                                <button onclick="window.deleteLink(${link.id})" class="p-2 bg-red-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                <button onclick="window.deleteLink(${link.id})" class="p-1.5 bg-red-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
                                 </button>
                             </div>
                         ` : ''}
-                        <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-6 md:p-8 flex flex-col items-center text-center block h-full">
-                            <div class="image-viewport mb-4 md:mb-6">
+                        <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-3 md:p-4 flex flex-col items-center justify-start text-center block h-full">
+                            <div class="image-viewport mb-3">
                                 <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
                                      style="transform: translate(${link.x}px, ${link.y}px) scale(${link.zoom}); opacity: ${link.img ? 1 : 0.1}"
                                      class="max-w-none h-full object-contain pointer-events-none">
                             </div>
-                            <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-xs md:text-sm line-clamp-2">${link.title}</span>
+                            <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-[9px] sm:text-[10px] line-clamp-2 leading-tight">${link.title}</span>
                         </a>
                     `;
                     grid.appendChild(card);
@@ -424,24 +418,26 @@
                 if (isEditing) {
                     const addBtn = document.createElement('button');
                     addBtn.onclick = () => window.addNewLink(cat.id);
-                    addBtn.className = 'scout-card border-4 border-dashed border-slate-200 dark:border-slate-800 bg-transparent flex flex-col items-center justify-center p-8 min-h-[250px] opacity-40 hover:opacity-100 hover:border-blue-500 cursor-pointer transition-all';
+                    addBtn.className = 'scout-card border-4 border-dashed border-slate-300 dark:border-slate-700 bg-transparent flex flex-col items-center justify-center p-3 opacity-50 hover:opacity-100 hover:border-blue-500 cursor-pointer transition-all h-full min-h-[120px]';
                     addBtn.innerHTML = `
-                        <i data-lucide="plus" class="w-12 h-12 text-slate-400 mb-4 pointer-events-none"></i>
-                        <span class="font-black text-slate-400 uppercase tracking-widest pointer-events-none text-xs">Add Link Here</span>
+                        <i data-lucide="plus" class="w-8 h-8 text-slate-400 mb-2 pointer-events-none"></i>
+                        <span class="font-black text-slate-400 uppercase tracking-widest pointer-events-none text-[9px] leading-tight text-center">Add Link</span>
                     `;
                     grid.appendChild(addBtn);
                 }
 
                 section.appendChild(grid);
-                container.appendChild(section);
+                categoryWrapper.appendChild(section);
             });
+
+            container.appendChild(categoryWrapper);
 
             // Add Category Button at the very bottom
             if (isEditing) {
                 const addCatWrapper = document.createElement('div');
-                addCatWrapper.className = 'mt-12 flex justify-center';
+                addCatWrapper.className = 'mt-12 flex justify-center w-full';
                 addCatWrapper.innerHTML = `
-                    <button onclick="window.addNewCategory()" class="px-8 py-4 border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] text-slate-400 font-black uppercase tracking-widest hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center gap-3">
+                    <button onclick="window.addNewCategory()" class="px-8 py-4 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] text-slate-400 font-black uppercase tracking-widest hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center gap-3">
                         <i data-lucide="plus-circle" class="w-6 h-6"></i> Add New Category
                     </button>
                 `;
