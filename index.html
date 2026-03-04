@@ -51,9 +51,6 @@
             overflow: hidden; 
             border-radius: 1rem; 
             background: #f1f5f9; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
         }
 
         .dark .image-viewport { background: #1e293b; }
@@ -96,8 +93,8 @@
         <header class="bg-white dark:bg-slate-900 border-b-[12px] border-yellow-400 shadow-2xl px-6 py-12 transition-colors">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10">
                 <div class="relative group">
-                    <div id="header-logo-container" class="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner flex items-center justify-center overflow-hidden border-8 border-white dark:border-slate-700 transition-all">
-                        <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="max-w-none h-full object-contain">
+                    <div id="header-logo-container" class="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner overflow-hidden border-8 border-white dark:border-slate-700 transition-all relative">
+                        <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
                     </div>
                     <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-3 -right-3 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
                         <!-- Icon injected by render() -->
@@ -173,7 +170,7 @@
 
                 <div class="flex flex-col items-center" id="field-preview">
                     <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing">
-                        <img id="preview-img" src="" class="max-w-none h-full object-contain pointer-events-none">
+                        <img id="preview-img" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
                     </div>
                     <div class="w-full mt-8 space-y-4" id="field-zoom">
                         <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -406,8 +403,8 @@
                         <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-3 md:p-4 flex flex-col items-center justify-start text-center block h-full">
                             <div class="image-viewport mb-3">
                                 <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
-                                     style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom}); opacity: ${link.img ? 1 : 0.1}"
-                                     class="max-w-none h-full object-contain pointer-events-none">
+                                     style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom || 1}); opacity: ${link.img ? 1 : 0.1}"
+                                     class="absolute inset-0 w-full h-full object-contain pointer-events-none">
                             </div>
                             <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-[9px] sm:text-[10px] line-clamp-2 leading-tight">${link.title}</span>
                         </a>
@@ -449,7 +446,7 @@
             document.getElementById('display-subtitle').innerText = settings.subtitle;
             const logo = document.getElementById('main-logo');
             logo.src = settings.logo;
-            logo.style.transform = `translate(${settings.x || 0}%, ${settings.y || 0}%) scale(${settings.zoom})`;
+            logo.style.transform = `translate(${settings.x || 0}%, ${settings.y || 0}%) scale(${settings.zoom || 1})`;
 
             // Render Dynamic UI Buttons Based on State
             const isDark = document.documentElement.classList.contains('dark');
@@ -571,7 +568,7 @@
             document.getElementById('input-title').value = settings.title;
             document.getElementById('input-url').value = settings.subtitle;
             document.getElementById('input-image').value = settings.logo;
-            document.getElementById('input-zoom').value = settings.zoom;
+            document.getElementById('input-zoom').value = settings.zoom || 1;
             
             setModalVisibility('header');
             window.updatePreview();
@@ -601,7 +598,7 @@
             document.getElementById('input-title').value = link.title;
             document.getElementById('input-url').value = link.url;
             document.getElementById('input-image').value = link.img;
-            document.getElementById('input-zoom').value = link.zoom;
+            document.getElementById('input-zoom').value = link.zoom || 1;
             
             populateCategoryDropdown(link.categoryId);
             setModalVisibility('link');
@@ -659,7 +656,7 @@
             if (currentEditType === 'category') return; // no preview for categories
 
             const img = document.getElementById('preview-img');
-            const zoom = document.getElementById('input-zoom').value;
+            const zoom = document.getElementById('input-zoom').value || 1;
             img.src = document.getElementById('input-image').value || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png';
             document.getElementById('zoom-val').innerText = parseFloat(zoom).toFixed(2) + 'x';
             
