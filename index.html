@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Added SortableJS for Drag and Drop Reordering -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         :root {
@@ -46,6 +45,20 @@
             border-color: var(--bsa-blue);
         }
 
+        .plan-card {
+            background: white;
+            border-radius: 2rem;
+            border-left: 8px solid var(--bsa-gold);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .dark .plan-card {
+            background: #1e293b;
+            border-color: rgba(255,255,255,0.05);
+            border-left-color: var(--bsa-gold);
+        }
+
         .image-viewport { 
             width: 100%; 
             aspect-ratio: 1 / 1; 
@@ -53,8 +66,6 @@
             overflow: hidden; 
             border-radius: 1rem; 
             background: #f1f5f9; 
-            
-            /* Crucial Mobile/Safari Bug Fixes to stop icons from bleeding out */
             -webkit-mask-image: -webkit-radial-gradient(white, black);
             mask-image: radial-gradient(white, black);
             transform: translateZ(0);
@@ -90,74 +101,76 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Sortable JS Drag Styling */
-        .sortable-ghost {
-            opacity: 0.4;
-            transform: scale(0.95);
-        }
-        .sortable-drag {
-            cursor: grabbing !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
+        .sortable-ghost { opacity: 0.4; transform: scale(0.95); }
+        .sortable-drag { cursor: grabbing !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+        /* Custom Scrollbar for Textareas */
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark textarea::-webkit-scrollbar-thumb { background: #475569; }
     </style>
 </head>
 <body class="min-h-screen relative">
-    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="app">
         <!-- Header -->
-        <header class="bg-white dark:bg-slate-900 border-b-[12px] border-yellow-400 shadow-2xl px-6 py-12 transition-colors">
-            <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10">
-                <div class="relative group">
-                    <div id="header-logo-container" class="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner overflow-hidden border-8 border-white dark:border-slate-700 transition-all relative">
-                        <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
-                    </div>
-                    <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-3 -right-3 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20">
-                        <!-- Icon injected by render() -->
-                    </button>
-                </div>
-
-                <div class="text-center md:text-left flex-1 relative group pr-12">
-                    <h1 id="display-title" class="text-6xl md:text-8xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-2 leading-none">
-                        Pack 26
-                    </h1>
-                    <div class="text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-3">
-                        <i data-lucide="star" class="text-yellow-500 fill-yellow-500 w-5 h-5"></i>
-                        <span id="display-subtitle">Scouting America</span>
-                    </div>
-                    <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
-                        <!-- Icon injected by render() -->
-                    </button>
-                </div>
-
-                <div class="flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
-                    <div class="flex gap-4">
-                        <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center">
-                            <!-- Icon injected by render() -->
-                        </button>
-                        <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden">
-                            <!-- Content injected by render() -->
+        <header class="bg-white dark:bg-slate-900 border-b-[12px] border-yellow-400 shadow-2xl px-6 py-12 transition-colors relative z-30">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex flex-col md:flex-row items-center gap-10">
+                    <div class="relative group">
+                        <div id="header-logo-container" class="w-44 h-44 rounded-[3rem] bg-slate-50 dark:bg-slate-800 shadow-inner overflow-hidden border-8 border-white dark:border-slate-700 transition-all relative">
+                            <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
+                        </div>
+                        <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-3 -right-3 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20">
+                            <!-- Icon injected -->
                         </button>
                     </div>
-                    <!-- Added my.scouting.org Link -->
-                    <a href="https://my.scouting.org" target="_blank" class="text-[10px] md:text-xs font-black text-blue-800 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i> my.scouting.org
-                    </a>
+
+                    <div class="text-center md:text-left flex-1 relative group pr-12">
+                        <h1 id="display-title" class="text-6xl md:text-8xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-2 leading-none">
+                            Pack 26
+                        </h1>
+                        <div class="text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-3">
+                            <!-- Custom Fleur-de-lis SVG replacing the Star -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" class="w-5 h-5 fill-yellow-500">
+                                <path d="M204.6 42.4C200.7 30 188 30 184.1 42.4c-15.5 49.3-39.7 122.9-74.1 193.1c-14.7 30-49.8 40.5-80.1 27.2c-23-10.1-41-33.1-45.7-60.8c-2.4-14.5-22.3-17.7-29.3-4.5C-13.8 281.8 45.4 402.5 142.1 402.5c22.1 0 42.6-6 60.5-16.5c-4 12.3-8.8 24.2-14.5 35.5c-11.8 23.5-35.1 38.5-61.4 38.5H112c-8.8 0-16 7.2-16 16s7.2 16 16 16H272c8.8 0 16-7.2 16-16s-7.2-16-16-16h-14.7c-26.3 0-49.6-15-61.4-38.5c-5.7-11.3-10.5-23.2-14.5-35.5c17.9 10.5 38.4 16.5 60.5 16.5c96.7 0 155.9-120.7 187-205.1c7-13.2-12.9-10-15.3 4.5c-4.7 27.7-22.7 50.7-45.7 60.8c-30.3 13.3-65.4 2.8-80.1-27.2c-34.4-70.2-58.6-143.8-74.1-193.1zM194.3 400.9c9.5-19 17.1-38.8 22.7-59.2c-7.3 1.8-14.9 2.8-22.7 2.8s-15.4-1-22.7-2.8c5.6 20.4 13.2 40.2 22.7 59.2z"/>
+                            </svg>
+                            <span id="display-subtitle">Scouting America</span>
+                        </div>
+                        <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
+                            <!-- Icon injected -->
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
+                        <div class="flex gap-4">
+                            <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center"></button>
+                            <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden"></button>
+                        </div>
+                        <a href="https://my.scouting.org" target="_blank" class="text-[10px] md:text-xs font-black text-blue-800 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> my.scouting.org
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Leader Navigation Tabs (Only visible to authenticated leaders) -->
+                <div id="leader-nav" class="hidden mt-8 flex justify-center md:justify-start gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+                    <button onclick="window.switchView('links')" id="tab-links" class="px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Resources</button>
+                    <button onclick="window.switchView('planner')" id="tab-planner" class="px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Pack Planner</button>
                 </div>
             </div>
         </header>
 
         <!-- Dynamic Content Area -->
-        <main class="max-w-[90rem] mx-auto py-16 sm:py-20 px-4 sm:px-6 flex flex-col items-center" id="links-container">
-            <!-- Categories and Links injected here -->
+        <main class="max-w-[90rem] mx-auto py-12 px-4 sm:px-6 flex flex-col items-center min-h-[50vh]" id="main-container">
+            <!-- Content injected here -->
         </main>
 
         <!-- Auth & Footer -->
         <div class="fixed bottom-10 right-10 z-50">
-            <button id="lock-btn" onclick="window.handleAuthClick()">
-                <!-- Icon injected by render() -->
-            </button>
+            <button id="lock-btn" onclick="window.handleAuthClick()"></button>
         </div>
     </div>
 
@@ -165,34 +178,37 @@
     <div id="login-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] hidden items-center justify-center p-6">
         <div class="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-sm overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-400">
             <div class="bg-blue-900 p-6 text-white flex justify-between items-center">
-                <h3 class="text-xl font-black uppercase tracking-widest">Leader Access</h3>
+                <h3 class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="shield-check" class="w-5 h-5"></i> Secure Access</h3>
                 <button onclick="window.closeLoginModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="p-8 flex flex-col gap-6">
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-center leading-relaxed">
+                    Enter <span class="text-blue-600 dark:text-blue-400">Plan121</span> for Planner<br>
+                    Enter <span class="text-yellow-600 dark:text-yellow-400">CoRf121</span> for Admin
+                </p>
                 <div class="relative">
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Access Key</label>
                     <div class="relative flex items-center">
-                        <input type="password" id="login-password" class="w-full p-4 pr-12 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all" placeholder="Enter key..." onkeydown="if(event.key === 'Enter') window.submitLogin()">
+                        <input type="password" id="login-password" class="w-full p-4 pr-12 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all tracking-widest" placeholder="••••••••" onkeydown="if(event.key === 'Enter') window.submitLogin()">
                         <button id="toggle-password-btn" onclick="window.togglePasswordVisibility()" class="absolute right-4 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none">
                             <i data-lucide="eye" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
-                <button onclick="window.submitLogin()" class="w-full py-4 bg-yellow-400 text-blue-900 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-yellow-300 transition-all active:scale-95">
-                    Unlock
+                <button onclick="window.submitLogin()" class="w-full py-4 bg-yellow-400 text-blue-900 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-yellow-300 transition-all active:scale-95 flex justify-center items-center gap-2">
+                    Unlock <i data-lucide="key" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Universal Modal -->
+    <!-- Universal Identity/Links Modal -->
     <div id="modal-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
         <div class="bg-white dark:bg-slate-900 rounded-[4rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-900">
             <div class="bg-blue-900 p-8 text-white flex justify-between items-center">
                 <h3 id="modal-title" class="text-2xl font-black uppercase tracking-widest">Settings</h3>
                 <button onclick="window.closeModal()" class="p-3 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
             </div>
-            
             <div class="p-8 md:p-10 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-12" id="modal-grid">
                 <div class="space-y-6">
                     <div id="field-title">
@@ -205,16 +221,13 @@
                     </div>
                     <div id="field-category" class="hidden">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Category</label>
-                        <select id="input-category" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all appearance-none cursor-pointer">
-                            <!-- Options injected dynamically -->
-                        </select>
+                        <select id="input-category" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all appearance-none cursor-pointer"></select>
                     </div>
                     <div id="field-image">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image Source URL</label>
                         <input id="input-image" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all">
                     </div>
                 </div>
-
                 <div class="flex flex-col items-center" id="field-preview">
                     <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
                         <img id="preview-img" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
@@ -227,12 +240,69 @@
                         <input type="range" id="input-zoom" min="0.5" max="4" step="0.01" value="1">
                     </div>
                 </div>
-
-                <!-- Save button spans full width if preview is hidden -->
                 <div class="col-span-1 md:col-span-2 flex justify-end mt-2">
-                    <button onclick="window.saveChanges()" id="modal-save-btn" class="w-full md:w-auto px-10 py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95">
-                        Save Changes
-                    </button>
+                    <button onclick="window.saveChanges()" id="modal-save-btn" class="w-full md:w-auto px-10 py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Planner Edit Modal -->
+    <div id="planner-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-6 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-500 my-auto">
+            <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
+                <h3 id="plan-modal-title" class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="calendar" class="w-5 h-5 text-yellow-500"></i> Event Details</h3>
+                <button onclick="window.closePlannerModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-8 space-y-6">
+                <!-- Date & Time Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Date</label>
+                        <input type="date" id="plan-date" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Time</label>
+                        <select id="plan-time" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all appearance-none cursor-pointer"></select>
+                    </div>
+                </div>
+
+                <!-- Configurable Dropdowns Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Event Type</label>
+                            <div class="flex gap-1">
+                                <button onclick="window.manageArray('eventTypes', 'add')" class="text-blue-500 hover:text-blue-700 p-1"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                                <button onclick="window.manageArray('eventTypes', 'remove')" class="text-red-400 hover:text-red-600 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <select id="plan-type" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all appearance-none cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Lead Scouter</label>
+                            <div class="flex gap-1">
+                                <button onclick="window.manageArray('leaders', 'add')" class="text-blue-500 hover:text-blue-700 p-1"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                                <button onclick="window.manageArray('leaders', 'remove')" class="text-red-400 hover:text-red-600 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <select id="plan-leader" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all appearance-none cursor-pointer"></select>
+                    </div>
+                </div>
+
+                <!-- Title & Details -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Title</label>
+                    <input id="plan-title" type="text" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all" placeholder="e.g. Pinewood Derby Weigh-in">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Details</label>
+                    <textarea id="plan-details" rows="4" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all resize-none" placeholder="Provide details, location, requirements..."></textarea>
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button onclick="window.savePlan()" class="w-full px-10 py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95">Save Event</button>
                 </div>
             </div>
         </div>
@@ -244,114 +314,75 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- State ---
+        // --- Core State ---
         let useFirebase = false;
         let auth = null;
         let db = null;
         let currentUser = null;
-        let isAdmin = false;
-        let isEditing = false;
         
+        let isAdmin = false;    // Edits Layout & Categories
+        let isLeader = false;   // Views & Edits Planner
+        let isEditing = false;  // Toggle state for Layout Edits
+        let currentView = 'links'; // 'links' or 'planner'
+
         const appId = 'pack-26-resources';
         
-        // Apply saved theme immediately
+        // Theme init
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
 
-        // Initialize Categories, Links & Settings from Local Storage (Fallbacks)
-        let categories = JSON.parse(localStorage.getItem('scout_categories')) || [
-            { id: 'default', title: 'General Resources' }
-        ];
-
+        // --- Data State ---
+        let categories = JSON.parse(localStorage.getItem('scout_categories')) || [{ id: 'default', title: 'General Resources' }];
         let links = JSON.parse(localStorage.getItem('scout_links')) || [
-            { id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default' },
-            { id: 2, title: 'Calendar', url: '#', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default' },
-            { id: 3, title: 'Uniforms', url: 'https://www.scoutshop.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default' }
+            { id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default' }
         ];
-
-        // Ensure all legacy links have a category assigned
-        links.forEach(l => {
-            if (!l.categoryId) l.categoryId = 'default';
-        });
-
         let settings = JSON.parse(localStorage.getItem('scout_settings')) || {
-            title: 'Pack 26',
-            subtitle: 'Scouting America',
-            logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png',
-            zoom: 1, x: 0, y: 0
+            title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0
         };
 
+        // Planner State
+        let plans = JSON.parse(localStorage.getItem('scout_plans')) || [];
+        let eventTypes = JSON.parse(localStorage.getItem('scout_event_types')) || ['Pack Meeting', 'Den Meeting', 'Campout', 'Blue & Gold', 'Pinewood Derby'];
+        let leaders = JSON.parse(localStorage.getItem('scout_leaders')) || ['Cubmaster', 'Den Leader', 'Committee Chair'];
+
         let currentEditId = null;
-        let currentEditType = null; // 'header', 'category', 'link'
+        let currentEditType = null; 
         let isDragging = false;
         let startX, startY;
 
-        // --- Custom Toast Notification Function ---
+        // --- Toasts ---
         window.showToast = function(message, isError = false) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-2xl transition-all duration-300 transform translate-y-[-20px] opacity-0 flex items-center gap-2 ${isError ? 'bg-red-600 text-white' : 'bg-green-500 text-white'}`;
-            
-            const iconName = isError ? 'alert-triangle' : 'cloud';
-            toast.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4"></i> ${message}`;
-            
+            toast.innerHTML = `<i data-lucide="${isError ? 'alert-triangle' : 'cloud'}" class="w-4 h-4"></i> ${message}`;
             container.appendChild(toast);
             if (window.lucide) window.lucide.createIcons();
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
-                toast.classList.add('translate-y-0', 'opacity-100');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-[-20px]', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            setTimeout(() => { toast.classList.remove('translate-y-[-20px]', 'opacity-0'); toast.classList.add('translate-y-0', 'opacity-100'); }, 10);
+            setTimeout(() => { toast.classList.remove('translate-y-0', 'opacity-100'); toast.classList.add('translate-y-[-20px]', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 4000);
         };
 
         // --- Firebase Init ---
         let fbConfig = null;
-        try {
-            if (typeof window.__firebase_config !== 'undefined') {
-                fbConfig = JSON.parse(window.__firebase_config);
-            }
-        } catch (e) {}
-
+        try { if (typeof window.__firebase_config !== 'undefined') fbConfig = JSON.parse(window.__firebase_config); } catch (e) {}
         if (!fbConfig || !fbConfig.apiKey) {
             fbConfig = {
-                apiKey: "AIzaSyCwmME4nKhlE2i6ygpimyuU29F5KOcEB3o",
-                authDomain: "pack-26-resources.firebaseapp.com",
-                projectId: "pack-26-resources",
-                storageBucket: "pack-26-resources.firebasestorage.app",
-                messagingSenderId: "1033254465829",
-                appId: "1:1033254465829:web:e78f1364ea09206568eacc"
+                apiKey: "AIzaSyCwmME4nKhlE2i6ygpimyuU29F5KOcEB3o", authDomain: "pack-26-resources.firebaseapp.com", projectId: "pack-26-resources", storageBucket: "pack-26-resources.firebasestorage.app", messagingSenderId: "1033254465829", appId: "1:1033254465829:web:e78f1364ea09206568eacc"
             };
         }
 
         if (fbConfig && fbConfig.apiKey) {
-            const app = initializeApp(fbConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            useFirebase = true;
-        } else {
-            console.warn("No Firebase Configuration found. App is running in Local Mode.");
+            const app = initializeApp(fbConfig); auth = getAuth(app); db = getFirestore(app); useFirebase = true;
         }
 
-        // --- Auth & Sync Loop ---
         if (useFirebase) {
             const initAuth = async () => {
                 try {
-                    if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
-                        await signInWithCustomToken(auth, window.__initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (e) {
-                    console.error("Firebase Auth Failed:", e);
-                }
+                    if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) await signInWithCustomToken(auth, window.__initial_auth_token);
+                    else await signInAnonymously(auth);
+                } catch (e) { console.error("Firebase Auth Failed:", e); }
             };
             
             initAuth().then(() => {
@@ -363,22 +394,14 @@
                             if (snap.exists()) {
                                 const data = snap.data();
                                 if (data.categories) categories = data.categories;
-                                else if (!data.categories && categories.length === 0) {
-                                    categories = [{ id: 'default', title: 'General Resources' }];
-                                }
-                                
-                                if (data.links) {
-                                    links = data.links;
-                                    links.forEach(l => { if (!l.categoryId) l.categoryId = 'default'; });
-                                }
+                                if (data.links) links = data.links;
                                 if (data.settings) settings = data.settings;
+                                if (data.plans) plans = data.plans;
+                                if (data.eventTypes) eventTypes = data.eventTypes;
+                                if (data.leaders) leaders = data.leaders;
                                 window.render();
-                            } else {
-                                window.syncToCloud(); 
-                            }
-                        }, (error) => {
-                            console.error("Sync Error: ", error);
-                        });
+                            } else { window.syncToCloud(); }
+                        }, (error) => console.error("Sync Error: ", error));
                     }
                 });
             });
@@ -388,54 +411,198 @@
             if (!useFirebase || !currentUser) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config');
-                await setDoc(docRef, { links, settings, categories, updatedAt: Date.now() });
+                await setDoc(docRef, { links, settings, categories, plans, eventTypes, leaders, updatedAt: Date.now() });
                 window.showToast("Cloud Sync Successful!");
-            } catch (error) {
-                console.error("Failed to push updates to cloud:", error);
-                window.showToast("Failed to sync to cloud", true);
-            }
+            } catch (error) { window.showToast("Failed to sync to cloud", true); }
         };
 
-        // --- Core Functions ---
+        // --- Render Engine ---
         window.render = function() {
-            const container = document.getElementById('links-container');
-            if (!container) return;
+            const container = document.getElementById('main-container');
+            const leaderNav = document.getElementById('leader-nav');
             
-            container.innerHTML = '';
+            // Header Sync
+            document.getElementById('display-title').innerText = settings.title;
+            document.getElementById('display-subtitle').innerText = settings.subtitle;
+            const logo = document.getElementById('main-logo');
+            logo.src = settings.logo;
+            logo.style.transform = `translate(${settings.x || 0}%, ${settings.y || 0}%) scale(${settings.zoom || 1})`;
 
-            // Main Category Flex Wrapper (Allows side-by-side 3 across)
+            // Nav Visibility & State
+            if (isLeader || isAdmin) {
+                leaderNav.classList.remove('hidden');
+                document.getElementById('tab-links').className = `px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === 'links' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
+                document.getElementById('tab-planner').className = `px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === 'planner' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
+            } else {
+                leaderNav.classList.add('hidden');
+                currentView = 'links'; // Force back to links if logged out
+            }
+
+            container.innerHTML = ''; // Clear main area
+
+            if (currentView === 'planner') {
+                window.renderPlannerView(container);
+            } else {
+                window.renderLinksView(container);
+            }
+
+            // UI Buttons (Theme & Auth)
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-btn').innerHTML = isDark ? '<i data-lucide="sun" class="w-5 h-5"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>';
+
+            const lockBtn = document.getElementById('lock-btn');
+            if (isAdmin || isLeader) {
+                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-yellow-400 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="unlock" class="text-blue-900 w-5 h-5"></i>';
+            } else {
+                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-blue-900 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="lock" class="text-white w-5 h-5"></i>';
+            }
+
+            const adminBtn = document.getElementById('admin-toggle-btn');
+            if (isAdmin && currentView === 'links') {
+                adminBtn.classList.remove('hidden');
+                if (isEditing) {
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 text-blue-900"></i><span class="text-xs">Finish Layout</span>';
+                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
+                } else {
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4"></i><span class="text-xs">Edit Layout</span>';
+                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
+                }
+            } else {
+                adminBtn.classList.add('hidden');
+                if(currentView === 'planner') isEditing = false; // Turn off layout edit when leaving
+            }
+
+            const headerBtn = document.getElementById('edit-header-btn');
+            const textBtn = document.getElementById('edit-text-btn');
+            if (isAdmin && isEditing && currentView === 'links') {
+                headerBtn.classList.remove('hidden'); headerBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>';
+                if (textBtn) { textBtn.classList.remove('hidden'); textBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>'; }
+            } else {
+                headerBtn.classList.add('hidden');
+                if (textBtn) textBtn.classList.add('hidden');
+            }
+
+            if (window.lucide) window.lucide.createIcons();
+            
+            // Backup local state
+            localStorage.setItem('scout_links', JSON.stringify(links));
+            localStorage.setItem('scout_settings', JSON.stringify(settings));
+            localStorage.setItem('scout_categories', JSON.stringify(categories));
+            localStorage.setItem('scout_plans', JSON.stringify(plans));
+            localStorage.setItem('scout_event_types', JSON.stringify(eventTypes));
+            localStorage.setItem('scout_leaders', JSON.stringify(leaders));
+        };
+
+        window.switchView = function(view) {
+            currentView = view;
+            window.render();
+        }
+
+        // --- Render View: Planner ---
+        window.renderPlannerView = function(container) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full max-w-4xl flex flex-col gap-6';
+
+            const headerRow = document.createElement('div');
+            headerRow.className = 'flex justify-between items-center mb-4';
+            headerRow.innerHTML = `
+                <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="calendar-days" class="w-8 h-8 text-blue-600"></i> Upcoming Events
+                </h2>
+                <button onclick="window.openPlannerModal()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold uppercase tracking-widest text-xs shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Add Event
+                </button>
+            `;
+            wrapper.appendChild(headerRow);
+
+            // Sort plans by Date & Time
+            const sortedPlans = [...plans].sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.time}`);
+                const dateB = new Date(`${b.date}T${b.time}`);
+                return dateA - dateB;
+            });
+
+            if (sortedPlans.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-20 opacity-50 font-bold uppercase tracking-widest text-sm text-slate-500';
+                empty.innerHTML = '<i data-lucide="calendar-x-2" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No upcoming events scheduled.';
+                wrapper.appendChild(empty);
+            } else {
+                sortedPlans.forEach(plan => {
+                    const card = document.createElement('div');
+                    card.className = 'plan-card p-6 flex flex-col md:flex-row gap-6 relative group';
+                    
+                    // Format Date nicely
+                    const d = new Date(`${plan.date}T00:00:00`);
+                    const dateStr = isNaN(d) ? plan.date : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    
+                    // Convert 24h to 12h nicely
+                    let timeStr = plan.time;
+                    if(plan.time) {
+                        let [h, m] = plan.time.split(':');
+                        let ampm = h >= 12 ? 'PM' : 'AM';
+                        h = h % 12;
+                        h = h ? h : 12; 
+                        timeStr = `${h}:${m} ${ampm}`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="window.openPlannerModal(${plan.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="window.deletePlan(${plan.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-red-500 rounded-lg hover:bg-red-100 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="md:w-48 flex-shrink-0 flex flex-col justify-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 pb-4 md:pb-0 md:pr-6">
+                            <span class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">${dateStr}</span>
+                            <span class="text-2xl font-black text-blue-900 dark:text-blue-400 leading-none">${timeStr}</span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-2 bg-slate-100 dark:bg-slate-800 inline-block px-2 py-1 rounded w-fit">${plan.type}</span>
+                        </div>
+                        <div class="flex-grow flex flex-col justify-center">
+                            <h4 class="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">${plan.title}</h4>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">${plan.details}</p>
+                            <div class="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+                                <i data-lucide="user" class="w-3 h-3"></i> Lead: <span class="text-slate-700 dark:text-slate-300">${plan.leader}</span>
+                            </div>
+                        </div>
+                    `;
+                    wrapper.appendChild(card);
+                });
+            }
+
+            container.appendChild(wrapper);
+        }
+
+        // --- Render View: Links ---
+        window.renderLinksView = function(container) {
             const categoryWrapper = document.createElement('div');
             categoryWrapper.id = 'category-wrapper';
             categoryWrapper.className = 'flex flex-wrap justify-center gap-6 md:gap-8 items-start w-full';
 
-            // Render Each Category Section (Bubble)
             categories.forEach(cat => {
                 const section = document.createElement('div');
                 section.className = 'category-section w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-2rem)] min-w-[300px] max-w-lg bg-slate-100 dark:bg-slate-800 rounded-[3rem] p-6 sm:p-8 shadow-xl border border-white dark:border-slate-700 flex flex-col relative';
                 section.dataset.id = cat.id;
 
-                // Category Header
                 const headerFlex = document.createElement('div');
                 headerFlex.className = 'flex items-center justify-between gap-4 mb-6 px-2';
                 headerFlex.innerHTML = `
                     <h2 class="text-blue-900 dark:text-blue-400 font-black uppercase tracking-widest text-lg">${cat.title}</h2>
                     ${isEditing ? `
                         <div class="flex gap-2 no-drag">
-                            <button class="category-drag-handle p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700 cursor-move" title="Drag to reorder"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
-                            <button onclick="window.editCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                            <button onclick="window.deleteCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-red-600 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-200 dark:border-slate-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <button class="category-drag-handle p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm cursor-move"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
+                            <button onclick="window.editCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-blue-600 rounded-xl shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="window.deleteCategory('${cat.id}')" class="p-2 bg-white dark:bg-slate-900 text-slate-400 hover:text-red-600 rounded-xl shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     ` : ''}
                 `;
                 section.appendChild(headerFlex);
 
-                // Grid for links (ALWAYS 3 columns)
                 const grid = document.createElement('div');
-                grid.className = 'link-grid grid grid-cols-3 gap-3 sm:gap-4 min-h-[120px]'; // Min height ensures empty categories can accept drops
+                grid.className = 'link-grid grid grid-cols-3 gap-3 sm:gap-4 min-h-[120px]';
                 grid.dataset.categoryId = cat.id;
 
                 const catLinks = links.filter(l => l.categoryId === cat.id);
-                
                 catLinks.forEach(link => {
                     const card = document.createElement('div');
                     card.className = `link-card relative group ${isEditing ? 'cursor-move' : ''}`;
@@ -443,27 +610,18 @@
                     card.innerHTML = `
                         ${isEditing ? `
                             <div class="absolute top-2 right-2 z-20 flex flex-col gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity no-drag cursor-default">
-                                <button onclick="window.editLink(${link.id})" class="p-1.5 bg-blue-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
-                                    <i data-lucide="edit-2" class="w-3 h-3"></i>
-                                </button>
-                                <button onclick="window.deleteLink(${link.id})" class="p-1.5 bg-red-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform">
-                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
-                                </button>
+                                <button onclick="window.editLink(${link.id})" class="p-1.5 bg-blue-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                                <button onclick="window.deleteLink(${link.id})" class="p-1.5 bg-red-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                             </div>
                         ` : ''}
                         <a href="${isEditing ? 'javascript:void(0)' : link.url}" target="_blank" class="scout-card p-3 md:p-4 flex flex-col items-center justify-start text-center block h-full pointer-events-none">
                             <div class="image-viewport mb-3">
-                                <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
-                                     style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom || 1}); opacity: ${link.img ? 1 : 0.1}"
-                                     class="absolute inset-0 w-full h-full object-contain pointer-events-none">
+                                <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom || 1}); opacity: ${link.img ? 1 : 0.1}" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
                             </div>
                             <span class="text-blue-900 dark:text-slate-200 font-extrabold uppercase tracking-widest text-[9px] sm:text-[10px] line-clamp-2 leading-tight">${link.title}</span>
                         </a>
                     `;
-                    // Note: We use pointer-events-none on the <a> tag when editing so it doesn't interrupt dragging
-                    if (!isEditing) {
-                        card.querySelector('a').classList.remove('pointer-events-none');
-                    }
+                    if (!isEditing) card.querySelector('a').classList.remove('pointer-events-none');
                     grid.appendChild(card);
                 });
 
@@ -471,10 +629,7 @@
                     const addBtn = document.createElement('button');
                     addBtn.onclick = () => window.addNewLink(cat.id);
                     addBtn.className = 'no-drag scout-card border-4 border-dashed border-slate-300 dark:border-slate-700 bg-transparent flex flex-col items-center justify-center p-3 opacity-50 hover:opacity-100 hover:border-blue-500 cursor-pointer transition-all h-full min-h-[120px] w-full';
-                    addBtn.innerHTML = `
-                        <i data-lucide="plus" class="w-8 h-8 text-slate-400 mb-2 pointer-events-none"></i>
-                        <span class="font-black text-slate-400 uppercase tracking-widest pointer-events-none text-[9px] leading-tight text-center">Add Link</span>
-                    `;
+                    addBtn.innerHTML = '<i data-lucide="plus" class="w-8 h-8 text-slate-400 mb-2 pointer-events-none"></i><span class="font-black text-slate-400 uppercase tracking-widest pointer-events-none text-[9px] leading-tight text-center">Add Link</span>';
                     grid.appendChild(addBtn);
                 }
 
@@ -484,99 +639,29 @@
 
             container.appendChild(categoryWrapper);
 
-            // Add Category Button at the very bottom
             if (isEditing) {
                 const addCatWrapper = document.createElement('div');
                 addCatWrapper.className = 'mt-12 flex justify-center w-full';
-                addCatWrapper.innerHTML = `
-                    <button onclick="window.addNewCategory()" class="px-8 py-4 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] text-slate-400 font-black uppercase tracking-widest hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center gap-3 shadow-lg">
-                        <i data-lucide="plus-circle" class="w-6 h-6"></i> Add New Category
-                    </button>
-                `;
+                addCatWrapper.innerHTML = `<button onclick="window.addNewCategory()" class="px-8 py-4 bg-white dark:bg-slate-900 border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] text-slate-400 font-black uppercase tracking-widest hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center gap-3 shadow-lg"><i data-lucide="plus-circle" class="w-6 h-6"></i> Add New Category</button>`;
                 container.appendChild(addCatWrapper);
             }
 
-            // Sync Header Texts & Logo
-            document.getElementById('display-title').innerText = settings.title;
-            document.getElementById('display-subtitle').innerText = settings.subtitle;
-            const logo = document.getElementById('main-logo');
-            logo.src = settings.logo;
-            logo.style.transform = `translate(${settings.x || 0}%, ${settings.y || 0}%) scale(${settings.zoom || 1})`;
-
-            // Render Dynamic UI Buttons Based on State
-            const isDark = document.documentElement.classList.contains('dark');
-            const themeBtn = document.getElementById('theme-btn');
-            themeBtn.innerHTML = isDark ? '<i data-lucide="sun" class="w-5 h-5"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>';
-
-            const lockBtn = document.getElementById('lock-btn');
-            if (isAdmin) {
-                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-yellow-400 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
-                lockBtn.innerHTML = '<i data-lucide="unlock" class="text-blue-900 w-5 h-5"></i>';
-            } else {
-                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-blue-900 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
-                lockBtn.innerHTML = '<i data-lucide="lock" class="text-white w-5 h-5"></i>';
-            }
-
-            const adminBtn = document.getElementById('admin-toggle-btn');
-            if (isAdmin) {
-                adminBtn.classList.remove('hidden');
-                if (isEditing) {
-                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 text-blue-900"></i><span class="text-xs">Finish</span>';
-                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
-                } else {
-                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4"></i><span class="text-xs">Admin</span>';
-                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
-                }
-            } else {
-                adminBtn.classList.add('hidden');
-            }
-
-            const headerBtn = document.getElementById('edit-header-btn');
-            const textBtn = document.getElementById('edit-text-btn');
-            if (isEditing) {
-                headerBtn.classList.remove('hidden');
-                headerBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>';
-                if (textBtn) {
-                    textBtn.classList.remove('hidden');
-                    textBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>';
-                }
-            } else {
-                headerBtn.classList.add('hidden');
-                if (textBtn) textBtn.classList.add('hidden');
-            }
-
-            if (window.lucide) window.lucide.createIcons();
-            
-            // Initialization of SortableJS logic
             if (isEditing && window.Sortable) {
-                // Initialize Category Reordering
                 new Sortable(document.getElementById('category-wrapper'), {
-                    animation: 250,
-                    handle: '.category-drag-handle',
-                    easing: "cubic-bezier(1, 0, 0, 1)",
+                    animation: 250, handle: '.category-drag-handle',
                     onEnd: function() {
                         const newCategories = [];
                         document.querySelectorAll('.category-section').forEach(el => {
                             const cat = categories.find(c => c.id === el.dataset.id);
                             if (cat) newCategories.push(cat);
                         });
-                        categories = newCategories;
-                        window.syncToCloud();
+                        categories = newCategories; window.syncToCloud();
                     }
                 });
-
-                // Initialize Tile Drag & Drop inside and across Categories
                 document.querySelectorAll('.link-grid').forEach(grid => {
                     new Sortable(grid, {
-                        group: 'shared-links',
-                        animation: 250,
-                        easing: "cubic-bezier(1, 0, 0, 1)",
-                        filter: '.no-drag', // Stop Add/Edit buttons from being draggable
-                        preventOnFilter: false,
-                        onMove: function (evt) {
-                            // Don't allow placing an item *after* the "Add Link" button
-                            return evt.related.className.indexOf('no-drag') === -1;
-                        },
+                        group: 'shared-links', animation: 250, filter: '.no-drag', preventOnFilter: false,
+                        onMove: (evt) => evt.related.className.indexOf('no-drag') === -1,
                         onEnd: function() {
                             const newLinks = [];
                             document.querySelectorAll('.link-grid').forEach(g => {
@@ -584,34 +669,22 @@
                                 g.querySelectorAll('.link-card').forEach(card => {
                                     const id = parseInt(card.dataset.id);
                                     const linkObj = links.find(l => l.id === id);
-                                    if (linkObj) {
-                                        linkObj.categoryId = catId; // Assign new category if moved
-                                        newLinks.push(linkObj);
-                                    }
+                                    if (linkObj) { linkObj.categoryId = catId; newLinks.push(linkObj); }
                                 });
                             });
-                            links = newLinks;
-                            window.syncToCloud();
+                            links = newLinks; window.syncToCloud();
                         }
                     });
                 });
             }
+        }
 
-            localStorage.setItem('scout_links', JSON.stringify(links));
-            localStorage.setItem('scout_settings', JSON.stringify(settings));
-            localStorage.setItem('scout_categories', JSON.stringify(categories));
-        };
-
-        // --- Admin Actions ---
+        // --- Auth Actions ---
         window.handleAuthClick = function() {
-            if (isAdmin) {
-                isAdmin = false;
-                isEditing = false; 
-                const adminBtn = document.getElementById('admin-toggle-btn');
-                if (adminBtn) adminBtn.classList.add('hidden');
+            if (isAdmin || isLeader) {
+                isAdmin = false; isLeader = false; isEditing = false; currentView = 'links';
                 window.render();
             } else {
-                // Open Custom Login Modal instead of Browser Prompt
                 document.getElementById('login-password').value = '';
                 document.getElementById('login-password').type = 'password';
                 document.getElementById('toggle-password-btn').innerHTML = '<i data-lucide="eye" class="w-5 h-5"></i>';
@@ -621,18 +694,16 @@
             }
         };
 
-        window.closeLoginModal = function() {
-            document.getElementById('login-modal').classList.replace('flex', 'hidden');
-        };
+        window.closeLoginModal = () => document.getElementById('login-modal').classList.replace('flex', 'hidden');
 
         window.submitLogin = function() {
             const pass = document.getElementById('login-password').value;
             if (pass === 'CoRf121') {
-                isAdmin = true;
-                isEditing = false;
-                window.closeLoginModal();
-                window.render();
-                window.showToast("Leader Mode Unlocked");
+                isAdmin = true; isLeader = true; isEditing = false;
+                window.closeLoginModal(); window.render(); window.showToast("Admin Mode Unlocked");
+            } else if (pass.toLowerCase() === 'plan121') {
+                isAdmin = false; isLeader = true; isEditing = false; currentView = 'planner';
+                window.closeLoginModal(); window.render(); window.showToast("Planner View Unlocked");
             } else {
                 window.showToast("Incorrect Access Key", true);
             }
@@ -641,231 +712,244 @@
         window.togglePasswordVisibility = function() {
             const input = document.getElementById('login-password');
             const btn = document.getElementById('toggle-password-btn');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                btn.innerHTML = '<i data-lucide="eye-off" class="w-5 h-5"></i>';
-            } else {
-                input.type = 'password';
-                btn.innerHTML = '<i data-lucide="eye" class="w-5 h-5"></i>';
-            }
+            if (input.type === 'password') { input.type = 'text'; btn.innerHTML = '<i data-lucide="eye-off" class="w-5 h-5"></i>'; }
+            else { input.type = 'password'; btn.innerHTML = '<i data-lucide="eye" class="w-5 h-5"></i>'; }
             if (window.lucide) window.lucide.createIcons();
         };
 
-        window.toggleAdminMode = function() {
-            isEditing = !isEditing;
-            window.render();
-        };
+        window.toggleAdminMode = function() { isEditing = !isEditing; window.render(); };
+        window.toggleDarkMode = function() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); window.render(); };
 
-        window.toggleDarkMode = function() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            window.render();
-        };
-
-        // --- Modals & Dynamic Form Logic ---
-        function setModalVisibility(type) {
-            const mGrid = document.getElementById('modal-grid');
-            const fUrl = document.getElementById('field-url');
-            const fImg = document.getElementById('field-image');
-            const fCat = document.getElementById('field-category');
-            const fPrev = document.getElementById('field-preview');
-            const fBtn = document.getElementById('modal-save-btn');
-
-            if (type === 'category') {
-                mGrid.classList.remove('md:grid-cols-2');
-                mGrid.classList.add('grid-cols-1');
-                fUrl.classList.add('hidden');
-                fImg.classList.add('hidden');
-                fCat.classList.add('hidden');
-                fPrev.classList.add('hidden');
-                fBtn.classList.replace('w-full', 'w-auto');
-            } else {
-                mGrid.classList.add('md:grid-cols-2');
-                mGrid.classList.remove('grid-cols-1');
-                fUrl.classList.remove('hidden');
-                fImg.classList.remove('hidden');
-                fPrev.classList.remove('hidden');
-                fBtn.classList.replace('w-auto', 'w-full');
-                
-                if (type === 'link') {
-                    fCat.classList.remove('hidden');
-                } else {
-                    fCat.classList.add('hidden'); // hidden for header
+        // --- Planner Modals & Logic ---
+        window.buildPlannerDropdowns = function(selectedType = '', selectedLeader = '', selectedTime = '') {
+            const timeSelect = document.getElementById('plan-time');
+            const typeSelect = document.getElementById('plan-type');
+            const leaderSelect = document.getElementById('plan-leader');
+            
+            // Build Time (15m increments)
+            timeSelect.innerHTML = '';
+            for(let h=0; h<24; h++) {
+                for(let m=0; m<60; m+=15) {
+                    const hh = h.toString().padStart(2, '0');
+                    const mm = m.toString().padStart(2, '0');
+                    const val = `${hh}:${mm}`;
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    // Format for display
+                    let dispH = h % 12 || 12;
+                    let ampm = h < 12 ? 'AM' : 'PM';
+                    opt.text = `${dispH}:${mm} ${ampm}`;
+                    if (val === selectedTime) opt.selected = true;
+                    timeSelect.appendChild(opt);
                 }
+            }
+
+            // Build Types
+            typeSelect.innerHTML = '';
+            eventTypes.forEach(t => {
+                const opt = document.createElement('option'); opt.value = t; opt.text = t;
+                if (t === selectedType) opt.selected = true;
+                typeSelect.appendChild(opt);
+            });
+
+            // Build Leaders
+            leaderSelect.innerHTML = '';
+            leaders.forEach(l => {
+                const opt = document.createElement('option'); opt.value = l; opt.text = l;
+                if (l === selectedLeader) opt.selected = true;
+                leaderSelect.appendChild(opt);
+            });
+        }
+
+        window.manageArray = function(arrayName, action) {
+            let arr = arrayName === 'eventTypes' ? eventTypes : leaders;
+            const selectId = arrayName === 'eventTypes' ? 'plan-type' : 'plan-leader';
+            const selectEl = document.getElementById(selectId);
+            
+            if (action === 'add') {
+                const item = prompt(`Enter new ${arrayName === 'eventTypes' ? 'Event Type' : 'Leader'}:`);
+                if (item && item.trim() && !arr.includes(item.trim())) {
+                    arr.push(item.trim());
+                    window.syncToCloud();
+                    window.buildPlannerDropdowns(
+                        arrayName === 'eventTypes' ? item.trim() : document.getElementById('plan-type').value, 
+                        arrayName === 'leaders' ? item.trim() : document.getElementById('plan-leader').value,
+                        document.getElementById('plan-time').value
+                    );
+                }
+            } else if (action === 'remove') {
+                const val = selectEl.value;
+                if (val && confirm(`Permanently remove "${val}" from the list?`)) {
+                    if(arrayName === 'eventTypes') {
+                        eventTypes = eventTypes.filter(i => i !== val);
+                    } else {
+                        leaders = leaders.filter(i => i !== val);
+                    }
+                    window.syncToCloud();
+                    window.buildPlannerDropdowns(
+                        document.getElementById('plan-type').value, 
+                        document.getElementById('plan-leader').value,
+                        document.getElementById('plan-time').value
+                    );
+                }
+            }
+        }
+
+        window.openPlannerModal = function(id = null) {
+            currentEditId = id;
+            let plan = id ? plans.find(p => p.id === id) : null;
+            
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+
+            document.getElementById('plan-modal-title').innerHTML = `<i data-lucide="calendar" class="w-5 h-5 text-yellow-500"></i> ${plan ? 'Edit Event' : 'New Event'}`;
+            document.getElementById('plan-date').value = plan ? plan.date : todayStr;
+            document.getElementById('plan-title').value = plan ? plan.title : '';
+            document.getElementById('plan-details').value = plan ? plan.details : '';
+            
+            window.buildPlannerDropdowns(plan?.type, plan?.leader, plan?.time || '18:00');
+            
+            document.getElementById('planner-modal').classList.replace('hidden', 'flex');
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        window.closePlannerModal = () => document.getElementById('planner-modal').classList.replace('flex', 'hidden');
+
+        window.savePlan = function() {
+            const date = document.getElementById('plan-date').value;
+            const time = document.getElementById('plan-time').value;
+            const type = document.getElementById('plan-type').value;
+            const title = document.getElementById('plan-title').value;
+            const details = document.getElementById('plan-details').value;
+            const leader = document.getElementById('plan-leader').value;
+
+            if(!title || !date) {
+                window.showToast("Date and Title are required", true);
+                return;
+            }
+
+            const currentTimestamp = Date.now();
+
+            if (currentEditId) {
+                const p = plans.find(p => p.id === currentEditId);
+                if (p) {
+                    p.date = date; p.time = time; p.type = type; p.title = title; p.details = details; p.leader = leader; p.editedAt = currentTimestamp;
+                }
+            } else {
+                plans.push({
+                    id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader
+                });
+            }
+
+            window.closePlannerModal();
+            window.render();
+            window.syncToCloud();
+        }
+
+        window.deletePlan = function(id) {
+            if(confirm("Remove this event from the planner?")) {
+                plans = plans.filter(p => p.id !== id);
+                window.render();
+                window.syncToCloud();
+            }
+        }
+
+        // --- Links/Identity Modals & Dynamic Form Logic ---
+        function setModalVisibility(type) {
+            const mGrid = document.getElementById('modal-grid'), fUrl = document.getElementById('field-url'), fImg = document.getElementById('field-image'), fCat = document.getElementById('field-category'), fPrev = document.getElementById('field-preview'), fBtn = document.getElementById('modal-save-btn');
+            if (type === 'category') {
+                mGrid.classList.remove('md:grid-cols-2'); mGrid.classList.add('grid-cols-1');
+                fUrl.classList.add('hidden'); fImg.classList.add('hidden'); fCat.classList.add('hidden'); fPrev.classList.add('hidden'); fBtn.classList.replace('w-full', 'w-auto');
+            } else {
+                mGrid.classList.add('md:grid-cols-2'); mGrid.classList.remove('grid-cols-1');
+                fUrl.classList.remove('hidden'); fImg.classList.remove('hidden'); fPrev.classList.remove('hidden'); fBtn.classList.replace('w-auto', 'w-full');
+                if (type === 'link') fCat.classList.remove('hidden'); else fCat.classList.add('hidden');
             }
         }
 
         window.openHeaderModal = function() {
-            currentEditId = 'header';
-            currentEditType = 'header';
-            document.getElementById('modal-title').innerText = "Identity Settings";
-            document.getElementById('label-url').innerText = "Subtitle";
-            document.getElementById('input-title').value = settings.title;
-            document.getElementById('input-url').value = settings.subtitle;
-            document.getElementById('input-image').value = settings.logo;
-            document.getElementById('input-zoom').value = settings.zoom || 1;
-            
-            setModalVisibility('header');
-            window.updatePreview();
-            document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
+            currentEditId = 'header'; currentEditType = 'header';
+            document.getElementById('modal-title').innerText = "Identity Settings"; document.getElementById('label-url').innerText = "Subtitle";
+            document.getElementById('input-title').value = settings.title; document.getElementById('input-url').value = settings.subtitle;
+            document.getElementById('input-image').value = settings.logo; document.getElementById('input-zoom').value = settings.zoom || 1;
+            setModalVisibility('header'); window.updatePreview(); document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
         };
 
-        // POPULATE CATEGORY DROPDOWN
-        function populateCategoryDropdown(selectedId) {
-            const select = document.getElementById('input-category');
-            select.innerHTML = '';
-            categories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.id;
-                opt.innerText = cat.title;
-                if (cat.id === selectedId) opt.selected = true;
-                select.appendChild(opt);
-            });
-        }
-
         window.editLink = function(id) {
-            currentEditId = id;
-            currentEditType = 'link';
-            const link = links.find(l => l.id === id);
+            currentEditId = id; currentEditType = 'link'; const link = links.find(l => l.id === id);
+            document.getElementById('modal-title').innerText = "Tile Settings"; document.getElementById('label-url').innerText = "URL";
+            document.getElementById('input-title').value = link.title; document.getElementById('input-url').value = link.url;
+            document.getElementById('input-image').value = link.img; document.getElementById('input-zoom').value = link.zoom || 1;
             
-            document.getElementById('modal-title').innerText = "Tile Settings";
-            document.getElementById('label-url').innerText = "URL";
-            document.getElementById('input-title').value = link.title;
-            document.getElementById('input-url').value = link.url;
-            document.getElementById('input-image').value = link.img;
-            document.getElementById('input-zoom').value = link.zoom || 1;
-            
-            populateCategoryDropdown(link.categoryId);
-            setModalVisibility('link');
-            window.updatePreview();
-            document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
+            const select = document.getElementById('input-category'); select.innerHTML = '';
+            categories.forEach(cat => { const opt = document.createElement('option'); opt.value = cat.id; opt.innerText = cat.title; if (cat.id === link.categoryId) opt.selected = true; select.appendChild(opt); });
+            setModalVisibility('link'); window.updatePreview(); document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
         };
 
         window.addNewLink = function(categoryId) {
-            const newId = Date.now();
-            links.push({ id: newId, title: 'New Link', url: '', img: '', zoom: 1, x: 0, y: 0, categoryId: categoryId });
-            window.editLink(newId);
+            const newId = Date.now(); links.push({ id: newId, title: 'New Link', url: '', img: '', zoom: 1, x: 0, y: 0, categoryId: categoryId }); window.editLink(newId);
         };
 
         window.deleteLink = function(id) {
-            if (confirm("Remove this tile?")) {
-                links = links.filter(l => l.id !== id);
-                window.render();
-                window.syncToCloud();
-            }
+            if (confirm("Remove this tile?")) { links = links.filter(l => l.id !== id); window.render(); window.syncToCloud(); }
         };
 
-        // --- Categories Logic ---
         window.editCategory = function(id) {
-            currentEditId = id;
-            currentEditType = 'category';
-            const cat = categories.find(c => c.id === id);
-
-            document.getElementById('modal-title').innerText = "Category Name";
-            document.getElementById('input-title').value = cat.title;
-            
-            setModalVisibility('category');
-            document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
+            currentEditId = id; currentEditType = 'category'; const cat = categories.find(c => c.id === id);
+            document.getElementById('modal-title').innerText = "Category Name"; document.getElementById('input-title').value = cat.title;
+            setModalVisibility('category'); document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
         }
 
         window.addNewCategory = function() {
-            const newId = 'cat_' + Date.now();
-            categories.push({ id: newId, title: 'New Category' });
-            window.editCategory(newId);
+            const newId = 'cat_' + Date.now(); categories.push({ id: newId, title: 'New Category' }); window.editCategory(newId);
         }
 
         window.deleteCategory = function(id) {
-            if (confirm("Are you sure you want to delete this category AND all the links inside it?")) {
-                categories = categories.filter(c => c.id !== id);
-                links = links.filter(l => l.categoryId !== id); // cascade delete links
-                window.render();
-                window.syncToCloud();
-            }
+            if (confirm("Delete this category AND all links inside it?")) { categories = categories.filter(c => c.id !== id); links = links.filter(l => l.categoryId !== id); window.render(); window.syncToCloud(); }
         }
 
-        window.closeModal = function() {
-            document.getElementById('modal-overlay').classList.replace('flex', 'hidden');
-        };
+        window.closeModal = () => document.getElementById('modal-overlay').classList.replace('flex', 'hidden');
 
         window.updatePreview = function() {
-            if (currentEditType === 'category') return; // no preview for categories
-
-            const img = document.getElementById('preview-img');
-            const zoom = document.getElementById('input-zoom').value || 1;
+            if (currentEditType === 'category') return;
+            const img = document.getElementById('preview-img'); const zoom = document.getElementById('input-zoom').value || 1;
             img.src = document.getElementById('input-image').value || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png';
             document.getElementById('zoom-val').innerText = parseFloat(zoom).toFixed(2) + 'x';
-            
             let obj = currentEditType === 'header' ? settings : links.find(l => l.id === currentEditId);
-            if (obj) {
-                img.style.transform = `translate(${obj.x || 0}%, ${obj.y || 0}%) scale(${zoom})`;
-            }
+            if (obj) img.style.transform = `translate(${obj.x || 0}%, ${obj.y || 0}%) scale(${zoom})`;
         };
 
         window.saveChanges = function() {
             if (currentEditType === 'header') {
-                settings.title = document.getElementById('input-title').value;
-                settings.subtitle = document.getElementById('input-url').value;
-                settings.logo = document.getElementById('input-image').value;
-                settings.zoom = document.getElementById('input-zoom').value;
+                settings.title = document.getElementById('input-title').value; settings.subtitle = document.getElementById('input-url').value; settings.logo = document.getElementById('input-image').value; settings.zoom = document.getElementById('input-zoom').value;
             } else if (currentEditType === 'category') {
-                const cat = categories.find(c => c.id === currentEditId);
-                if (cat) cat.title = document.getElementById('input-title').value || 'Unnamed Category';
+                const cat = categories.find(c => c.id === currentEditId); if (cat) cat.title = document.getElementById('input-title').value || 'Unnamed Category';
             } else if (currentEditType === 'link') {
                 const link = links.find(l => l.id === currentEditId);
                 if (link) {
                     link.title = document.getElementById('input-title').value;
-                    let safeUrl = document.getElementById('input-url').value.trim();
-                    if (safeUrl && !safeUrl.startsWith('http')) safeUrl = 'https://' + safeUrl;
-                    link.url = safeUrl;
-                    link.categoryId = document.getElementById('input-category').value;
-                    link.img = document.getElementById('input-image').value;
-                    link.zoom = document.getElementById('input-zoom').value;
+                    let safeUrl = document.getElementById('input-url').value.trim(); if (safeUrl && !safeUrl.startsWith('http')) safeUrl = 'https://' + safeUrl;
+                    link.url = safeUrl; link.categoryId = document.getElementById('input-category').value; link.img = document.getElementById('input-image').value; link.zoom = document.getElementById('input-zoom').value;
                 }
             }
-            window.closeModal();
-            window.render();
-            window.syncToCloud(); 
+            window.closeModal(); window.render(); window.syncToCloud(); 
         };
 
-        // --- Event Listeners ---
+        // --- Mouse Drag Events ---
         document.getElementById('input-image').addEventListener('input', window.updatePreview);
         document.getElementById('input-zoom').addEventListener('input', window.updatePreview);
 
         const previewBox = document.getElementById('preview-box');
-        previewBox.addEventListener('mousedown', (e) => {
-            if (currentEditType === 'category') return;
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-        });
-
+        previewBox.addEventListener('mousedown', (e) => { if (currentEditType === 'category') return; isDragging = true; startX = e.clientX; startY = e.clientY; });
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            startX = e.clientX;
-            startY = e.clientY;
-
-            // Normalize drag based on preview box size (Percentage-based drag)
+            const dx = e.clientX - startX; const dy = e.clientY - startY; startX = e.clientX; startY = e.clientY;
             const previewRect = document.getElementById('preview-box').getBoundingClientRect();
-            const percentX = (dx / previewRect.width) * 100;
-            const percentY = (dy / previewRect.height) * 100;
-
             let obj = currentEditType === 'header' ? settings : links.find(l => l.id === currentEditId);
-            if (obj) {
-                obj.x = (obj.x || 0) + percentX;
-                obj.y = (obj.y || 0) + percentY;
-                window.updatePreview();
-            }
+            if (obj) { obj.x = (obj.x || 0) + ((dx / previewRect.width) * 100); obj.y = (obj.y || 0) + ((dy / previewRect.height) * 100); window.updatePreview(); }
         });
-
         window.addEventListener('mouseup', () => isDragging = false);
-
-        window.onload = () => {
-            window.render();
-        };
+        window.onload = () => window.render();
     </script>
 </body>
 </html>
