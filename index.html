@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- HTML to PDF Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" xintegrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         :root {
             --bsa-blue: #003F87;
@@ -59,6 +61,20 @@
             border-left-color: var(--bsa-gold);
         }
 
+        .comm-card {
+            background: white;
+            border-radius: 2rem;
+            border-left: 8px solid var(--bsa-blue);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .dark .comm-card {
+            background: #1e293b;
+            border-color: rgba(255,255,255,0.05);
+            border-left-color: var(--bsa-blue);
+        }
+
         .image-viewport { 
             width: 100%; 
             aspect-ratio: 1 / 1; 
@@ -104,7 +120,6 @@
         .sortable-ghost { opacity: 0.4; transform: scale(0.95); }
         .sortable-drag { cursor: grabbing !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
 
-        /* Custom Scrollbar for Textareas */
         textarea::-webkit-scrollbar { width: 8px; }
         textarea::-webkit-scrollbar-track { background: transparent; }
         textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -124,7 +139,6 @@
                             <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
                         </div>
                         <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-2 -right-2 p-2.5 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20">
-                            <!-- Icon injected -->
                         </button>
                     </div>
 
@@ -136,7 +150,6 @@
                             <span id="display-subtitle">Scouting America</span>
                         </div>
                         <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
-                            <!-- Icon injected -->
                         </button>
                     </div>
 
@@ -151,10 +164,11 @@
                     </div>
                 </div>
 
-                <!-- Leader Navigation Tabs (Only visible to authenticated leaders) -->
-                <div id="leader-nav" class="hidden mt-4 flex justify-center md:justify-start gap-4 border-t border-slate-200 dark:border-slate-800 pt-4">
-                    <button onclick="window.switchView('links')" id="tab-links" class="px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Resources</button>
-                    <button onclick="window.switchView('planner')" id="tab-planner" class="px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Pack Planner</button>
+                <!-- Leader Navigation Tabs -->
+                <div id="leader-nav" class="hidden mt-4 flex flex-wrap justify-center md:justify-start gap-3 border-t border-slate-200 dark:border-slate-800 pt-4">
+                    <button onclick="window.switchView('links')" id="tab-links" class="px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Resources</button>
+                    <button onclick="window.switchView('planner')" id="tab-planner" class="px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Pack Planner</button>
+                    <button onclick="window.switchView('committee')" id="tab-committee" class="px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Committee</button>
                 </div>
             </div>
         </header>
@@ -304,6 +318,40 @@
         </div>
     </div>
 
+    <!-- Committee Note Edit Modal with Auto-Save -->
+    <div id="committee-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-6 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-600 my-auto">
+            <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
+                <div class="flex flex-col">
+                    <h3 class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i> Meeting Minutes</h3>
+                    <span id="comm-save-status" class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Ready</span>
+                </div>
+                <button onclick="window.closeCommitteeModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-8 space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Meeting Date</label>
+                        <input type="date" id="comm-date" oninput="window.triggerCommAutoSave()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Attendees</label>
+                        <input type="text" id="comm-attendees" oninput="window.triggerCommAutoSave()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all" placeholder="e.g. John, Sarah, Mike...">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Meeting Notes</label>
+                    <textarea id="comm-notes" rows="12" oninput="window.triggerCommAutoSave()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all resize-none font-medium leading-relaxed" placeholder="Type minutes here. Edits are saved automatically..."></textarea>
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button onclick="window.closeCommitteeModal()" class="w-full px-10 py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase Realtime Sync Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -316,10 +364,10 @@
         let db = null;
         let currentUser = null;
         
-        let isAdmin = false;    // Edits Layout & Categories
-        let isLeader = false;   // Views & Edits Planner
-        let isEditing = false;  // Toggle state for Layout Edits
-        let currentView = 'links'; // 'links' or 'planner'
+        let isAdmin = false;    
+        let isLeader = false;   
+        let isEditing = false;  
+        let currentView = 'links'; 
 
         const appId = 'pack-26-resources';
         
@@ -338,15 +386,22 @@
             title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0
         };
 
-        // Planner State
+        // Planner & Committee State
         let plans = JSON.parse(localStorage.getItem('scout_plans')) || [];
+        let committeeNotes = JSON.parse(localStorage.getItem('scout_committee')) || [];
         let eventTypes = JSON.parse(localStorage.getItem('scout_event_types')) || ['Pack Meeting', 'Den Meeting', 'Campout', 'Blue & Gold', 'Pinewood Derby'];
         let leaders = JSON.parse(localStorage.getItem('scout_leaders')) || ['Cubmaster', 'Den Leader', 'Committee Chair'];
+
+        let expandedCommNotes = []; // Tracks which committee bubbles are open (Local state only)
 
         let currentEditId = null;
         let currentEditType = null; 
         let isDragging = false;
         let startX, startY;
+
+        // Auto-Save Mechanics
+        let currentCommEditId = null;
+        let autoSaveTimer = null;
 
         // --- Toasts ---
         window.showToast = function(message, isError = false) {
@@ -393,6 +448,7 @@
                                 if (data.links) links = data.links;
                                 if (data.settings) settings = data.settings;
                                 if (data.plans) plans = data.plans;
+                                if (data.committeeNotes) committeeNotes = data.committeeNotes;
                                 if (data.eventTypes) eventTypes = data.eventTypes;
                                 if (data.leaders) leaders = data.leaders;
                                 window.render();
@@ -407,9 +463,8 @@
             if (!useFirebase || !currentUser) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config');
-                await setDoc(docRef, { links, settings, categories, plans, eventTypes, leaders, updatedAt: Date.now() });
-                window.showToast("Cloud Sync Successful!");
-            } catch (error) { window.showToast("Failed to sync to cloud", true); }
+                await setDoc(docRef, { links, settings, categories, plans, committeeNotes, eventTypes, leaders, updatedAt: Date.now() });
+            } catch (error) { console.error("Failed to sync to cloud", error); }
         };
 
         // --- Render Engine ---
@@ -427,17 +482,20 @@
             // Nav Visibility & State
             if (isLeader || isAdmin) {
                 leaderNav.classList.remove('hidden');
-                document.getElementById('tab-links').className = `px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === 'links' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
-                document.getElementById('tab-planner').className = `px-6 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === 'planner' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
+                document.getElementById('tab-links').className = `px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === 'links' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
+                document.getElementById('tab-planner').className = `px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === 'planner' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
+                document.getElementById('tab-committee').className = `px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === 'committee' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
             } else {
                 leaderNav.classList.add('hidden');
-                currentView = 'links'; // Force back to links if logged out
+                currentView = 'links'; 
             }
 
-            container.innerHTML = ''; // Clear main area
+            container.innerHTML = ''; 
 
             if (currentView === 'planner') {
                 window.renderPlannerView(container);
+            } else if (currentView === 'committee') {
+                window.renderCommitteeView(container);
             } else {
                 window.renderLinksView(container);
             }
@@ -467,7 +525,7 @@
                 }
             } else {
                 adminBtn.classList.add('hidden');
-                if(currentView === 'planner') isEditing = false; // Turn off layout edit when leaving
+                if(currentView !== 'links') isEditing = false; 
             }
 
             const headerBtn = document.getElementById('edit-header-btn');
@@ -487,6 +545,7 @@
             localStorage.setItem('scout_settings', JSON.stringify(settings));
             localStorage.setItem('scout_categories', JSON.stringify(categories));
             localStorage.setItem('scout_plans', JSON.stringify(plans));
+            localStorage.setItem('scout_committee', JSON.stringify(committeeNotes));
             localStorage.setItem('scout_event_types', JSON.stringify(eventTypes));
             localStorage.setItem('scout_leaders', JSON.stringify(leaders));
         };
@@ -494,6 +553,238 @@
         window.switchView = function(view) {
             currentView = view;
             window.render();
+        }
+
+        // --- Render View: Committee Notes ---
+        window.renderCommitteeView = function(container) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full max-w-4xl flex flex-col gap-4';
+
+            const headerRow = document.createElement('div');
+            headerRow.className = 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4';
+            headerRow.innerHTML = `
+                <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="users" class="w-6 h-6 text-blue-600"></i> Committee Notes
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="window.exportAllNotes()" class="px-5 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full font-bold uppercase tracking-widest text-[10px] shadow-sm transition-colors flex items-center gap-2">
+                        <i data-lucide="download" class="w-3 h-3"></i> Export History to PDF
+                    </button>
+                    <button onclick="window.openCommitteeModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Start New Meeting
+                    </button>
+                </div>
+            `;
+            wrapper.appendChild(headerRow);
+
+            // Sort newest to oldest
+            const sortedNotes = [...committeeNotes].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (sortedNotes.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-20 opacity-50 font-bold uppercase tracking-widest text-sm text-slate-500';
+                empty.innerHTML = '<i data-lucide="folder-open" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No meeting notes recorded.';
+                wrapper.appendChild(empty);
+            } else {
+                sortedNotes.forEach(note => {
+                    const card = document.createElement('div');
+                    const isExpanded = expandedCommNotes.includes(note.id);
+                    
+                    card.className = `comm-card p-6 flex flex-col cursor-pointer hover:-translate-y-1`;
+                    card.onclick = (e) => {
+                        // Prevent expansion toggle if clicking an action button
+                        if (e.target.closest('button')) return; 
+                        window.toggleCommitteeNote(note.id);
+                    };
+
+                    const d = new Date(`${note.date}T00:00:00`);
+                    const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    let innerHTML = `
+                        <div class="flex justify-between items-center w-full">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-blue-900 dark:text-blue-400 text-lg">${dateStr}</span>
+                                <span class="italic text-slate-500 text-sm mt-1 flex items-center gap-1.5"><i data-lucide="users" class="w-3 h-3"></i> ${note.attendees || 'No attendees listed'}</span>
+                            </div>
+                            <div class="text-slate-400">
+                                <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}"></i>
+                            </div>
+                        </div>
+                    `;
+
+                    if (isExpanded) {
+                        innerHTML += `
+                            <div class="mt-6 border-t border-slate-100 dark:border-slate-800 pt-6 cursor-default" onclick="(e) => e.stopPropagation()">
+                                <div class="text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium leading-relaxed">${note.notes || '<span class="italic opacity-50">No minutes recorded for this meeting.</span>'}</div>
+                                
+                                <div class="mt-8 flex justify-end gap-3">
+                                    <button onclick="window.exportSingleNote(${note.id})" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2">
+                                        <i data-lucide="file-down" class="w-3 h-3"></i> PDF
+                                    </button>
+                                    <button onclick="window.openCommitteeModal(${note.id})" class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2">
+                                        <i data-lucide="unlock" class="w-3 h-3"></i> Edit
+                                    </button>
+                                    <button onclick="window.deleteCommitteeNote(${note.id})" class="px-4 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    card.innerHTML = innerHTML;
+                    wrapper.appendChild(card);
+                });
+            }
+
+            container.appendChild(wrapper);
+        }
+
+        window.toggleCommitteeNote = function(id) {
+            if (expandedCommNotes.includes(id)) {
+                expandedCommNotes = expandedCommNotes.filter(n => n !== id);
+            } else {
+                expandedCommNotes.push(id);
+            }
+            window.render();
+        }
+
+        // --- Committee Modals & Auto-Save ---
+        window.openCommitteeModal = function(id = null) {
+            if (!id) {
+                // Instantly create a blank note to establish an ID for Auto-Save tracking
+                id = Date.now();
+                const todayStr = new Date().toISOString().split('T')[0];
+                committeeNotes.push({ id: id, date: todayStr, attendees: '', notes: '' });
+                window.syncToCloud();
+            }
+            
+            currentCommEditId = id;
+            const note = committeeNotes.find(n => n.id === id);
+            
+            document.getElementById('comm-date').value = note.date;
+            document.getElementById('comm-attendees').value = note.attendees;
+            document.getElementById('comm-notes').value = note.notes;
+            
+            const statusEl = document.getElementById('comm-save-status');
+            statusEl.innerText = 'Ready';
+            statusEl.className = 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1';
+            
+            document.getElementById('committee-modal').classList.replace('hidden', 'flex');
+        }
+
+        window.closeCommitteeModal = function() {
+            // Clean up if a completely empty meeting was opened and closed
+            const note = committeeNotes.find(n => n.id === currentCommEditId);
+            if (note && !note.notes.trim() && !note.attendees.trim()) {
+                committeeNotes = committeeNotes.filter(n => n.id !== currentCommEditId);
+                window.syncToCloud();
+            }
+            document.getElementById('committee-modal').classList.replace('flex', 'hidden');
+            window.render(); // Re-render to show updates or removed empties
+        }
+
+        window.triggerCommAutoSave = function() {
+            const statusEl = document.getElementById('comm-save-status');
+            statusEl.innerText = 'Saving...';
+            statusEl.className = 'text-yellow-500 text-[10px] font-bold uppercase tracking-widest mt-1';
+            
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const date = document.getElementById('comm-date').value;
+                const attendees = document.getElementById('comm-attendees').value;
+                const notes = document.getElementById('comm-notes').value;
+                
+                const note = committeeNotes.find(n => n.id === currentCommEditId);
+                if (note) {
+                    note.date = date;
+                    note.attendees = attendees;
+                    note.notes = notes;
+                    window.syncToCloud();
+                    
+                    statusEl.innerText = 'Saved';
+                    statusEl.className = 'text-green-500 text-[10px] font-bold uppercase tracking-widest mt-1';
+                }
+            }, 1500); // Wait 1.5 seconds after typing stops
+        }
+
+        window.deleteCommitteeNote = function(id) {
+            if(confirm("Permanently delete this meeting's minutes?")) {
+                committeeNotes = committeeNotes.filter(n => n.id !== id);
+                window.syncToCloud();
+                window.render();
+            }
+        }
+
+        // --- Committee PDF Generation Engine ---
+        window.exportSingleNote = function(id) {
+            const note = committeeNotes.find(n => n.id === id);
+            if(!note) return;
+            
+            window.showToast("Generating PDF...");
+            const d = new Date(`${note.date}T00:00:00`);
+            const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            const element = document.createElement('div');
+            element.style.padding = '40px';
+            element.style.fontFamily = 'Helvetica, Arial, sans-serif';
+            element.innerHTML = `
+                <h1 style="color: #003F87; font-size: 24px; font-weight: bold; border-bottom: 2px solid #FDC82F; padding-bottom: 10px; margin-bottom: 20px;">Committee Meeting Minutes</h1>
+                <p style="font-size: 14px; margin-bottom: 5px;"><strong>Date:</strong> ${dateStr}</p>
+                <p style="font-size: 14px; margin-bottom: 30px;"><strong>Attendees:</strong> ${note.attendees || 'None specified'}</p>
+                <div style="font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${note.notes || 'No notes recorded.'}</div>
+            `;
+
+            html2pdf().set({
+                margin: 10,
+                filename: `Pack_Committee_Minutes_${note.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            }).from(element).save();
+        }
+
+        window.exportAllNotes = function() {
+            if(committeeNotes.length === 0) {
+                window.showToast("No history to export.", true);
+                return;
+            }
+            
+            window.showToast("Generating Full History PDF...");
+            const sortedNotes = [...committeeNotes].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const container = document.createElement('div');
+            container.style.padding = '20px';
+            container.style.fontFamily = 'Helvetica, Arial, sans-serif';
+
+            sortedNotes.forEach((note, index) => {
+                const d = new Date(`${note.date}T00:00:00`);
+                const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                const noteDiv = document.createElement('div');
+                noteDiv.innerHTML = `
+                    <h1 style="color: #003F87; font-size: 24px; font-weight: bold; border-bottom: 2px solid #FDC82F; padding-bottom: 10px; margin-bottom: 20px;">Committee Meeting Minutes</h1>
+                    <p style="font-size: 14px; margin-bottom: 5px;"><strong>Date:</strong> ${dateStr}</p>
+                    <p style="font-size: 14px; margin-bottom: 30px;"><strong>Attendees:</strong> ${note.attendees || 'None specified'}</p>
+                    <div style="font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${note.notes || 'No notes recorded.'}</div>
+                `;
+
+                // Add standard html2pdf page break class unless it's the very last note
+                if(index < sortedNotes.length - 1) {
+                    noteDiv.innerHTML += `<div class="html2pdf__page-break"></div>`;
+                }
+
+                container.appendChild(noteDiv);
+            });
+
+            html2pdf().set({
+                margin: 10,
+                filename: `Complete_Committee_History.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                pagebreak: { mode: 'css', before: '.html2pdf__page-break' },
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            }).from(container).save();
         }
 
         // --- Render View: Planner ---
@@ -513,7 +804,6 @@
             `;
             wrapper.appendChild(headerRow);
 
-            // Sort plans by Date & Time
             const sortedPlans = [...plans].sort((a, b) => {
                 const dateA = new Date(`${a.date}T${a.time}`);
                 const dateB = new Date(`${b.date}T${b.time}`);
@@ -530,11 +820,9 @@
                     const card = document.createElement('div');
                     card.className = 'plan-card p-4 flex flex-col md:flex-row gap-4 relative group';
                     
-                    // Format Date nicely
                     const d = new Date(`${plan.date}T00:00:00`);
                     const dateStr = isNaN(d) ? plan.date : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                     
-                    // Convert 24h to 12h nicely
                     let timeStr = plan.time;
                     if(plan.time) {
                         let [h, m] = plan.time.split(':');
@@ -675,7 +963,7 @@
             }
         }
 
-        // --- Auth Actions ---
+        // --- Auth & Generic Actions ---
         window.handleAuthClick = function() {
             if (isAdmin || isLeader) {
                 isAdmin = false; isLeader = false; isEditing = false; currentView = 'links';
@@ -722,7 +1010,6 @@
             const typeSelect = document.getElementById('plan-type');
             const leaderSelect = document.getElementById('plan-leader');
             
-            // Build Time (15m increments)
             timeSelect.innerHTML = '';
             for(let h=0; h<24; h++) {
                 for(let m=0; m<60; m+=15) {
@@ -731,7 +1018,6 @@
                     const val = `${hh}:${mm}`;
                     const opt = document.createElement('option');
                     opt.value = val;
-                    // Format for display
                     let dispH = h % 12 || 12;
                     let ampm = h < 12 ? 'AM' : 'PM';
                     opt.text = `${dispH}:${mm} ${ampm}`;
@@ -740,7 +1026,6 @@
                 }
             }
 
-            // Build Types
             typeSelect.innerHTML = '';
             eventTypes.forEach(t => {
                 const opt = document.createElement('option'); opt.value = t; opt.text = t;
@@ -748,7 +1033,6 @@
                 typeSelect.appendChild(opt);
             });
 
-            // Build Leaders
             leaderSelect.innerHTML = '';
             leaders.forEach(l => {
                 const opt = document.createElement('option'); opt.value = l; opt.text = l;
