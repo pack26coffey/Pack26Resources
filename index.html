@@ -63,9 +63,9 @@
 
         .comm-card {
             background: white;
-            border-radius: 2rem;
+            border-radius: 1.5rem;
             border-left: 8px solid var(--bsa-blue);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 12px -3px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
         }
 
@@ -139,6 +139,7 @@
                             <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
                         </div>
                         <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-2 -right-2 p-2.5 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20">
+                            <!-- Icon injected -->
                         </button>
                     </div>
 
@@ -150,6 +151,7 @@
                             <span id="display-subtitle">Scouting America</span>
                         </div>
                         <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
+                            <!-- Icon injected -->
                         </button>
                     </div>
 
@@ -319,34 +321,104 @@
     </div>
 
     <!-- Committee Note Edit Modal with Auto-Save -->
-    <div id="committee-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-6 overflow-y-auto">
-        <div class="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-600 my-auto">
-            <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
+    <div id="committee-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-8 border-blue-600 my-auto">
+            <div class="bg-slate-800 p-4 sm:p-5 text-white flex justify-between items-center border-b border-slate-700 sticky top-0 z-10">
                 <div class="flex flex-col">
-                    <h3 class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i> Meeting Minutes</h3>
-                    <span id="comm-save-status" class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Ready</span>
+                    <h3 class="text-lg font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i> Meeting Minutes</h3>
+                    <span id="comm-save-status" class="text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-0.5">Ready</span>
                 </div>
-                <button onclick="window.closeCommitteeModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
+                <button onclick="window.closeCommitteeModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <div class="p-8 space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            
+            <div class="p-4 sm:p-6 space-y-4">
+                <!-- Date & Attendees -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Meeting Date</label>
-                        <input type="date" id="comm-date" oninput="window.triggerCommAutoSave()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all cursor-pointer">
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Date</label>
+                        <input type="date" id="comm-date" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all cursor-pointer">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Attendees</label>
-                        <input type="text" id="comm-attendees" oninput="window.triggerCommAutoSave()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all" placeholder="e.g. John, Sarah, Mike...">
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Attendees</label>
+                        <input type="text" id="comm-attendees" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="John, Sarah, Mike...">
                     </div>
                 </div>
 
+                <!-- Finance Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Cash on Hand</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                            <input type="number" step="0.01" id="comm-cash" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 pl-7 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Finance Notes</label>
+                        <input type="text" id="comm-finance" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Recent expenses, deposits, etc.">
+                    </div>
+                </div>
+
+                <!-- Volunteer Status -->
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Meeting Notes</label>
-                    <textarea id="comm-notes" rows="12" oninput="window.triggerCommAutoSave()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all resize-none font-medium leading-relaxed" placeholder="Type minutes here. Edits are saved automatically..."></textarea>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Volunteer Status</label>
+                    <input type="text" id="comm-volunteer" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Open positions, training needs...">
+                </div>
+
+                <!-- 3-Month Planner Table -->
+                <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/50">
+                    <!-- Current Month -->
+                    <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] border-b border-slate-200 dark:border-slate-700">
+                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800/80">Current Month</div>
+                        <div class="p-2 space-y-2">
+                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Pack Mtg</span><input id="comm-cp" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Topic/Plan"></div>
+                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Outing</span><input id="comm-co" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Location/Plan"></div>
+                        </div>
+                    </div>
+                    <!-- Next Month -->
+                    <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] border-b border-slate-200 dark:border-slate-700">
+                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800/80">Next Month</div>
+                        <div class="p-2 space-y-2">
+                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Pack Mtg</span><input id="comm-np" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Topic/Plan"></div>
+                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Outing</span><input id="comm-no" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Location/Plan"></div>
+                        </div>
+                    </div>
+                    <!-- Following Month -->
+                    <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr]">
+                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800/80">Following Mo.</div>
+                        <div class="p-2 space-y-2">
+                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Pack Mtg</span><input id="comm-fp" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Topic/Plan"></div>
+                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Outing</span><input id="comm-fo" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Location/Plan"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Items -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Action Items</label>
+                    <textarea id="comm-action" rows="3" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all resize-none" placeholder="Who needs to do what..."></textarea>
+                </div>
+
+                <!-- Round Table -->
+                <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Round Table Name</label>
+                        <input type="text" id="comm-rtname" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Name">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Round Table Comments</label>
+                        <input type="text" id="comm-rtcomments" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Comments from the district roundtable...">
+                    </div>
+                </div>
+
+                <!-- Legacy/General Notes -->
+                <div id="comm-legacy-container">
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">General/Legacy Notes</label>
+                    <textarea id="comm-notes" rows="2" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all resize-none" placeholder="Additional notes..."></textarea>
                 </div>
 
                 <div class="flex justify-end mt-4">
-                    <button onclick="window.closeCommitteeModal()" class="w-full px-10 py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95">Done</button>
+                    <button onclick="window.closeCommitteeModal()" class="w-full sm:w-auto px-8 py-3 bg-blue-900 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95 text-xs">Close & Save</button>
                 </div>
             </div>
         </div>
@@ -568,16 +640,15 @@
                 </h2>
                 <div class="flex flex-wrap gap-2">
                     <button onclick="window.exportAllNotes()" class="px-5 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full font-bold uppercase tracking-widest text-[10px] shadow-sm transition-colors flex items-center gap-2">
-                        <i data-lucide="download" class="w-3 h-3"></i> Export History to PDF
+                        <i data-lucide="download" class="w-3 h-3"></i> Export Full PDF
                     </button>
                     <button onclick="window.openCommitteeModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
-                        <i data-lucide="plus" class="w-3 h-3"></i> Start New Meeting
+                        <i data-lucide="plus" class="w-3 h-3"></i> Start Meeting
                     </button>
                 </div>
             `;
             wrapper.appendChild(headerRow);
 
-            // Sort newest to oldest
             const sortedNotes = [...committeeNotes].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (sortedNotes.length === 0) {
@@ -590,9 +661,8 @@
                     const card = document.createElement('div');
                     const isExpanded = expandedCommNotes.includes(note.id);
                     
-                    card.className = `comm-card p-6 flex flex-col cursor-pointer hover:-translate-y-1`;
+                    card.className = `comm-card p-5 flex flex-col cursor-pointer hover:-translate-y-1`;
                     card.onclick = (e) => {
-                        // Prevent expansion toggle if clicking an action button
                         if (e.target.closest('button')) return; 
                         window.toggleCommitteeNote(note.id);
                     };
@@ -603,8 +673,8 @@
                     let innerHTML = `
                         <div class="flex justify-between items-center w-full">
                             <div class="flex flex-col">
-                                <span class="font-bold text-blue-900 dark:text-blue-400 text-lg">${dateStr}</span>
-                                <span class="italic text-slate-500 text-sm mt-1 flex items-center gap-1.5"><i data-lucide="users" class="w-3 h-3"></i> ${note.attendees || 'No attendees listed'}</span>
+                                <span class="font-bold text-blue-900 dark:text-blue-400 text-base md:text-lg">${dateStr}</span>
+                                <span class="italic text-slate-500 text-xs mt-1 flex items-center gap-1.5"><i data-lucide="users" class="w-3 h-3"></i> ${note.attendees || 'No attendees listed'}</span>
                             </div>
                             <div class="text-slate-400">
                                 <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}"></i>
@@ -614,17 +684,69 @@
 
                     if (isExpanded) {
                         innerHTML += `
-                            <div class="mt-6 border-t border-slate-100 dark:border-slate-800 pt-6 cursor-default" onclick="(e) => e.stopPropagation()">
-                                <div class="text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium leading-relaxed">${note.notes || '<span class="italic opacity-50">No minutes recorded for this meeting.</span>'}</div>
+                            <div class="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4 cursor-default text-sm text-slate-700 dark:text-slate-300 space-y-4" onclick="(e) => e.stopPropagation()">
                                 
-                                <div class="mt-8 flex justify-end gap-3">
-                                    <button onclick="window.exportSingleNote(${note.id})" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                                        <span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Finances</span>
+                                        <div><strong class="text-xs">Cash on Hand:</strong> <span class="text-xs">$${note.cashOnHand || '0.00'}</span></div>
+                                        <div class="mt-1"><strong class="text-xs">Notes:</strong> <span class="text-xs">${note.financeNotes || '-'}</span></div>
+                                    </div>
+                                    <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                                        <span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Volunteer Status</span>
+                                        <div class="text-xs">${note.volunteerStatus || '-'}</div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 overflow-hidden">
+                                    <div class="grid grid-cols-[90px_1fr] sm:grid-cols-[120px_1fr] border-b border-slate-200 dark:border-slate-700">
+                                        <div class="p-2 sm:p-3 bg-slate-100 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Current Mo.</div>
+                                        <div class="p-2 text-xs space-y-1">
+                                            <div><strong class="text-slate-400">Pack Mtg:</strong> ${note.cp || '-'}</div>
+                                            <div><strong class="text-slate-400">Outing:</strong> ${note.co || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-[90px_1fr] sm:grid-cols-[120px_1fr] border-b border-slate-200 dark:border-slate-700">
+                                        <div class="p-2 sm:p-3 bg-slate-100 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Next Month</div>
+                                        <div class="p-2 text-xs space-y-1">
+                                            <div><strong class="text-slate-400">Pack Mtg:</strong> ${note.np || '-'}</div>
+                                            <div><strong class="text-slate-400">Outing:</strong> ${note.no || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-[90px_1fr] sm:grid-cols-[120px_1fr]">
+                                        <div class="p-2 sm:p-3 bg-slate-100 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Following Mo.</div>
+                                        <div class="p-2 text-xs space-y-1">
+                                            <div><strong class="text-slate-400">Pack Mtg:</strong> ${note.fp || '-'}</div>
+                                            <div><strong class="text-slate-400">Outing:</strong> ${note.fo || '-'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Action Items</span>
+                                    <div class="text-xs whitespace-pre-wrap bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">${note.action || '-'}</div>
+                                </div>
+
+                                <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                    <div class="whitespace-nowrap"><span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Round Table Name</span><div class="text-xs font-bold">${note.rtName || '-'}</div></div>
+                                    <div class="w-full"><span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Comments</span><div class="text-xs italic">${note.rtComments || '-'}</div></div>
+                                </div>
+
+                                ${note.notes ? `
+                                <div class="mt-4 pt-4 border-t border-dashed border-slate-200 dark:border-slate-700">
+                                    <span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Legacy / General Notes</span>
+                                    <div class="text-xs whitespace-pre-wrap">${note.notes}</div>
+                                </div>
+                                ` : ''}
+                                
+                                <div class="mt-6 flex justify-end gap-2 sm:gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
+                                    <button onclick="window.exportSingleNote(${note.id})" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-colors flex items-center gap-1.5">
                                         <i data-lucide="file-down" class="w-3 h-3"></i> PDF
                                     </button>
-                                    <button onclick="window.openCommitteeModal(${note.id})" class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2">
+                                    <button onclick="window.openCommitteeModal(${note.id})" class="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-colors flex items-center gap-1.5">
                                         <i data-lucide="unlock" class="w-3 h-3"></i> Edit
                                     </button>
-                                    <button onclick="window.deleteCommitteeNote(${note.id})" class="px-4 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2">
+                                    <button onclick="window.deleteCommitteeNote(${note.id})" class="px-3 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-colors flex items-center gap-1.5">
                                         <i data-lucide="trash-2" class="w-3 h-3"></i> Delete
                                     </button>
                                 </div>
@@ -652,60 +774,79 @@
         // --- Committee Modals & Auto-Save ---
         window.openCommitteeModal = function(id = null) {
             if (!id) {
-                // Instantly create a blank note to establish an ID for Auto-Save tracking
                 id = Date.now();
                 const todayStr = new Date().toISOString().split('T')[0];
-                committeeNotes.push({ id: id, date: todayStr, attendees: '', notes: '' });
+                committeeNotes.push({ id: id, date: todayStr, attendees: '', cashOnHand: '', financeNotes: '', volunteerStatus: '', cp: '', co: '', np: '', no: '', fp: '', fo: '', action: '', rtName: '', rtComments: '', notes: '' });
                 window.syncToCloud();
             }
             
             currentCommEditId = id;
             const note = committeeNotes.find(n => n.id === id);
             
-            document.getElementById('comm-date').value = note.date;
-            document.getElementById('comm-attendees').value = note.attendees;
-            document.getElementById('comm-notes').value = note.notes;
+            document.getElementById('comm-date').value = note.date || '';
+            document.getElementById('comm-attendees').value = note.attendees || '';
+            document.getElementById('comm-cash').value = note.cashOnHand || '';
+            document.getElementById('comm-finance').value = note.financeNotes || '';
+            document.getElementById('comm-volunteer').value = note.volunteerStatus || '';
+            document.getElementById('comm-cp').value = note.cp || '';
+            document.getElementById('comm-co').value = note.co || '';
+            document.getElementById('comm-np').value = note.np || '';
+            document.getElementById('comm-no').value = note.no || '';
+            document.getElementById('comm-fp').value = note.fp || '';
+            document.getElementById('comm-fo').value = note.fo || '';
+            document.getElementById('comm-action').value = note.action || '';
+            document.getElementById('comm-rtname').value = note.rtName || '';
+            document.getElementById('comm-rtcomments').value = note.rtComments || '';
+            document.getElementById('comm-notes').value = note.notes || '';
             
             const statusEl = document.getElementById('comm-save-status');
             statusEl.innerText = 'Ready';
-            statusEl.className = 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1';
+            statusEl.className = 'text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-0.5';
             
             document.getElementById('committee-modal').classList.replace('hidden', 'flex');
         }
 
         window.closeCommitteeModal = function() {
-            // Clean up if a completely empty meeting was opened and closed
             const note = committeeNotes.find(n => n.id === currentCommEditId);
-            if (note && !note.notes.trim() && !note.attendees.trim()) {
+            if (note && !note.notes?.trim() && !note.attendees?.trim() && !note.cashOnHand?.trim() && !note.cp?.trim() && !note.action?.trim()) {
                 committeeNotes = committeeNotes.filter(n => n.id !== currentCommEditId);
                 window.syncToCloud();
             }
             document.getElementById('committee-modal').classList.replace('flex', 'hidden');
-            window.render(); // Re-render to show updates or removed empties
+            window.render(); 
         }
 
         window.triggerCommAutoSave = function() {
             const statusEl = document.getElementById('comm-save-status');
             statusEl.innerText = 'Saving...';
-            statusEl.className = 'text-yellow-500 text-[10px] font-bold uppercase tracking-widest mt-1';
+            statusEl.className = 'text-yellow-500 text-[9px] font-bold uppercase tracking-widest mt-0.5';
             
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(() => {
-                const date = document.getElementById('comm-date').value;
-                const attendees = document.getElementById('comm-attendees').value;
-                const notes = document.getElementById('comm-notes').value;
-                
                 const note = committeeNotes.find(n => n.id === currentCommEditId);
                 if (note) {
-                    note.date = date;
-                    note.attendees = attendees;
-                    note.notes = notes;
+                    note.date = document.getElementById('comm-date').value;
+                    note.attendees = document.getElementById('comm-attendees').value;
+                    note.cashOnHand = document.getElementById('comm-cash').value;
+                    note.financeNotes = document.getElementById('comm-finance').value;
+                    note.volunteerStatus = document.getElementById('comm-volunteer').value;
+                    note.cp = document.getElementById('comm-cp').value;
+                    note.co = document.getElementById('comm-co').value;
+                    note.np = document.getElementById('comm-np').value;
+                    note.no = document.getElementById('comm-no').value;
+                    note.fp = document.getElementById('comm-fp').value;
+                    note.fo = document.getElementById('comm-fo').value;
+                    note.action = document.getElementById('comm-action').value;
+                    note.rtName = document.getElementById('comm-rtname').value;
+                    note.rtComments = document.getElementById('comm-rtcomments').value;
+                    note.notes = document.getElementById('comm-notes').value;
+                    
                     window.syncToCloud();
                     
                     statusEl.innerText = 'Saved';
-                    statusEl.className = 'text-green-500 text-[10px] font-bold uppercase tracking-widest mt-1';
+                    statusEl.className = 'text-green-500 text-[9px] font-bold uppercase tracking-widest mt-0.5';
                 }
-            }, 1500); // Wait 1.5 seconds after typing stops
+            }, 1000); 
         }
 
         window.deleteCommitteeNote = function(id) {
@@ -717,23 +858,90 @@
         }
 
         // --- Committee PDF Generation Engine ---
+        window.getPDFTemplateHTML = function(note) {
+            const d = new Date(`${note.date}T00:00:00`);
+            const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            return `
+                <div style="font-family: Helvetica, Arial, sans-serif; padding: 20px;">
+                    <h1 style="color: #003F87; font-size: 22px; font-weight: 900; border-bottom: 3px solid #FDC82F; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase;">Committee Meeting Minutes</h1>
+                    
+                    <div style="margin-bottom: 20px; font-size: 12px;">
+                        <span style="display:inline-block; width: 70px;"><strong>Date:</strong></span> ${dateStr}<br/>
+                        <span style="display:inline-block; width: 70px;"><strong>Attendees:</strong></span> ${note.attendees || 'None specified'}
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 100px; background: #f1f5f9;">Cash on Hand</th>
+                            <td style="border: 1px solid #000; padding: 6px; width: 100px;">$${note.cashOnHand || '0.00'}</td>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 100px; background: #f1f5f9;">Finance Notes</th>
+                            <td style="border: 1px solid #000; padding: 6px;">${note.financeNotes || ''}</td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr><th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Volunteer Status</th></tr>
+                        <tr><td style="border: 1px solid #000; padding: 6px; height: 25px;">${note.volunteerStatus || ''}</td></tr>
+                    </table>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 100px; background: #f1f5f9;">Current Month</th>
+                            <td style="border: 1px solid #000; padding: 4px 6px;">
+                                <div style="margin-bottom:2px;"><strong>Pack Meeting:</strong> ${note.cp || ''}</div>
+                                <div><strong>Outing:</strong> ${note.co || ''}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Next Month</th>
+                            <td style="border: 1px solid #000; padding: 4px 6px;">
+                                <div style="margin-bottom:2px;"><strong>Pack Meeting:</strong> ${note.np || ''}</div>
+                                <div><strong>Outing:</strong> ${note.no || ''}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Following Month</th>
+                            <td style="border: 1px solid #000; padding: 4px 6px;">
+                                <div style="margin-bottom:2px;"><strong>Pack Meeting:</strong> ${note.fp || ''}</div>
+                                <div><strong>Outing:</strong> ${note.fo || ''}</div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr><th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Action Items</th></tr>
+                        <tr><td style="border: 1px solid #000; padding: 6px; height: 50px; white-space: pre-wrap; vertical-align: top;">${note.action || ''}</td></tr>
+                    </table>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 120px; background: #f1f5f9;">Round Table Name</th>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Comments</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">${note.rtName || ''}</td>
+                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">${note.rtComments || ''}</td>
+                        </tr>
+                    </table>
+                    
+                    ${note.notes ? `
+                    <div style="font-size: 11px; margin-top: 20px;">
+                        <strong>Legacy / General Notes:</strong><br/>
+                        <div style="white-space: pre-wrap; margin-top: 5px; color: #444;">${note.notes}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
         window.exportSingleNote = function(id) {
             const note = committeeNotes.find(n => n.id === id);
             if(!note) return;
             
             window.showToast("Generating PDF...");
-            const d = new Date(`${note.date}T00:00:00`);
-            const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
             const element = document.createElement('div');
-            element.style.padding = '40px';
-            element.style.fontFamily = 'Helvetica, Arial, sans-serif';
-            element.innerHTML = `
-                <h1 style="color: #003F87; font-size: 24px; font-weight: bold; border-bottom: 2px solid #FDC82F; padding-bottom: 10px; margin-bottom: 20px;">Committee Meeting Minutes</h1>
-                <p style="font-size: 14px; margin-bottom: 5px;"><strong>Date:</strong> ${dateStr}</p>
-                <p style="font-size: 14px; margin-bottom: 30px;"><strong>Attendees:</strong> ${note.attendees || 'None specified'}</p>
-                <div style="font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${note.notes || 'No notes recorded.'}</div>
-            `;
+            element.innerHTML = window.getPDFTemplateHTML(note);
 
             html2pdf().set({
                 margin: 10,
@@ -754,31 +962,18 @@
             const sortedNotes = [...committeeNotes].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             const container = document.createElement('div');
-            container.style.padding = '20px';
-            container.style.fontFamily = 'Helvetica, Arial, sans-serif';
 
             sortedNotes.forEach((note, index) => {
-                const d = new Date(`${note.date}T00:00:00`);
-                const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
                 const noteDiv = document.createElement('div');
-                noteDiv.innerHTML = `
-                    <h1 style="color: #003F87; font-size: 24px; font-weight: bold; border-bottom: 2px solid #FDC82F; padding-bottom: 10px; margin-bottom: 20px;">Committee Meeting Minutes</h1>
-                    <p style="font-size: 14px; margin-bottom: 5px;"><strong>Date:</strong> ${dateStr}</p>
-                    <p style="font-size: 14px; margin-bottom: 30px;"><strong>Attendees:</strong> ${note.attendees || 'None specified'}</p>
-                    <div style="font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${note.notes || 'No notes recorded.'}</div>
-                `;
-
-                // Add standard html2pdf page break class unless it's the very last note
+                noteDiv.innerHTML = window.getPDFTemplateHTML(note);
                 if(index < sortedNotes.length - 1) {
                     noteDiv.innerHTML += `<div class="html2pdf__page-break"></div>`;
                 }
-
                 container.appendChild(noteDiv);
             });
 
             html2pdf().set({
-                margin: 10,
+                margin: 0,
                 filename: `Complete_Committee_History.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
