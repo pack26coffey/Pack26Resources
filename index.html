@@ -195,8 +195,7 @@
             </div>
             <div class="p-8 flex flex-col gap-6">
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-center leading-relaxed">
-                    Enter <span class="text-blue-600 dark:text-blue-400">Plan121</span> for Planner<br>
-                    Enter <span class="text-yellow-600 dark:text-yellow-400">CoRf121</span> for Admin
+                    Please enter your access key to continue.
                 </p>
                 <div class="relative">
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Access Key</label>
@@ -310,7 +309,7 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Details</label>
-                    <textarea id="plan-details" rows="4" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all resize-none" placeholder="Provide details, location, requirements..."></textarea>
+                    <textarea id="plan-details" rows="4" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-colors resize-none overflow-hidden" placeholder="Provide details, location, requirements..."></textarea>
                 </div>
 
                 <div class="flex justify-end mt-4">
@@ -340,7 +339,7 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Attendees</label>
-                        <input type="text" id="comm-attendees" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="John, Sarah, Mike...">
+                        <textarea id="comm-attendees" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-colors resize-none overflow-hidden" placeholder="John, Sarah, Mike..."></textarea>
                     </div>
                 </div>
 
@@ -355,14 +354,14 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Finance Notes</label>
-                        <input type="text" id="comm-finance" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Recent expenses, deposits, etc.">
+                        <textarea id="comm-finance" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-colors resize-none overflow-hidden" placeholder="Recent expenses, deposits, etc."></textarea>
                     </div>
                 </div>
 
                 <!-- Volunteer Status -->
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Volunteer Status</label>
-                    <input type="text" id="comm-volunteer" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Open positions, training needs...">
+                    <textarea id="comm-volunteer" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-colors resize-none overflow-hidden" placeholder="Open positions, training needs..."></textarea>
                 </div>
 
                 <!-- 3-Month Planner Table -->
@@ -371,24 +370,24 @@
                     <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] border-b border-slate-200 dark:border-slate-700">
                         <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800/80">Current Month</div>
                         <div class="p-2 space-y-2">
-                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Pack Mtg</span><input id="comm-cp" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Topic/Plan"></div>
-                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Outing</span><input id="comm-co" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Location/Plan"></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Pack Mtg</span><textarea id="comm-cp" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Topic/Plan"></textarea></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Outing</span><textarea id="comm-co" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Location/Plan"></textarea></div>
                         </div>
                     </div>
                     <!-- Next Month -->
                     <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] border-b border-slate-200 dark:border-slate-700">
                         <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800/80">Next Month</div>
                         <div class="p-2 space-y-2">
-                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Pack Mtg</span><input id="comm-np" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Topic/Plan"></div>
-                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Outing</span><input id="comm-no" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Location/Plan"></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Pack Mtg</span><textarea id="comm-np" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Topic/Plan"></textarea></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Outing</span><textarea id="comm-no" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Location/Plan"></textarea></div>
                         </div>
                     </div>
                     <!-- Following Month -->
                     <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr]">
-                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800/80">Following Mo.</div>
+                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800/80">Following Month</div>
                         <div class="p-2 space-y-2">
-                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Pack Mtg</span><input id="comm-fp" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Topic/Plan"></div>
-                            <div class="flex items-center gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right">Outing</span><input id="comm-fo" oninput="window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400" placeholder="Location/Plan"></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Pack Mtg</span><textarea id="comm-fp" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Topic/Plan"></textarea></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Outing</span><textarea id="comm-fo" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-white dark:bg-slate-900 outline-none border border-slate-200 dark:border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Location/Plan"></textarea></div>
                         </div>
                     </div>
                 </div>
@@ -396,25 +395,26 @@
                 <!-- Action Items -->
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Action Items</label>
-                    <textarea id="comm-action" rows="3" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all resize-none" placeholder="Who needs to do what..."></textarea>
+                    <textarea id="comm-action" rows="3" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-colors resize-none overflow-hidden" placeholder="Who needs to do what..."></textarea>
                 </div>
 
-                <!-- Round Table -->
-                <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-4">
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Round Table Name</label>
-                        <input type="text" id="comm-rtname" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Name">
+                <!-- Dynamic Round Table Section -->
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-200 dark:border-slate-700 pb-2">
+                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block">Round Table Reports</label>
+                        <button type="button" onclick="window.addRTItem()" class="text-[9px] font-black uppercase text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 tracking-widest flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Add Report
+                        </button>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Round Table Comments</label>
-                        <input type="text" id="comm-rtcomments" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all" placeholder="Comments from the district roundtable...">
+                    <div id="comm-rt-container" class="space-y-3">
+                        <!-- RT Items Injected Here -->
                     </div>
                 </div>
 
                 <!-- Legacy/General Notes -->
                 <div id="comm-legacy-container">
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">General/Legacy Notes</label>
-                    <textarea id="comm-notes" rows="2" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all resize-none" placeholder="Additional notes..."></textarea>
+                    <textarea id="comm-notes" rows="2" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-colors resize-none overflow-hidden" placeholder="Additional notes..."></textarea>
                 </div>
 
                 <div class="flex justify-end mt-4">
@@ -429,6 +429,12 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Add auto resize function for textareas
+        window.autoResizeTextarea = function(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        };
 
         // --- Core State ---
         let useFirebase = false;
@@ -683,6 +689,25 @@
                     `;
 
                     if (isExpanded) {
+                        const rtItems = note.rtItems || [];
+                        if (rtItems.length === 0 && (note.rtName || note.rtComments)) {
+                            rtItems.push({ name: note.rtName || '', comments: note.rtComments || '' });
+                        }
+                        let rtHTML = '';
+                        if (rtItems.length > 0) {
+                            rtItems.forEach(item => {
+                                if (item.name || item.comments) {
+                                    rtHTML += `
+                                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 py-2 border-b border-slate-100 dark:border-slate-700/50 last:border-0 last:pb-0">
+                                            <div class="sm:w-[150px] flex-shrink-0"><span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-0.5">Name</span><div class="text-xs font-bold">${item.name || '-'}</div></div>
+                                            <div class="w-full"><span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-0.5">Comments</span><div class="text-xs italic">${item.comments || '-'}</div></div>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        }
+                        if (!rtHTML) rtHTML = '<div class="text-xs italic text-slate-500 py-2">No round table reports</div>';
+
                         innerHTML += `
                             <div class="mt-4 border-t border-slate-100 dark:border-slate-800 pt-4 cursor-default text-sm text-slate-700 dark:text-slate-300 space-y-4" onclick="(e) => e.stopPropagation()">
                                 
@@ -714,7 +739,7 @@
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-[90px_1fr] sm:grid-cols-[120px_1fr]">
-                                        <div class="p-2 sm:p-3 bg-slate-100 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Following Mo.</div>
+                                        <div class="p-2 sm:p-3 bg-slate-100 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Following Month</div>
                                         <div class="p-2 text-xs space-y-1">
                                             <div><strong class="text-slate-400">Pack Mtg:</strong> ${note.fp || '-'}</div>
                                             <div><strong class="text-slate-400">Outing:</strong> ${note.fo || '-'}</div>
@@ -727,9 +752,9 @@
                                     <div class="text-xs whitespace-pre-wrap bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">${note.action || '-'}</div>
                                 </div>
 
-                                <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row gap-2 sm:gap-4">
-                                    <div class="whitespace-nowrap"><span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Round Table Name</span><div class="text-xs font-bold">${note.rtName || '-'}</div></div>
-                                    <div class="w-full"><span class="font-black text-slate-400 uppercase text-[9px] tracking-widest block mb-1">Comments</span><div class="text-xs italic">${note.rtComments || '-'}</div></div>
+                                <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                                    <span class="font-black text-slate-400 uppercase text-[10px] tracking-widest block mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">Round Table Reports</span>
+                                    ${rtHTML}
                                 </div>
 
                                 ${note.notes ? `
@@ -776,12 +801,21 @@
             if (!id) {
                 id = Date.now();
                 const todayStr = new Date().toISOString().split('T')[0];
-                committeeNotes.push({ id: id, date: todayStr, attendees: '', cashOnHand: '', financeNotes: '', volunteerStatus: '', cp: '', co: '', np: '', no: '', fp: '', fo: '', action: '', rtName: '', rtComments: '', notes: '' });
+                committeeNotes.push({ id: id, date: todayStr, attendees: '', cashOnHand: '', financeNotes: '', volunteerStatus: '', cp: '', co: '', np: '', no: '', fp: '', fo: '', action: '', rtItems: [{name: '', comments: ''}], notes: '' });
                 window.syncToCloud();
             }
             
             currentCommEditId = id;
             const note = committeeNotes.find(n => n.id === id);
+            
+            if (!note.rtItems) {
+                note.rtItems = [];
+                if (note.rtName || note.rtComments) {
+                    note.rtItems.push({ name: note.rtName || '', comments: note.rtComments || '' });
+                } else {
+                    note.rtItems.push({ name: '', comments: '' });
+                }
+            }
             
             document.getElementById('comm-date').value = note.date || '';
             document.getElementById('comm-attendees').value = note.attendees || '';
@@ -795,8 +829,6 @@
             document.getElementById('comm-fp').value = note.fp || '';
             document.getElementById('comm-fo').value = note.fo || '';
             document.getElementById('comm-action').value = note.action || '';
-            document.getElementById('comm-rtname').value = note.rtName || '';
-            document.getElementById('comm-rtcomments').value = note.rtComments || '';
             document.getElementById('comm-notes').value = note.notes || '';
             
             const statusEl = document.getElementById('comm-save-status');
@@ -804,6 +836,13 @@
             statusEl.className = 'text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-0.5';
             
             document.getElementById('committee-modal').classList.replace('hidden', 'flex');
+            
+            window.renderRTItems();
+            
+            // Auto-resize newly populated textareas
+            setTimeout(() => {
+                document.querySelectorAll('#committee-modal textarea').forEach(el => window.autoResizeTextarea(el));
+            }, 10);
         }
 
         window.closeCommitteeModal = function() {
@@ -837,8 +876,6 @@
                     note.fp = document.getElementById('comm-fp').value;
                     note.fo = document.getElementById('comm-fo').value;
                     note.action = document.getElementById('comm-action').value;
-                    note.rtName = document.getElementById('comm-rtname').value;
-                    note.rtComments = document.getElementById('comm-rtcomments').value;
                     note.notes = document.getElementById('comm-notes').value;
                     
                     window.syncToCloud();
@@ -861,6 +898,29 @@
         window.getPDFTemplateHTML = function(note) {
             const d = new Date(`${note.date}T00:00:00`);
             const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            const rtItems = note.rtItems || [];
+            if (rtItems.length === 0 && (note.rtName || note.rtComments)) {
+                rtItems.push({ name: note.rtName || '', comments: note.rtComments || '' });
+            }
+            let rtTableRows = '';
+            rtItems.forEach(item => {
+                if (item.name || item.comments) {
+                    rtTableRows += `
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">${item.name || ''}</td>
+                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">${item.comments || ''}</td>
+                        </tr>
+                    `;
+                }
+            });
+            if (!rtTableRows) {
+                rtTableRows = `
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 6px; vertical-align: top;" colspan="2">No reports</td>
+                    </tr>
+                `;
+            }
 
             return `
                 <div style="font-family: Helvetica, Arial, sans-serif; padding: 20px;">
@@ -919,10 +979,7 @@
                             <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 120px; background: #f1f5f9;">Round Table Name</th>
                             <th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Comments</th>
                         </tr>
-                        <tr>
-                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">${note.rtName || ''}</td>
-                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">${note.rtComments || ''}</td>
-                        </tr>
+                        ${rtTableRows}
                     </table>
                     
                     ${note.notes ? `
@@ -1286,6 +1343,10 @@
             
             document.getElementById('planner-modal').classList.replace('hidden', 'flex');
             if (window.lucide) window.lucide.createIcons();
+            
+            setTimeout(() => {
+                document.querySelectorAll('#planner-modal textarea').forEach(el => window.autoResizeTextarea(el));
+            }, 10);
         }
 
         window.closePlannerModal = () => document.getElementById('planner-modal').classList.replace('flex', 'hidden');
@@ -1423,6 +1484,72 @@
             let obj = currentEditType === 'header' ? settings : links.find(l => l.id === currentEditId);
             if (obj) { obj.x = (obj.x || 0) + ((dx / previewRect.width) * 100); obj.y = (obj.y || 0) + ((dy / previewRect.height) * 100); window.updatePreview(); }
         });
+
+        window.updateRTItem = function(index, field, value) {
+            const note = committeeNotes.find(n => n.id === currentCommEditId);
+            if (note && note.rtItems[index]) {
+                note.rtItems[index][field] = value;
+                window.triggerCommAutoSave();
+            }
+        }
+        
+        window.addRTItem = function() {
+            const note = committeeNotes.find(n => n.id === currentCommEditId);
+            if (note) {
+                if(!note.rtItems) note.rtItems = [];
+                note.rtItems.push({ name: '', comments: '' });
+                window.renderRTItems();
+                window.triggerCommAutoSave();
+            }
+        }
+        
+        window.removeRTItem = function(index) {
+            const note = committeeNotes.find(n => n.id === currentCommEditId);
+            if (note && note.rtItems && note.rtItems.length > 1) {
+                note.rtItems.splice(index, 1);
+                window.renderRTItems();
+                window.triggerCommAutoSave();
+            } else if (note && note.rtItems && note.rtItems.length === 1) {
+                note.rtItems[0] = { name: '', comments: '' };
+                window.renderRTItems();
+                window.triggerCommAutoSave();
+            }
+        }
+
+        window.renderRTItems = function() {
+            const note = committeeNotes.find(n => n.id === currentCommEditId);
+            const container = document.getElementById('comm-rt-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const items = note.rtItems || [];
+            
+            items.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-1 sm:grid-cols-[150px_1fr_auto] gap-3 items-start relative bg-white dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700';
+                
+                row.innerHTML = `
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Name</label>
+                        <input type="text" oninput="window.updateRTItem(${index}, 'name', this.value)" class="w-full p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-all border border-transparent focus:border-blue-400" placeholder="Name" value="${(item.name || '').replace(/"/g, '&quot;')}">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Comments</label>
+                        <textarea rows="1" oninput="window.autoResizeTextarea(this); window.updateRTItem(${index}, 'comments', this.value)" class="w-full p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 dark:text-white transition-colors resize-none overflow-hidden border border-transparent focus:border-blue-400" placeholder="Comments...">${item.comments || ''}</textarea>
+                    </div>
+                    <div class="pt-5 flex items-center h-full">
+                        <button onclick="window.removeRTItem(${index})" class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Remove Report"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+            if (window.lucide) window.lucide.createIcons();
+            
+            setTimeout(() => {
+                container.querySelectorAll('textarea').forEach(el => window.autoResizeTextarea(el));
+            }, 10);
+        }
+
         window.addEventListener('mouseup', () => isDragging = false);
         window.onload = () => window.render();
     </script>
