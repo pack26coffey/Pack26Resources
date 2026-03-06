@@ -196,6 +196,13 @@
                             </button>
                             <!-- Theme Toggle -->
                             <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-2.5 md:p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center"></button>
+                            
+                            <!-- App Icon Editor Toggle (Admin Only) -->
+                            <button id="app-icon-edit-btn" onclick="window.openAppIconModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
+                                <i data-lucide="smartphone" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i>
+                                <span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">App Icon</span>
+                            </button>
+
                             <!-- Admin Edit Toggle -->
                             <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden"></button>
                         </div>
@@ -251,7 +258,7 @@
         </div>
     </div>
 
-    <!-- Universal Identity/Links Modal -->
+    <!-- Universal Identity/Links/AppIcon Modal -->
     <div id="modal-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
         <div class="bg-white dark:bg-slate-900 rounded-[4rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-900">
             <div class="bg-blue-900 p-8 text-white flex justify-between items-center">
@@ -284,12 +291,12 @@
                         <select id="input-category" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all appearance-none cursor-pointer"></select>
                     </div>
                     <div id="field-image">
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image Source URL</label>
+                        <label id="label-image" class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image Source URL</label>
                         <input id="input-image" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all">
-                    </div>
-                    <div id="field-tab-icon" class="hidden">
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Browser Tab & App Icon URL</label>
-                        <input id="input-tab-icon" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all" placeholder="Defaults to main logo if blank">
+                        
+                        <div id="app-icon-help-text" class="hidden text-xs font-bold text-slate-500 dark:text-slate-400 mt-3 leading-relaxed border-l-4 border-purple-500 pl-3">
+                            This image will be used for the browser tab and the mobile home screen shortcut. Leave blank to automatically use your main logo. Square images work best!
+                        </div>
                     </div>
                 </div>
                 <div class="flex flex-col items-center" id="field-preview">
@@ -703,18 +710,27 @@
                 lockBtn.innerHTML = '<i data-lucide="lock" class="text-white w-5 h-5"></i>';
             }
 
+            const appIconBtn = document.getElementById('app-icon-edit-btn');
             const adminBtn = document.getElementById('admin-toggle-btn');
             if (isAdmin && currentView === 'links') {
                 adminBtn.classList.remove('hidden');
                 if (isEditing) {
                     adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 md:w-4 md:h-4 text-blue-900"></i><span class="text-[10px] md:text-xs">Finish Editing</span>';
                     adminBtn.className = "flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
+                    
+                    appIconBtn.classList.remove('hidden');
+                    appIconBtn.classList.add('flex');
                 } else {
                     adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 md:w-4 md:h-4"></i><span class="text-[10px] md:text-xs">Edit Page</span>';
                     adminBtn.className = "flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
+                    
+                    appIconBtn.classList.add('hidden');
+                    appIconBtn.classList.remove('flex');
                 }
             } else {
                 adminBtn.classList.add('hidden');
+                appIconBtn.classList.add('hidden');
+                appIconBtn.classList.remove('flex');
                 if(currentView !== 'links') isEditing = false; 
             }
 
@@ -1590,25 +1606,38 @@
 
         // --- Links/Identity Modals & Dynamic Form Logic ---
         function setModalVisibility(type) {
-            const mGrid = document.getElementById('modal-grid'), fUrl = document.getElementById('field-url'), fImg = document.getElementById('field-image'), fCat = document.getElementById('field-category'), fPrev = document.getElementById('field-preview'), fBtn = document.getElementById('modal-save-btn');
-            const fTabIcon = document.getElementById('field-tab-icon');
+            const mGrid = document.getElementById('modal-grid'), 
+                  fTitle = document.getElementById('field-title'),
+                  fUrl = document.getElementById('field-url'), 
+                  fImg = document.getElementById('field-image'), 
+                  fCat = document.getElementById('field-category'), 
+                  fPrev = document.getElementById('field-preview'), 
+                  fZoom = document.getElementById('field-zoom'),
+                  fBtn = document.getElementById('modal-save-btn'),
+                  fHelp = document.getElementById('app-icon-help-text');
+            
+            // Reset all visibility defaults
+            [fTitle, fUrl, fImg, fCat, fPrev, fZoom].forEach(el => {
+                if(el) el.classList.remove('hidden');
+            });
+            if (fHelp) fHelp.classList.add('hidden');
+            
+            mGrid.classList.add('md:grid-cols-2'); 
+            mGrid.classList.remove('grid-cols-1');
+            fBtn.classList.replace('w-auto', 'w-full');
+
+            // Apply specific hidden states based on the editor mode
             if (type === 'category') {
                 mGrid.classList.remove('md:grid-cols-2'); mGrid.classList.add('grid-cols-1');
-                fUrl.classList.add('hidden'); fImg.classList.add('hidden'); fCat.classList.add('hidden'); fPrev.classList.add('hidden'); fBtn.classList.replace('w-full', 'w-auto');
-                if (fTabIcon) fTabIcon.classList.add('hidden');
-            } else {
-                mGrid.classList.add('md:grid-cols-2'); mGrid.classList.remove('grid-cols-1');
-                fUrl.classList.remove('hidden'); fImg.classList.remove('hidden'); fPrev.classList.remove('hidden'); fBtn.classList.replace('w-auto', 'w-full');
-                if (type === 'link') {
-                    fCat.classList.remove('hidden');
-                    if (fTabIcon) fTabIcon.classList.add('hidden');
-                } else if (type === 'header') {
-                    fCat.classList.add('hidden');
-                    if (fTabIcon) fTabIcon.classList.remove('hidden');
-                } else {
-                    fCat.classList.add('hidden');
-                    if (fTabIcon) fTabIcon.classList.add('hidden');
-                }
+                [fUrl, fImg, fCat, fPrev, fZoom].forEach(el => { if(el) el.classList.add('hidden'); });
+                fBtn.classList.replace('w-full', 'w-auto');
+            } else if (type === 'link') {
+                // all defaults apply
+            } else if (type === 'header') {
+                fCat.classList.add('hidden');
+            } else if (type === 'app-icon') {
+                [fTitle, fUrl, fCat, fZoom].forEach(el => { if(el) el.classList.add('hidden'); });
+                if (fHelp) fHelp.classList.remove('hidden');
             }
         }
 
@@ -1625,21 +1654,41 @@
 
         window.openHeaderModal = function() {
             currentEditId = 'header'; currentEditType = 'header';
-            document.getElementById('modal-title').innerText = "Identity Settings"; document.getElementById('label-url').innerText = "Subtitle";
-            document.getElementById('input-title').value = settings.title; document.getElementById('input-url').value = settings.subtitle;
-            document.getElementById('input-image').value = settings.logo; document.getElementById('input-zoom').value = settings.zoom || 1;
-            if (document.getElementById('input-tab-icon')) document.getElementById('input-tab-icon').value = settings.tabIconUrl || '';
+            document.getElementById('modal-title').innerText = "Identity Settings"; 
+            document.getElementById('label-url').innerText = "Subtitle";
+            document.getElementById('label-image').innerText = "Main Logo URL";
+            document.getElementById('input-title').value = settings.title; 
+            document.getElementById('input-url').value = settings.subtitle;
+            document.getElementById('input-image').value = settings.logo; 
+            document.getElementById('input-zoom').value = settings.zoom || 1;
             
             document.getElementById('input-link-type').parentElement.classList.add('hidden');
 
-            setModalVisibility('header'); window.updatePreview(); document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
+            setModalVisibility('header'); 
+            window.updatePreview(); 
+            document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
+        };
+
+        window.openAppIconModal = function() {
+            currentEditId = 'app-icon'; currentEditType = 'app-icon';
+            document.getElementById('modal-title').innerText = "Browser Tab & App Icon"; 
+            document.getElementById('label-image').innerText = "Icon Image URL";
+            document.getElementById('input-image').value = settings.tabIconUrl || ''; 
+            document.getElementById('input-zoom').value = 1; // Visually reset
+            
+            setModalVisibility('app-icon'); 
+            window.updatePreview(); 
+            document.getElementById('modal-overlay').classList.replace('hidden', 'flex');
         };
 
         window.editLink = function(id) {
             currentEditId = id; currentEditType = 'link'; const link = links.find(l => l.id === id);
-            document.getElementById('modal-title').innerText = "Tile Settings"; document.getElementById('label-url').innerText = "Target / URL";
+            document.getElementById('modal-title').innerText = "Tile Settings"; 
+            document.getElementById('label-url').innerText = "Target / URL";
+            document.getElementById('label-image').innerText = "Image Source URL";
             document.getElementById('input-title').value = link.title; 
-            document.getElementById('input-image').value = link.img; document.getElementById('input-zoom').value = link.zoom || 1;
+            document.getElementById('input-image').value = link.img; 
+            document.getElementById('input-zoom').value = link.zoom || 1;
             
             document.getElementById('input-link-type').parentElement.classList.remove('hidden');
 
@@ -1683,17 +1732,23 @@
 
         window.updatePreview = function() {
             if (currentEditType === 'category') return;
-            const img = document.getElementById('preview-img'); const zoom = document.getElementById('input-zoom').value || 1;
+            const img = document.getElementById('preview-img'); 
+            const zoom = document.getElementById('input-zoom').value || 1;
             img.src = document.getElementById('input-image').value || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png';
             document.getElementById('zoom-val').innerText = parseFloat(zoom).toFixed(2) + 'x';
-            let obj = currentEditType === 'header' ? settings : links.find(l => l.id === currentEditId);
-            if (obj) img.style.transform = `translate(${obj.x || 0}%, ${obj.y || 0}%) scale(${zoom})`;
+            
+            let obj = currentEditType === 'header' ? settings : (currentEditType === 'app-icon' ? {x: 0, y: 0} : links.find(l => l.id === currentEditId));
+            if (obj) img.style.transform = `translate(${obj.x || 0}%, ${obj.y || 0}%) scale(${currentEditType === 'app-icon' ? 1 : zoom})`;
         };
 
         window.saveChanges = function() {
             if (currentEditType === 'header') {
-                settings.title = document.getElementById('input-title').value; settings.subtitle = document.getElementById('input-url').value; settings.logo = document.getElementById('input-image').value; settings.zoom = document.getElementById('input-zoom').value;
-                if (document.getElementById('input-tab-icon')) settings.tabIconUrl = document.getElementById('input-tab-icon').value;
+                settings.title = document.getElementById('input-title').value; 
+                settings.subtitle = document.getElementById('input-url').value; 
+                settings.logo = document.getElementById('input-image').value; 
+                settings.zoom = document.getElementById('input-zoom').value;
+            } else if (currentEditType === 'app-icon') {
+                settings.tabIconUrl = document.getElementById('input-image').value;
             } else if (currentEditType === 'category') {
                 const cat = categories.find(c => c.id === currentEditId); if (cat) cat.title = document.getElementById('input-title').value || 'Unnamed Category';
             } else if (currentEditType === 'link') {
@@ -1719,7 +1774,10 @@
         document.getElementById('input-zoom').addEventListener('input', window.updatePreview);
 
         const previewBox = document.getElementById('preview-box');
-        previewBox.addEventListener('mousedown', (e) => { if (currentEditType === 'category') return; isDragging = true; startX = e.clientX; startY = e.clientY; });
+        previewBox.addEventListener('mousedown', (e) => { 
+            if (currentEditType === 'category' || currentEditType === 'app-icon') return; 
+            isDragging = true; startX = e.clientX; startY = e.clientY; 
+        });
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             const dx = e.clientX - startX; const dy = e.clientY - startY; startX = e.clientX; startY = e.clientY;
