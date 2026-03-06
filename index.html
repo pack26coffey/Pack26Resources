@@ -8,6 +8,8 @@
     <meta name="application-name" content="Scout Hub">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#003F87">
+    <link rel="icon" id="dynamic-favicon" href="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png">
+    <link rel="apple-touch-icon" id="dynamic-apple-icon" href="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -285,6 +287,10 @@
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image Source URL</label>
                         <input id="input-image" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all">
                     </div>
+                    <div id="field-tab-icon" class="hidden">
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Browser Tab & App Icon URL</label>
+                        <input id="input-tab-icon" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all" placeholder="Defaults to main logo if blank">
+                    </div>
                 </div>
                 <div class="flex flex-col items-center" id="field-preview">
                     <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
@@ -538,7 +544,7 @@
             { id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default' }
         ];
         let settings = JSON.parse(localStorage.getItem('scout_settings')) || {
-            title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0
+            title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0, tabIconUrl: ''
         };
 
         // Planner, Committee & Volunteers State
@@ -641,6 +647,12 @@
             document.title = settings.title ? `${settings.title} Hub` : 'Scout Hub';
             const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
             if (appleTitle) appleTitle.setAttribute("content", settings.title || 'Scout Hub');
+
+            const iconUrl = settings.tabIconUrl || settings.logo || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png';
+            const favicon = document.getElementById('dynamic-favicon');
+            const appleIcon = document.getElementById('dynamic-apple-icon');
+            if(favicon) favicon.href = iconUrl;
+            if(appleIcon) appleIcon.href = iconUrl;
 
             // Nav Visibility & State
             if (isLeader || isAdmin) {
@@ -1579,13 +1591,24 @@
         // --- Links/Identity Modals & Dynamic Form Logic ---
         function setModalVisibility(type) {
             const mGrid = document.getElementById('modal-grid'), fUrl = document.getElementById('field-url'), fImg = document.getElementById('field-image'), fCat = document.getElementById('field-category'), fPrev = document.getElementById('field-preview'), fBtn = document.getElementById('modal-save-btn');
+            const fTabIcon = document.getElementById('field-tab-icon');
             if (type === 'category') {
                 mGrid.classList.remove('md:grid-cols-2'); mGrid.classList.add('grid-cols-1');
                 fUrl.classList.add('hidden'); fImg.classList.add('hidden'); fCat.classList.add('hidden'); fPrev.classList.add('hidden'); fBtn.classList.replace('w-full', 'w-auto');
+                if (fTabIcon) fTabIcon.classList.add('hidden');
             } else {
                 mGrid.classList.add('md:grid-cols-2'); mGrid.classList.remove('grid-cols-1');
                 fUrl.classList.remove('hidden'); fImg.classList.remove('hidden'); fPrev.classList.remove('hidden'); fBtn.classList.replace('w-auto', 'w-full');
-                if (type === 'link') fCat.classList.remove('hidden'); else fCat.classList.add('hidden');
+                if (type === 'link') {
+                    fCat.classList.remove('hidden');
+                    if (fTabIcon) fTabIcon.classList.add('hidden');
+                } else if (type === 'header') {
+                    fCat.classList.add('hidden');
+                    if (fTabIcon) fTabIcon.classList.remove('hidden');
+                } else {
+                    fCat.classList.add('hidden');
+                    if (fTabIcon) fTabIcon.classList.add('hidden');
+                }
             }
         }
 
@@ -1605,6 +1628,7 @@
             document.getElementById('modal-title').innerText = "Identity Settings"; document.getElementById('label-url').innerText = "Subtitle";
             document.getElementById('input-title').value = settings.title; document.getElementById('input-url').value = settings.subtitle;
             document.getElementById('input-image').value = settings.logo; document.getElementById('input-zoom').value = settings.zoom || 1;
+            if (document.getElementById('input-tab-icon')) document.getElementById('input-tab-icon').value = settings.tabIconUrl || '';
             
             document.getElementById('input-link-type').parentElement.classList.add('hidden');
 
@@ -1669,6 +1693,7 @@
         window.saveChanges = function() {
             if (currentEditType === 'header') {
                 settings.title = document.getElementById('input-title').value; settings.subtitle = document.getElementById('input-url').value; settings.logo = document.getElementById('input-image').value; settings.zoom = document.getElementById('input-zoom').value;
+                if (document.getElementById('input-tab-icon')) settings.tabIconUrl = document.getElementById('input-tab-icon').value;
             } else if (currentEditType === 'category') {
                 const cat = categories.find(c => c.id === currentEditId); if (cat) cat.title = document.getElementById('input-title').value || 'Unnamed Category';
             } else if (currentEditType === 'link') {
