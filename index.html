@@ -145,63 +145,75 @@
 
     <div id="app">
         <!-- Header -->
-        <header class="bg-white dark:bg-slate-900 border-b-[8px] border-yellow-400 shadow-xl px-6 py-6 transition-colors relative z-30">
+        <header class="bg-white dark:bg-slate-900 border-b-[8px] border-yellow-400 shadow-xl px-4 md:px-6 py-4 md:py-6 transition-colors relative z-30">
             <div class="max-w-6xl mx-auto">
-                <div class="flex flex-col md:flex-row items-center gap-6">
-                    <div class="relative group">
-                        <div id="header-logo-container" class="w-28 h-28 md:w-32 md:h-32 rounded-[2rem] bg-slate-50 dark:bg-slate-800 shadow-inner overflow-hidden border-4 border-white dark:border-slate-700 transition-all relative">
-                            <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+                    
+                    <!-- Left Side: Logo & Titles (Always on same horizontal plane) -->
+                    <div class="flex flex-row items-center gap-4 w-full md:w-auto md:flex-1">
+                        <div class="relative group flex-shrink-0">
+                            <div id="header-logo-container" class="w-20 h-20 md:w-32 md:h-32 rounded-[1.25rem] md:rounded-[2rem] bg-slate-50 dark:bg-slate-800 shadow-inner overflow-hidden border-4 border-white dark:border-slate-700 transition-all relative">
+                                <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
+                            </div>
+                            <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 p-2 md:p-2.5 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20">
+                                <!-- Icon injected -->
+                            </button>
                         </div>
-                        <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-2 -right-2 p-2.5 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20">
-                            <!-- Icon injected -->
-                        </button>
-                    </div>
 
-                    <div class="text-center md:text-left flex-1 relative group pr-12">
-                        <h1 id="display-title" class="text-4xl md:text-6xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-1 leading-none">
-                            Pack 26
-                        </h1>
-                        <div class="text-lg md:text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-3">
-                            <span id="display-subtitle">Scouting America</span>
-                        </div>
-                        <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
-                            <!-- Icon injected -->
-                        </button>
-                    </div>
-
-                    <div class="flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
-                        <div class="flex gap-4">
-                            <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center"></button>
-                            <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden"></button>
-                        </div>
-                        <div class="flex flex-col items-end gap-1.5 mt-1">
-                            <a href="https://my.scouting.org" target="_blank" class="text-[10px] md:text-xs font-black text-blue-800 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1">
-                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> my.scouting.org
-                            </a>
-                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-right">
-                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal
+                        <div class="text-left flex-1 relative group md:pr-12">
+                            <h1 id="display-title" class="text-3xl sm:text-4xl md:text-6xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-0.5 md:mb-1 leading-none">
+                                Pack 26
+                            </h1>
+                            <div class="text-[11px] sm:text-xs md:text-xl font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] md:tracking-[0.4em] flex items-center justify-start gap-3">
+                                <span id="display-subtitle">Scouting America</span>
+                            </div>
+                            <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-2 md:p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform">
+                                <!-- Icon injected -->
                             </button>
                         </div>
                     </div>
+
+                    <!-- Right Side: Links & Controls -->
+                    <div class="flex flex-row items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-2 md:gap-3 mt-1 md:mt-0 border-t border-slate-100 dark:border-slate-800 pt-3 md:border-0 md:pt-0">
+                        <div class="flex flex-col items-start md:items-end gap-1 md:gap-1.5">
+                            <a href="https://my.scouting.org" target="_blank" class="text-[10px] md:text-xs font-black text-blue-800 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> my.scouting.org
+                            </a>
+                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                            <!-- Home Button -->
+                            <button id="home-btn" onclick="window.switchView('links')" class="hidden p-2.5 md:p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-md flex items-center justify-center group">
+                                <i data-lucide="home" class="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform"></i>
+                            </button>
+                            <!-- Theme Toggle -->
+                            <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-2.5 md:p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center"></button>
+                            <!-- Admin Edit Toggle -->
+                            <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden"></button>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Leader Navigation Tabs -->
-                <div id="leader-nav" class="hidden mt-4 flex flex-wrap justify-center md:justify-start gap-3 border-t border-slate-200 dark:border-slate-800 pt-4">
-                    <button onclick="window.switchView('links')" id="tab-links" class="px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Resources</button>
-                    <button onclick="window.switchView('planner')" id="tab-planner" class="px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Pack Planner</button>
-                    <button onclick="window.switchView('committee')" id="tab-committee" class="px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Committee</button>
-                    <button onclick="window.switchView('volunteer')" id="tab-volunteer" class="px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm">Volunteers</button>
+                <div id="leader-nav" class="hidden mt-4 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3 border-t border-slate-200 dark:border-slate-800 pt-4">
+                    <button onclick="window.switchView('links')" id="tab-links" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Resources</button>
+                    <button onclick="window.switchView('planner')" id="tab-planner" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Pack Planner</button>
+                    <button onclick="window.switchView('committee')" id="tab-committee" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Committee</button>
+                    <button onclick="window.switchView('volunteer')" id="tab-volunteer" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Volunteers</button>
                 </div>
             </div>
         </header>
 
         <!-- Dynamic Content Area -->
-        <main class="max-w-[90rem] mx-auto py-12 px-4 sm:px-6 flex flex-col items-center min-h-[50vh]" id="main-container">
+        <main class="max-w-[90rem] mx-auto py-8 md:py-12 px-4 sm:px-6 flex flex-col items-center min-h-[50vh]" id="main-container">
             <!-- Content injected here -->
         </main>
 
         <!-- Auth & Footer -->
-        <div class="fixed bottom-10 right-10 z-50">
+        <div class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50">
             <button id="lock-btn" onclick="window.handleAuthClick()"></button>
         </div>
     </div>
@@ -215,8 +227,7 @@
             </div>
             <div class="p-8 flex flex-col gap-6">
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-center leading-relaxed">
-                    Enter <span class="text-blue-600 dark:text-blue-400">Plan121</span> for Planner<br>
-                    Enter <span class="text-yellow-600 dark:text-yellow-400">CoRf121</span> for Admin
+                    Enter your secure access key below to unlock advanced management features.
                 </p>
                 <div class="relative">
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Access Key</label>
@@ -629,7 +640,7 @@
                 tabs.forEach(tab => {
                     const el = document.getElementById(`tab-${tab}`);
                     if(el) {
-                        el.className = `px-5 py-2 rounded-full font-bold uppercase tracking-widest text-xs transition-colors shadow-sm ${currentView === tab ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
+                        el.className = `px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm ${currentView === tab ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`;
                     }
                 });
             } else {
@@ -651,9 +662,16 @@
                 window.renderLinksView(container);
             }
 
-            // UI Buttons (Theme & Auth)
+            // UI Buttons (Theme, Home & Auth)
             const isDark = document.documentElement.classList.contains('dark');
-            document.getElementById('theme-btn').innerHTML = isDark ? '<i data-lucide="sun" class="w-5 h-5"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>';
+            document.getElementById('theme-btn').innerHTML = isDark ? '<i data-lucide="sun" class="w-4 h-4 md:w-5 md:h-5"></i>' : '<i data-lucide="moon" class="w-4 h-4 md:w-5 md:h-5"></i>';
+
+            const homeBtn = document.getElementById('home-btn');
+            if (currentView !== 'links') {
+                homeBtn.classList.remove('hidden');
+            } else {
+                homeBtn.classList.add('hidden');
+            }
 
             const lockBtn = document.getElementById('lock-btn');
             if (isAdmin || isLeader) {
@@ -668,11 +686,11 @@
             if (isAdmin && (currentView === 'links' || currentView === 'volunteer' || currentView === 'planner')) {
                 adminBtn.classList.remove('hidden');
                 if (isEditing) {
-                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 text-blue-900"></i><span class="text-xs">Finish Editing</span>';
-                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 md:w-4 md:h-4 text-blue-900"></i><span class="text-[10px] md:text-xs">Finish Editing</span>';
+                    adminBtn.className = "flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-yellow-400 text-blue-900 border-2 border-yellow-400 font-bold uppercase tracking-widest shadow-lg transition-all";
                 } else {
-                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4"></i><span class="text-xs">Edit Page</span>';
-                    adminBtn.className = "flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
+                    adminBtn.innerHTML = '<i data-lucide="settings" class="w-4 h-4 md:w-4 md:h-4"></i><span class="text-[10px] md:text-xs">Edit Page</span>';
+                    adminBtn.className = "flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest shadow-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-700";
                 }
             } else {
                 adminBtn.classList.add('hidden');
@@ -682,8 +700,8 @@
             const headerBtn = document.getElementById('edit-header-btn');
             const textBtn = document.getElementById('edit-text-btn');
             if (isAdmin && isEditing && currentView === 'links') {
-                headerBtn.classList.remove('hidden'); headerBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>';
-                if (textBtn) { textBtn.classList.remove('hidden'); textBtn.innerHTML = '<i data-lucide="edit-3" class="w-5 h-5"></i>'; }
+                headerBtn.classList.remove('hidden'); headerBtn.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 md:w-5 md:h-5"></i>';
+                if (textBtn) { textBtn.classList.remove('hidden'); textBtn.innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 md:w-5 md:h-5"></i>'; }
             } else {
                 headerBtn.classList.add('hidden');
                 if (textBtn) textBtn.classList.add('hidden');
@@ -753,7 +771,7 @@
 
                     card.innerHTML = `
                         ${isEditing ? `
-                        <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute top-4 right-4 flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onclick="window.openVolunteerModal(${vol.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                             <button onclick="window.deleteVolunteer(${vol.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-red-500 rounded-lg hover:bg-red-100 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>` : ''}
@@ -1236,7 +1254,7 @@
 
                     card.innerHTML = `
                         ${isEditing ? `
-                        <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute top-4 right-4 flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onclick="window.openPlannerModal(${plan.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                             <button onclick="window.deletePlan(${plan.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-red-500 rounded-lg hover:bg-red-100 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
