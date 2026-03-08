@@ -917,9 +917,14 @@
                 empty.innerHTML = '<i data-lucide="user-x" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No volunteer positions listed.';
                 wrapper.appendChild(empty);
             } else {
+                const listContainer = document.createElement('div');
+                listContainer.id = 'volunteer-list';
+                listContainer.className = 'flex flex-col gap-4 w-full';
+
                 volunteers.forEach(vol => {
                     const card = document.createElement('div');
                     card.className = 'vol-card p-6 flex flex-col relative group';
+                    card.dataset.id = vol.id;
                     
                     let volNameDisplay = vol.name && vol.name.trim() !== '' 
                         ? `<span class="text-xl font-black text-slate-800 dark:text-slate-100">${vol.name}</span>`
@@ -939,19 +944,44 @@
 
                     card.innerHTML = `
                         ${isAdmin ? `
-                        <div class="absolute top-4 right-4 flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute top-4 right-4 flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <button class="vol-drag-handle p-2 bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors cursor-move" title="Drag to reorder"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
                             <button onclick="window.openVolunteerModal(${vol.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                             <button onclick="window.deleteVolunteer(${vol.id})" class="p-2 bg-slate-100 dark:bg-slate-800 text-red-500 rounded-lg hover:bg-red-100 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>` : ''}
-                        <div class="flex flex-col pr-16">
-                            <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">${vol.position}</h4>
+                        <div class="flex flex-col pr-24 sm:pr-28">
+                            <h4 class="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">${vol.position}</h4>
                             <div class="mb-2">${volNameDisplay}</div>
                             ${vol.description ? `<p class="text-sm italic text-slate-500 dark:text-slate-400 border-l-2 border-slate-200 dark:border-slate-700 pl-3 my-2">${vol.description}</p>` : ''}
                             ${respList}
                         </div>
                     `;
-                    wrapper.appendChild(card);
+                    listContainer.appendChild(card);
                 });
+                
+                wrapper.appendChild(listContainer);
+
+                if (isAdmin && window.Sortable) {
+                    setTimeout(() => {
+                        const el = document.getElementById('volunteer-list');
+                        if (el) {
+                            new Sortable(el, {
+                                animation: 250,
+                                handle: '.vol-drag-handle',
+                                onEnd: function() {
+                                    const newOrderIds = Array.from(el.children).map(child => parseInt(child.dataset.id));
+                                    const newVolunteers = [];
+                                    newOrderIds.forEach(id => {
+                                        const vol = volunteers.find(v => v.id === id);
+                                        if (vol) newVolunteers.push(vol);
+                                    });
+                                    volunteers = newVolunteers;
+                                    window.syncToCloud();
+                                }
+                            });
+                        }
+                    }, 50);
+                }
             }
 
             container.appendChild(wrapper);
