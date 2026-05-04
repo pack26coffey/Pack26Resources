@@ -125,6 +125,7 @@
 
         input[type=range] {
             -webkit-appearance: none;
+            appearance: none;
             width: 100%;
             height: 8px;
             background: #e2e8f0;
@@ -134,6 +135,7 @@
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
+            appearance: none;
             width: 20px;
             height: 20px;
             background: var(--bsa-blue);
@@ -311,6 +313,19 @@
                             <option value="#committee">Committee Notes</option>
                         </select>
                     </div>
+
+                    <!-- Master Tile Toggle -->
+                    <div id="field-master" class="hidden items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50">
+                        <div>
+                            <span class="text-[10px] font-black uppercase text-blue-900 dark:text-blue-400 tracking-widest block mb-0.5">Master Tile</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Display large at the top of the page</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="input-is-master" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
                     <div id="field-category" class="hidden">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Category</label>
                         <select id="input-category" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all appearance-none cursor-pointer"></select>
@@ -351,7 +366,7 @@
                 </div>
                 <div class="flex flex-col items-center" id="field-preview">
                     <!-- Standard 1:1 Box or Wide Header Box -->
-                    <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing" style="-webkit-mask-image: -webkit-radial-gradient(white, black);">
+                    <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing" style="-webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black);">
                         <img id="preview-img" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
                     </div>
                     <div class="w-full mt-8 space-y-4" id="field-zoom">
@@ -601,7 +616,7 @@
         // --- Data State ---
         let categories = JSON.parse(localStorage.getItem('scout_categories')) || [{ id: 'default', title: 'General Resources' }];
         let links = JSON.parse(localStorage.getItem('scout_links')) || [
-            { id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default' }
+            { id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default', isMaster: false }
         ];
         let settings = JSON.parse(localStorage.getItem('scout_settings')) || {
             title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0, tabIconUrl: '', tabIconZoom: 1, tabIconX: 0, tabIconY: 0,
@@ -1521,6 +1536,60 @@
 
         // --- Render View: Links ---
         window.renderLinksView = function(container) {
+            
+            // 1. Render Master Tiles
+            const masterLinks = links.filter(l => l.isMaster);
+            
+            if (masterLinks.length > 0 || isEditing) {
+                const masterContainer = document.createElement('div');
+                masterContainer.className = 'w-full max-w-4xl mx-auto flex flex-col gap-4 mb-10';
+                masterContainer.id = 'master-wrapper-grid';
+
+                masterLinks.forEach(link => {
+                    const card = document.createElement('div');
+                    card.className = `master-card relative group ${isEditing ? 'cursor-move' : ''}`;
+                    card.dataset.id = link.id;
+
+                    const isInternal = link.url && link.url.startsWith('#');
+                    const targetUrl = isEditing ? 'javascript:void(0)' : (isInternal ? 'javascript:void(0)' : link.url);
+                    const onclickAttr = (!isEditing && isInternal) ? `onclick="window.switchView('${link.url.substring(1)}'); return false;"` : '';
+
+                    card.innerHTML = `
+                        ${isEditing ? `
+                            <div class="absolute top-3 right-3 z-20 flex flex-col gap-1.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity no-drag cursor-default">
+                                <button onclick="window.editLink(${link.id})" class="p-2 bg-blue-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                <button onclick="window.deleteLink(${link.id})" class="p-2 bg-red-600 text-white rounded-lg shadow-lg hover:scale-110 transition-transform"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        ` : ''}
+                        <a href="${targetUrl}" ${onclickAttr} target="${isInternal ? '_self' : '_blank'}" class="bg-white dark:bg-slate-800 rounded-[2rem] p-4 sm:p-5 flex items-center gap-4 sm:gap-6 shadow-md border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 transition-all w-full h-full ${!isEditing ? '' : 'pointer-events-none'}">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-slate-100 dark:bg-slate-900 rounded-2xl relative overflow-hidden flex items-center justify-center">
+                                <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom || 1}); opacity: ${link.img ? 1 : 0.1}" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl sm:text-2xl font-black text-blue-900 dark:text-blue-400 uppercase tracking-widest leading-tight pr-6">${link.title}</h3>
+                            </div>
+                            <div class="text-slate-300 dark:text-slate-600 pr-2 hidden sm:block">
+                                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                            </div>
+                        </a>
+                    `;
+                    if (!isEditing) card.querySelector('a').classList.remove('pointer-events-none');
+                    masterContainer.appendChild(card);
+                });
+
+                if (isEditing) {
+                    const addBtn = document.createElement('button');
+                    addBtn.onclick = () => window.addNewMasterLink();
+                    addBtn.className = 'no-drag bg-transparent border-4 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] p-4 flex items-center justify-center gap-3 opacity-50 hover:opacity-100 hover:border-blue-500 hover:text-blue-500 text-slate-400 transition-all cursor-pointer w-full';
+                    addBtn.innerHTML = '<i data-lucide="plus" class="w-6 h-6"></i><span class="font-black uppercase tracking-widest text-sm">Add Master Tile</span>';
+                    masterContainer.appendChild(addBtn);
+                }
+
+                container.appendChild(masterContainer);
+            }
+
+
+            // 2. Render Categories
             const categoryWrapper = document.createElement('div');
             categoryWrapper.id = 'category-wrapper';
             categoryWrapper.className = 'flex flex-wrap justify-center gap-6 md:gap-8 items-start w-full';
@@ -1548,7 +1617,9 @@
                 grid.className = 'link-grid grid grid-cols-3 gap-3 sm:gap-4 min-h-[120px]';
                 grid.dataset.categoryId = cat.id;
 
-                const catLinks = links.filter(l => l.categoryId === cat.id);
+                // Ensure we do not display master links in standard categories
+                const catLinks = links.filter(l => l.categoryId === cat.id && !l.isMaster);
+                
                 catLinks.forEach(link => {
                     const card = document.createElement('div');
                     card.className = `link-card relative group ${isEditing ? 'cursor-move' : ''}`;
@@ -1600,6 +1671,24 @@
             }
 
             if (isEditing && window.Sortable) {
+                
+                // Master Tile sorting
+                const mWrap = document.getElementById('master-wrapper-grid');
+                if (mWrap) {
+                    new Sortable(mWrap, {
+                        animation: 250,
+                        filter: '.no-drag',
+                        onEnd: function() {
+                            const newMasterIds = Array.from(mWrap.querySelectorAll('.master-card')).map(el => parseInt(el.dataset.id));
+                            const nonMasterLinks = links.filter(l => !l.isMaster);
+                            const newMasterLinks = newMasterIds.map(id => links.find(l => l.id === id)).filter(Boolean);
+                            links = [...newMasterLinks, ...nonMasterLinks];
+                            window.syncToCloud();
+                        }
+                    });
+                }
+
+                // Category Tile sorting
                 new Sortable(document.getElementById('category-wrapper'), {
                     animation: 250, handle: '.category-drag-handle',
                     onEnd: function() {
@@ -1611,12 +1700,16 @@
                         categories = newCategories; window.syncToCloud();
                     }
                 });
+
                 document.querySelectorAll('.link-grid').forEach(grid => {
                     new Sortable(grid, {
                         group: 'shared-links', animation: 250, filter: '.no-drag', preventOnFilter: false,
                         onMove: (evt) => evt.related.className.indexOf('no-drag') === -1,
                         onEnd: function() {
                             const newLinks = [];
+                            // Add Master Links back in first to preserve them
+                            links.filter(l => l.isMaster).forEach(ml => newLinks.push(ml));
+
                             document.querySelectorAll('.link-grid').forEach(g => {
                                 const catId = g.dataset.categoryId;
                                 g.querySelectorAll('.link-card').forEach(card => {
@@ -1820,10 +1913,11 @@
                   fHelp = document.getElementById('app-icon-help-text'),
                   fHeaderType = document.getElementById('field-header-type'),
                   fHeaderColors = document.getElementById('field-header-colors'),
-                  fHeaderImage = document.getElementById('field-header-image');
+                  fHeaderImage = document.getElementById('field-header-image'),
+                  fMaster = document.getElementById('field-master');
             
             // Reset all visibility defaults
-            [fTitle, fUrl, fImg, fCat, fPrev, fZoom, fHeaderType, fHeaderColors, fHeaderImage].forEach(el => {
+            [fTitle, fUrl, fImg, fCat, fPrev, fZoom, fHeaderType, fHeaderColors, fHeaderImage, fMaster].forEach(el => {
                 if(el) el.classList.remove('hidden');
             });
             if (fHelp) fHelp.classList.add('hidden');
@@ -1837,26 +1931,31 @@
             // Apply specific hidden states based on the editor mode
             if (type === 'category') {
                 mGrid.classList.remove('md:grid-cols-2'); mGrid.classList.add('grid-cols-1');
-                [fUrl, fImg, fCat, fPrev, fZoom, fHeaderType, fHeaderColors, fHeaderImage].forEach(el => { if(el) el.classList.add('hidden'); });
+                [fUrl, fImg, fCat, fPrev, fZoom, fHeaderType, fHeaderColors, fHeaderImage, fMaster].forEach(el => { if(el) el.classList.add('hidden'); });
                 fBtn.classList.replace('w-full', 'w-auto');
             } else if (type === 'link') {
                 [fHeaderType, fHeaderColors, fHeaderImage].forEach(el => { if(el) el.classList.add('hidden'); });
+                if(fMaster) fMaster.classList.replace('hidden', 'flex'); // Ensure it flexes
                 previewBox.className = 'w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing';
                 previewBox.style.webkitMaskImage = '-webkit-radial-gradient(white, black)';
+                previewBox.style.maskImage = 'radial-gradient(white, black)';
             } else if (type === 'header') {
-                [fCat, fHeaderType, fHeaderColors, fHeaderImage].forEach(el => { if(el) el.classList.add('hidden'); });
+                [fCat, fHeaderType, fHeaderColors, fHeaderImage, fMaster].forEach(el => { if(el) el.classList.add('hidden'); });
                 previewBox.className = 'w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing';
                 previewBox.style.webkitMaskImage = '-webkit-radial-gradient(white, black)';
+                previewBox.style.maskImage = 'radial-gradient(white, black)';
             } else if (type === 'app-icon') {
-                [fTitle, fUrl, fCat, fHeaderType, fHeaderColors, fHeaderImage].forEach(el => { if(el) el.classList.add('hidden'); });
+                [fTitle, fUrl, fCat, fHeaderType, fHeaderColors, fHeaderImage, fMaster].forEach(el => { if(el) el.classList.add('hidden'); });
                 if (fHelp) fHelp.classList.remove('hidden');
                 previewBox.className = 'w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing';
                 previewBox.style.webkitMaskImage = '-webkit-radial-gradient(white, black)';
+                previewBox.style.maskImage = 'radial-gradient(white, black)';
             } else if (type === 'header-design') {
-                [fTitle, fUrl, fCat, fImg].forEach(el => { if(el) el.classList.add('hidden'); });
+                [fTitle, fUrl, fCat, fImg, fMaster].forEach(el => { if(el) el.classList.add('hidden'); });
                 // Change preview box to wide format for header previews
                 previewBox.className = 'w-full h-32 bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move active:cursor-grabbing';
                 previewBox.style.webkitMaskImage = 'none';
+                previewBox.style.maskImage = 'none';
             }
         }
 
@@ -1925,6 +2024,9 @@
             document.getElementById('input-zoom').value = link.zoom || 1;
             
             document.getElementById('input-link-type').parentElement.classList.remove('hidden');
+            
+            const isMasterEl = document.getElementById('input-is-master');
+            if (isMasterEl) isMasterEl.checked = !!link.isMaster;
 
             const isInternal = link.url && link.url.startsWith('#');
             document.getElementById('input-link-type').value = isInternal ? 'internal' : 'external';
@@ -1941,7 +2043,13 @@
         };
 
         window.addNewLink = function(categoryId) {
-            const newId = Date.now(); links.push({ id: newId, title: 'New Link', url: '', img: '', zoom: 1, x: 0, y: 0, categoryId: categoryId }); window.editLink(newId);
+            const newId = Date.now(); links.push({ id: newId, title: 'New Link', url: '', img: '', zoom: 1, x: 0, y: 0, categoryId: categoryId, isMaster: false }); window.editLink(newId);
+        };
+
+        window.addNewMasterLink = function() {
+            const newId = Date.now(); 
+            links.push({ id: newId, title: 'New Master Link', url: '', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default', isMaster: true }); 
+            window.editLink(newId);
         };
 
         window.deleteLink = function(id) {
@@ -2044,7 +2152,13 @@
                         safeUrl = document.getElementById('input-url').value.trim(); 
                         if (safeUrl && !safeUrl.startsWith('http') && !safeUrl.startsWith('#')) safeUrl = 'https://' + safeUrl;
                     }
-                    link.url = safeUrl; link.categoryId = document.getElementById('input-category').value; link.img = document.getElementById('input-image').value; link.zoom = document.getElementById('input-zoom').value;
+                    link.url = safeUrl; 
+                    link.categoryId = document.getElementById('input-category').value; 
+                    link.img = document.getElementById('input-image').value; 
+                    link.zoom = document.getElementById('input-zoom').value;
+                    
+                    const isMasterEl = document.getElementById('input-is-master');
+                    if (isMasterEl) link.isMaster = isMasterEl.checked;
                 }
             }
             window.closeModal(); window.render(); window.syncToCloud(); 
