@@ -812,7 +812,8 @@
                 });
             } else {
                 leaderNav.classList.add('hidden');
-                if(currentView !== 'links' && currentView !== 'volunteer') {
+                // Safelist views that are public (Planner is now visible without admin auth!)
+                if(currentView !== 'links' && currentView !== 'volunteer' && currentView !== 'planner') {
                     currentView = 'links'; 
                 }
             }
@@ -1838,6 +1839,7 @@
         }
 
         window.openPlannerModal = function(id = null) {
+            if (!isAdmin && !isLeader) return;
             currentEditId = id;
             let plan = id ? plans.find(p => p.id === id) : null;
             
@@ -1862,6 +1864,7 @@
         window.closePlannerModal = () => document.getElementById('planner-modal').classList.replace('flex', 'hidden');
 
         window.savePlan = function() {
+            if (!isAdmin && !isLeader) return;
             const date = document.getElementById('plan-date').value;
             const time = document.getElementById('plan-time').value;
             const type = document.getElementById('plan-type').value;
@@ -1893,6 +1896,7 @@
         }
 
         window.deletePlan = function(id) {
+            if (!isAdmin && !isLeader) return;
             if(confirm("Remove this event from the planner?")) {
                 plans = plans.filter(p => p.id !== id);
                 window.render();
