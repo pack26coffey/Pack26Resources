@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-title" content="Scout Hub">
     <meta name="application-name" content="Scout Hub">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#003F87">
+    <meta name="theme-color" content="#020617">
     <link rel="icon" id="dynamic-favicon" href="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png">
     <link rel="apple-touch-icon" id="dynamic-apple-icon" href="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,26 +24,17 @@
         
         body { 
             font-family: 'Outfit', sans-serif;
-            background-color: #f8fafc;
+            background-color: #020617; 
+            color: #f8fafc; 
             transition: background-color 0.5s ease;
         }
 
-        .dark body { 
-            background-color: #020617; 
-            color: #f8fafc; 
-        }
-
         .scout-card {
-            background: white; 
+            background: #0f172a; 
             border-radius: 1.5rem; 
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(0,63,135,0.05); 
+            border: 1px solid rgba(255,255,255,0.05); 
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .dark .scout-card { 
-            background: #0f172a; 
-            border-color: rgba(255,255,255,0.05); 
         }
 
         .scout-card:hover { 
@@ -53,22 +44,19 @@
         }
 
         .plan-card, .comm-card, .rt-card, .vol-card {
-            background: white;
+            background: #1e293b;
             border-radius: 1.5rem;
             box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.05);
             transition: all 0.2s ease;
-            border-left: 8px solid;
-        }
-        .comm-card { border-left-color: var(--bsa-blue); }
-        .rt-card { border-left-color: var(--bsa-gold); }
-        .vol-card { border-radius: 2rem; border-left-color: var(--bsa-red); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
-
-        .dark .plan-card, .dark .comm-card, .dark .rt-card, .dark .vol-card {
-            background: #1e293b;
             border-top: 1px solid rgba(255,255,255,0.05);
             border-right: 1px solid rgba(255,255,255,0.05);
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-left: 8px solid;
         }
+        
+        .comm-card { border-left-color: var(--bsa-blue); }
+        .rt-card { border-left-color: var(--bsa-gold); }
+        .vol-card { border-radius: 2rem; border-left-color: var(--bsa-red); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
 
         .image-viewport { 
             width: 100%; 
@@ -76,13 +64,11 @@
             position: relative; 
             overflow: hidden; 
             border-radius: 1rem; 
-            background: #f1f5f9; 
+            background: #1e293b; 
             -webkit-mask-image: -webkit-radial-gradient(white, black);
             mask-image: radial-gradient(white, black);
             transform: translateZ(0);
         }
-
-        .dark .image-viewport { background: #1e293b; }
 
         input[type=range] {
             -webkit-appearance: none;
@@ -116,22 +102,21 @@
 
         textarea::-webkit-scrollbar { width: 8px; }
         textarea::-webkit-scrollbar-track { background: transparent; }
-        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark textarea::-webkit-scrollbar-thumb { background: #475569; }
+        textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
 
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.75rem; }
     </style>
 </head>
-<body class="min-h-screen relative">
+<body class="min-h-screen relative text-slate-100 bg-slate-950">
     <!-- Hidden div to ensure Tailwind compiles necessary dynamic grid classes -->
-    <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full"></div>
+    <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full aspect-square"></div>
 
     <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="app">
         <!-- Header -->
-        <header id="main-header" class="bg-white dark:bg-slate-900 border-b-[8px] border-yellow-400 shadow-xl px-4 md:px-6 py-4 md:py-6 transition-colors relative z-30 overflow-hidden">
+        <header id="main-header" class="bg-slate-900 border-b-[8px] border-yellow-400 shadow-xl px-4 md:px-6 py-4 md:py-6 transition-colors relative z-30 overflow-hidden">
             <div id="header-bg-layer" class="absolute inset-0 z-0 pointer-events-none hidden">
                 <img id="header-bg-img" src="" class="absolute inset-0 w-full h-full object-cover">
             </div>
@@ -141,15 +126,15 @@
                     <!-- Left Side -->
                     <div class="flex flex-row items-center gap-4 w-full md:w-auto md:flex-1">
                         <div class="relative group flex-shrink-0">
-                            <div id="header-logo-container" class="w-20 h-20 md:w-32 md:h-32 rounded-[1.25rem] md:rounded-[2rem] bg-slate-50 dark:bg-slate-800 shadow-inner overflow-hidden border-4 border-white dark:border-slate-700 transition-all relative">
+                            <div id="header-logo-container" class="w-20 h-20 md:w-32 md:h-32 rounded-[1.25rem] md:rounded-[2rem] bg-slate-800 shadow-inner overflow-hidden border-4 border-slate-700 transition-all relative">
                                 <img id="main-logo" src="https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png" class="absolute inset-0 w-full h-full object-contain">
                             </div>
                             <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 p-2 md:p-2.5 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20"></button>
                         </div>
 
                         <div class="text-left flex-1 relative group md:pr-12">
-                            <h1 id="display-title" class="text-3xl sm:text-4xl md:text-6xl font-black text-blue-900 dark:text-blue-500 uppercase tracking-tighter mb-0.5 md:mb-1 leading-none drop-shadow-md">Pack 26</h1>
-                            <div class="text-[11px] sm:text-xs md:text-xl font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em] flex items-center justify-start gap-3 drop-shadow-md">
+                            <h1 id="display-title" class="text-3xl sm:text-4xl md:text-6xl font-black text-blue-500 uppercase tracking-tighter mb-0.5 md:mb-1 leading-none drop-shadow-md">Pack 26</h1>
+                            <div class="text-[11px] sm:text-xs md:text-xl font-bold text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em] flex items-center justify-start gap-3 drop-shadow-md">
                                 <span id="display-subtitle">Scouting America</span>
                             </div>
                             <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-2 md:p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform"></button>
@@ -157,22 +142,21 @@
                     </div>
 
                     <!-- Right Side -->
-                    <div class="flex flex-row items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-2 md:gap-3 mt-1 md:mt-0 border-t border-slate-200/50 dark:border-slate-800/50 pt-3 md:border-0 md:pt-0">
+                    <div class="flex flex-row items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-2 md:gap-3 mt-1 md:mt-0 border-t border-slate-800/50 pt-3 md:border-0 md:pt-0">
                         <div class="flex flex-col items-start md:items-end gap-1 md:gap-1.5 drop-shadow-md">
-                            <a href="https://my.scouting.org" target="_blank" class="text-[10px] md:text-xs font-black text-blue-800 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1">
+                            <a href="https://my.scouting.org" target="_blank" class="text-[10px] md:text-xs font-black text-blue-400 hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1">
                                 <i data-lucide="external-link" class="w-3.5 h-3.5"></i> my.scouting.org
                             </a>
-                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
+                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-400 hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
                                 <i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal
                             </button>
                         </div>
                         <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
-                            <button id="home-btn" onclick="window.switchView('links')" class="hidden p-2.5 md:p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-md flex items-center justify-center group"><i data-lucide="home" class="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform"></i></button>
-                            <button id="theme-btn" onclick="window.toggleDarkMode()" class="p-2.5 md:p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-yellow-400 hover:text-blue-900 transition-all shadow-md flex items-center justify-center"></button>
-                            <button id="header-design-btn" onclick="window.openHeaderDesignModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 hover:bg-teal-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
+                            <button id="home-btn" onclick="window.switchView('links')" class="hidden p-2.5 md:p-3 rounded-xl bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-md flex items-center justify-center group"><i data-lucide="home" class="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform"></i></button>
+                            <button id="header-design-btn" onclick="window.openHeaderDesignModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-teal-900/30 text-teal-400 hover:bg-teal-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
                                 <i data-lucide="paint-roller" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">Header Design</span>
                             </button>
-                            <button id="app-icon-edit-btn" onclick="window.openAppIconModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
+                            <button id="app-icon-edit-btn" onclick="window.openAppIconModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-purple-900/30 text-purple-400 hover:bg-purple-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
                                 <i data-lucide="smartphone" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">App Icon</span>
                             </button>
                             <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden"></button>
@@ -180,7 +164,7 @@
                     </div>
                 </div>
 
-                <div id="leader-nav" class="hidden mt-4 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3 border-t border-slate-200/50 dark:border-slate-800/50 pt-4">
+                <div id="leader-nav" class="hidden mt-4 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3 border-t border-slate-800/50 pt-4">
                     <button onclick="window.switchView('links')" id="tab-links" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Resources</button>
                     <button onclick="window.switchView('planner')" id="tab-planner" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Pack Planner</button>
                     <button onclick="window.switchView('committee')" id="tab-committee" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Committee</button>
@@ -201,7 +185,7 @@
 
     <!-- Login Modal -->
     <div id="login-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] hidden items-center justify-center p-6">
-        <div class="bg-white dark:bg-slate-900 rounded-[3rem] w-full max-w-sm overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-400">
+        <div class="bg-slate-900 rounded-[3rem] w-full max-w-sm overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-400">
             <div class="bg-blue-900 p-6 text-white flex justify-between items-center">
                 <h3 class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="shield-check" class="w-5 h-5"></i> Secure Access</h3>
                 <button onclick="window.closeLoginModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -210,7 +194,7 @@
                 <div class="relative">
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Access Key</label>
                     <div class="relative flex items-center">
-                        <input type="password" id="login-password" class="w-full p-4 pr-12 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all tracking-widest" onkeydown="if(event.key === 'Enter') window.submitLogin()">
+                        <input type="password" id="login-password" class="w-full p-4 pr-12 bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 text-white transition-all tracking-widest" onkeydown="if(event.key === 'Enter') window.submitLogin()">
                         <button id="toggle-password-btn" onclick="window.togglePasswordVisibility()" class="absolute right-4 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"><i data-lucide="eye" class="w-5 h-5"></i></button>
                     </div>
                 </div>
@@ -221,7 +205,7 @@
 
     <!-- Universal Modal -->
     <div id="modal-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
-        <div class="bg-white dark:bg-slate-900 rounded-[4rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-900">
+        <div class="bg-slate-900 rounded-[4rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-900">
             <div class="bg-blue-900 p-8 text-white flex justify-between items-center">
                 <h3 id="modal-title" class="text-2xl font-black uppercase tracking-widest">Settings</h3>
                 <button onclick="window.closeModal()" class="p-3 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
@@ -230,40 +214,40 @@
                 <div class="space-y-6">
                     <div id="field-title">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Title</label>
-                        <input id="input-title" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 dark:text-white transition-all">
+                        <input id="input-title" class="w-full p-4 bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 text-white transition-all">
                     </div>
                     <div id="field-url">
                         <div class="flex justify-between items-end mb-2">
                             <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest" id="label-url">Target / URL</label>
-                            <select id="input-link-type" onchange="window.toggleLinkType()" class="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 bg-transparent outline-none cursor-pointer">
+                            <select id="input-link-type" onchange="window.toggleLinkType()" class="text-[10px] font-bold uppercase text-blue-400 bg-transparent outline-none cursor-pointer">
                                 <option value="external">External Link</option>
                                 <option value="internal">Internal App Page</option>
                             </select>
                         </div>
-                        <input id="input-url" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none dark:text-white transition-all" placeholder="https://...">
-                        <select id="input-internal-target" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl outline-none dark:text-white font-bold transition-all hidden cursor-pointer">
+                        <input id="input-url" class="w-full p-4 bg-slate-800 rounded-2xl outline-none text-white transition-all" placeholder="https://...">
+                        <select id="input-internal-target" class="w-full p-4 bg-slate-800 rounded-2xl outline-none text-white font-bold transition-all hidden cursor-pointer">
                             <option value="#volunteer">Volunteer Portal</option>
                             <option value="#planner">Pack Planner</option>
                             <option value="#committee">Committee Notes</option>
                         </select>
                     </div>
-                    <div id="field-master" class="hidden items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50">
+                    <div id="field-master" class="hidden items-center justify-between p-4 bg-blue-900/20 rounded-2xl border border-blue-800/50">
                         <div>
-                            <span class="text-[10px] font-black uppercase text-blue-900 dark:text-blue-400 tracking-widest block mb-0.5">Master Tile</span>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Display large at the top</span>
+                            <span class="text-[10px] font-black uppercase text-blue-400 tracking-widest block mb-0.5">Master Tile</span>
+                            <span class="text-[10px] text-slate-400 font-bold">Display large at the top</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="input-is-master" class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
                     <div id="field-category" class="hidden">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Category</label>
-                        <select id="input-category" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none dark:text-white transition-all"></select>
+                        <select id="input-category" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none text-white transition-all"></select>
                     </div>
                     <div id="field-header-type" class="hidden">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Background Style</label>
-                        <select id="input-header-bg-type" onchange="window.updatePreview()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold outline-none dark:text-white transition-all">
+                        <select id="input-header-bg-type" onchange="window.updatePreview()" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none text-white transition-all">
                             <option value="default">Default</option><option value="color">Solid Color</option><option value="image">Custom Image</option>
                         </select>
                     </div>
@@ -273,16 +257,16 @@
                     </div>
                     <div id="field-header-image" class="hidden">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Header Image URL</label>
-                        <input id="input-header-bg-image" oninput="window.updatePreview()" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all">
+                        <input id="input-header-bg-image" oninput="window.updatePreview()" class="w-full p-4 bg-slate-800 rounded-2xl text-sm font-mono outline-none text-white transition-all">
                     </div>
                     <div id="field-image">
                         <label id="label-image" class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Image Source URL</label>
-                        <input id="input-image" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-sm font-mono outline-none dark:text-white transition-all">
+                        <input id="input-image" class="w-full p-4 bg-slate-800 rounded-2xl text-sm font-mono outline-none text-white transition-all">
                         <div id="app-icon-help-text" class="hidden text-xs font-bold text-slate-500 mt-3 border-l-4 border-purple-500 pl-3">Image for browser tab and mobile shortcut.</div>
                     </div>
                 </div>
                 <div class="flex flex-col items-center" id="field-preview">
-                    <div id="preview-box" class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-200 dark:border-slate-700 shadow-xl cursor-move" style="-webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black);">
+                    <div id="preview-box" class="w-64 h-64 bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-700 shadow-xl cursor-move" style="-webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black);">
                         <img id="preview-img" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
                     </div>
                     <div class="w-full mt-8 space-y-4" id="field-zoom">
@@ -297,10 +281,201 @@
         </div>
     </div>
 
-    <!-- Additional Modals omitted from this raw block for brevity, loaded dynamically -->
-    <div id="planner-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4"></div>
-    <div id="volunteer-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4"></div>
-    <div id="committee-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4"></div>
+    <!-- Planner Edit Modal -->
+    <div id="planner-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-500 my-auto">
+            <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
+                <h3 id="plan-modal-title" class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="calendar" class="w-5 h-5 text-yellow-500"></i> Event Details</h3>
+                <button onclick="window.closePlannerModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-6 sm:p-8 space-y-6">
+                <!-- Row 1: Date & Time -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Date</label>
+                        <input type="date" id="plan-date" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-all cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Time</label>
+                        <select id="plan-time" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-all appearance-none cursor-pointer"></select>
+                    </div>
+                </div>
+
+                <!-- Row 2: Type & Color -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Event Type</label>
+                            <div class="flex gap-1">
+                                <button onclick="window.manageArray('eventTypes', 'add')" class="text-blue-500 hover:text-blue-400 p-1"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                                <button onclick="window.manageArray('eventTypes', 'remove')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <select id="plan-type" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-all appearance-none cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Tile Border Color</label>
+                        <input type="color" id="plan-color" value="#FDC82F" class="w-full h-[56px] p-1 bg-slate-800 rounded-2xl cursor-pointer border-0 outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- Row 3: Leader & Title -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Lead Scouter</label>
+                            <div class="flex gap-1">
+                                <button onclick="window.manageArray('leaders', 'add')" class="text-blue-500 hover:text-blue-400 p-1"><i data-lucide="plus-circle" class="w-4 h-4"></i></button>
+                                <button onclick="window.manageArray('leaders', 'remove')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <select id="plan-leader" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-all appearance-none cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Title <span class="text-slate-400/50 font-normal">(Optional)</span></label>
+                        <input id="plan-title" type="text" class="w-full p-4 bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-blue-900/10 text-white transition-all" placeholder="e.g. Weigh-in">
+                    </div>
+                </div>
+
+                <!-- Row 4: Details -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Details <span class="text-slate-400/50 font-normal">(Optional)</span></label>
+                    <textarea id="plan-details" rows="2" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Provide extra details, location, requirements..."></textarea>
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button onclick="window.savePlan()" class="w-full px-10 py-5 bg-blue-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-800 transition-all active:scale-95">Save Event</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Volunteer Portal Edit Modal -->
+    <div id="volunteer-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-red-600 my-auto">
+            <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
+                <h3 class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5 text-red-500"></i> Edit Volunteer Position</h3>
+                <button onclick="window.closeVolunteerModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-8 space-y-6">
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Position Name *</label>
+                    <input id="vol-position" type="text" class="w-full p-4 bg-slate-800 rounded-2xl font-bold text-lg outline-none focus:ring-4 ring-red-900/10 text-white transition-all" placeholder="e.g. Cubmaster">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Volunteer Name</label>
+                    <input id="vol-name" type="text" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-red-900/10 text-white transition-all" placeholder="Leave blank to display as VACANT">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Short Description</label>
+                    <input id="vol-description" type="text" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-red-900/10 text-white transition-all" placeholder="e.g. The guiding leader of the Pack">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Responsibilities</label>
+                    <textarea id="vol-responsibilities" rows="5" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-red-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Enter responsibilities (Type each new responsibility on a new line to create bullets)"></textarea>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <button onclick="window.saveVolunteer()" class="w-full px-10 py-5 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-red-700 transition-all active:scale-95">Save Position</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Committee Note Edit Modal with Auto-Save -->
+    <div id="committee-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-slate-900 rounded-3xl w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-8 border-blue-600 my-auto" id="comm-modal-panel">
+            <div class="bg-slate-800 p-4 sm:p-5 text-white flex justify-between items-center border-b border-slate-700 sticky top-0 z-10">
+                <div class="flex flex-col">
+                    <h3 id="comm-modal-title" class="text-lg font-black uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i> Meeting Minutes
+                    </h3>
+                    <span id="comm-save-status" class="text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-0.5">Ready</span>
+                </div>
+                <button onclick="window.closeCommitteeModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="p-4 sm:p-6 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Date</label>
+                        <input type="date" id="comm-date" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 text-white transition-all cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Attendees (Leaders)</label>
+                        <textarea id="comm-attendees" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 text-white transition-colors resize-none overflow-hidden" placeholder="John, Sarah, Mike..."></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Volunteer Status Update</label>
+                    <textarea id="comm-volunteer" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 text-white transition-colors resize-none overflow-hidden" placeholder="Open positions, training needs..."></textarea>
+                </div>
+
+                <div id="comm-finance-row" class="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Cash on Hand</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                            <input type="number" step="0.01" id="comm-cash" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 pl-7 bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 text-white transition-all" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Finance Notes</label>
+                        <textarea id="comm-finance" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 text-white transition-colors resize-none overflow-hidden" placeholder="Recent expenses, deposits, etc."></textarea>
+                    </div>
+                </div>
+
+                <div id="comm-planner-row" class="border border-slate-700 rounded-xl overflow-hidden bg-slate-800/50">
+                    <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] border-b border-slate-700">
+                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-800/80">Current Month</div>
+                        <div class="p-2 space-y-2">
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Pack Mtg</span><textarea id="comm-cp" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-slate-900 outline-none border border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Topic/Plan"></textarea></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Outing</span><textarea id="comm-co" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-slate-900 outline-none border border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Location/Plan"></textarea></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] border-b border-slate-700">
+                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-800/80">Next Month</div>
+                        <div class="p-2 space-y-2">
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Pack Mtg</span><textarea id="comm-np" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-slate-900 outline-none border border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Topic/Plan"></textarea></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Outing</span><textarea id="comm-no" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-slate-900 outline-none border border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Location/Plan"></textarea></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr]">
+                        <div class="p-3 text-xs font-black uppercase text-slate-500 flex items-center bg-slate-800/80">Following Mo.</div>
+                        <div class="p-2 space-y-2">
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Pack Mtg</span><textarea id="comm-fp" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-slate-900 outline-none border border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Topic/Plan"></textarea></div>
+                            <div class="flex items-start gap-2"><span class="w-20 text-[10px] font-bold text-slate-400 uppercase text-right mt-2.5">Outing</span><textarea id="comm-fo" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="flex-1 p-2 text-sm rounded-lg bg-slate-900 outline-none border border-slate-700 focus:border-blue-400 transition-colors resize-none overflow-hidden" placeholder="Location/Plan"></textarea></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="comm-action-row">
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Action Items</label>
+                    <textarea id="comm-action" rows="3" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 text-white transition-colors resize-none overflow-hidden" placeholder="Who needs to do what..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Round Table Name</label>
+                        <input type="text" id="comm-rtname" oninput="window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 text-white transition-all" placeholder="Name">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">Round Table Comments</label>
+                        <textarea id="comm-rtcomments" rows="1" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-900/20 text-white transition-colors resize-none overflow-hidden" placeholder="Comments from the district roundtable..."></textarea>
+                    </div>
+                </div>
+
+                <div id="comm-legacy-container">
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block tracking-widest">General/Legacy Notes</label>
+                    <textarea id="comm-notes" rows="2" oninput="window.autoResizeTextarea(this); window.triggerCommAutoSave()" class="w-full p-2.5 bg-slate-800 rounded-xl text-sm outline-none focus:ring-2 ring-blue-900/20 text-white transition-colors resize-none overflow-hidden" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button onclick="window.closeCommitteeModal()" class="w-full sm:w-auto px-8 py-3 bg-slate-800 text-white rounded-xl font-black uppercase tracking-widest shadow-xl hover:bg-slate-700 transition-all active:scale-95 text-xs border border-slate-600">Close & Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -312,8 +487,6 @@
         let useFirebase = false; let auth = null; let db = null; let currentUser = null;
         let isAdmin = false; let isLeader = false; let isEditing = false; let currentView = 'links'; 
         const appId = 'pack-26-resources';
-        
-        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
 
         let categories = JSON.parse(localStorage.getItem('scout_categories')) || [{ id: 'default', title: 'General Resources' }];
         let links = JSON.parse(localStorage.getItem('scout_links')) || [{ id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default', isMaster: false }];
@@ -325,6 +498,10 @@
         let volunteers = JSON.parse(localStorage.getItem('scout_volunteers')) || [];
 
         let currentEditId = null; let currentEditType = null; let isDragging = false; let startX, startY;
+        let expandedCommNotes = [];
+        let autoSaveTimer = null;
+        let currentCommEditId = null;
+        let currentCommType = 'committee';
 
         window.showToast = (msg, err=false) => {
             const c = document.getElementById('toast-container');
@@ -369,12 +546,12 @@
             try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config'), { links, settings, categories, plans, committeeNotes, eventTypes, leaders, volunteers, updatedAt: Date.now() }); } catch(e){}
         };
 
-        // --- Render Links View with Structural Grid Fixes ---
+        // --- Render Links View with Structural Grid Fixes & Square Tiles ---
         window.renderLinksView = function(container) {
             const masterLinks = links.filter(l => l.isMaster);
             if (masterLinks.length > 0 || isEditing) {
                 const mc = document.createElement('div'); mc.className = 'w-full mb-12';
-                if (isEditing) mc.innerHTML = `<div class="flex justify-between items-center mb-6"><h3 class="text-xs font-black text-slate-400 tracking-[0.2em]">Master Tiles</h3> <button onclick="window.addNewMasterLink()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold uppercase tracking-widest"><i data-lucide="plus" class="inline w-3 h-3"></i> Add Master</button></div>`;
+                if (isEditing) mc.innerHTML = `<div class="flex justify-between items-center mb-6"><h3 class="text-xs font-black text-slate-400 tracking-[0.2em]">Master Tiles</h3> <button onclick="window.addNewMasterLink()" class="px-4 py-2 bg-blue-900/30 text-blue-400 rounded-lg text-xs font-bold uppercase tracking-widest"><i data-lucide="plus" class="inline w-3 h-3"></i> Add Master</button></div>`;
                 const grid = document.createElement('div'); grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'; grid.id = 'master-grid';
                 masterLinks.forEach(l => grid.appendChild(createLinkElement(l, true)));
                 mc.appendChild(grid); container.appendChild(mc);
@@ -382,7 +559,6 @@
             }
 
             const catContainerWrapper = document.createElement('div');
-            // Explicitly defining the multi-column grid for categories on desktop
             catContainerWrapper.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full items-start';
             catContainerWrapper.id = 'categories-container';
 
@@ -392,20 +568,19 @@
 
                 const catDiv = document.createElement('div');
                 catDiv.dataset.id = cat.id;
-                catDiv.className = 'flex flex-col gap-4 relative group/cat bg-white dark:bg-slate-800/40 rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/50';
+                catDiv.className = 'flex flex-col gap-4 relative group/cat bg-slate-800/40 rounded-[2rem] p-6 shadow-sm border border-slate-700/50';
                 
                 catDiv.innerHTML = `
                     <div class="flex items-center justify-between mb-2">
-                        <h2 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest pl-2 border-l-4 border-yellow-400 flex items-center gap-2">
-                            ${isEditing ? `<button class="cat-drag-handle p-1 text-slate-300 cursor-move"><i data-lucide="grip-vertical" class="w-5 h-5 pointer-events-none"></i></button>` : ''}
+                        <h2 class="text-xl font-black text-slate-100 uppercase tracking-widest pl-2 border-l-4 border-yellow-400 flex items-center gap-2">
+                            ${isEditing ? `<button class="cat-drag-handle p-1 text-slate-500 cursor-move"><i data-lucide="grip-vertical" class="w-5 h-5 pointer-events-none"></i></button>` : ''}
                             ${cat.title}
                         </h2>
-                        ${isEditing ? `<div class="flex gap-2 opacity-0 group-hover/cat:opacity-100"><button onclick="window.editCategory('${cat.id}')" class="p-2 bg-slate-200 text-blue-600 rounded-xl"><i data-lucide="edit-2" class="w-4 h-4"></i></button><button onclick="window.addNewLink('${cat.id}')" class="p-2 bg-slate-200 text-green-600 rounded-xl"><i data-lucide="plus" class="w-4 h-4"></i></button></div>` : ''}
+                        ${isEditing ? `<div class="flex gap-2 opacity-0 group-hover/cat:opacity-100"><button onclick="window.editCategory('${cat.id}')" class="p-2 bg-slate-800 text-blue-400 rounded-xl"><i data-lucide="edit-2" class="w-4 h-4"></i></button><button onclick="window.addNewLink('${cat.id}')" class="p-2 bg-slate-800 text-green-400 rounded-xl"><i data-lucide="plus" class="w-4 h-4"></i></button></div>` : ''}
                     </div>
                 `;
                 
                 const grid = document.createElement('div');
-                // Explicitly defining 2 columns for the tiles inside the category
                 grid.className = 'grid grid-cols-2 gap-3 sm:gap-4 mt-2 min-h-[50px]';
                 grid.dataset.catId = cat.id;
                 catLinks.forEach(l => grid.appendChild(createLinkElement(l, false)));
@@ -427,7 +602,7 @@
             if(isEditing) {
                 const addBtn = document.createElement('button');
                 addBtn.onclick = window.addNewCategory;
-                addBtn.className = 'mt-12 px-8 py-4 border-4 border-dashed border-slate-300 text-slate-500 font-black uppercase tracking-widest rounded-[2rem] w-full max-w-md mx-auto block';
+                addBtn.className = 'mt-12 px-8 py-4 border-4 border-dashed border-slate-700 text-slate-500 font-black uppercase tracking-widest rounded-[2rem] w-full max-w-md mx-auto block hover:text-blue-400 hover:border-blue-500 transition-colors';
                 addBtn.innerText = 'Add Category';
                 container.appendChild(addBtn);
             }
@@ -435,9 +610,8 @@
 
         function createLinkElement(link, isMaster) {
             const el = document.createElement('div');
-            el.className = 'relative group h-full'; el.dataset.id = link.id;
+            el.className = 'relative group h-full w-full'; el.dataset.id = link.id;
             
-            // Both live tiles and modal use object-contain strictly now
             const imgHtml = `
                 <div class="image-viewport shadow-sm">
                     <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
@@ -449,24 +623,742 @@
             let action = `href="${link.url}" target="_blank"`;
             if (link.url?.startsWith('#')) action = `href="javascript:void(0)" onclick="window.switchView('${link.url.replace('#','')}')"`;
             
+            // Standard tiles are perfectly square now with aspect-square and full width
             el.innerHTML = `
                 ${isMaster ? `
-                <a ${action} class="scout-card p-6 flex items-center gap-6 h-full hover:bg-slate-50 dark:hover:bg-slate-800">
+                <a ${action} class="scout-card p-6 flex items-center gap-6 h-full hover:bg-slate-800">
                     <div class="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">${imgHtml}</div>
-                    <div class="flex flex-col"><h3 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">${link.title}</h3></div>
+                    <div class="flex flex-col"><h3 class="text-xl font-black text-slate-100 uppercase tracking-widest">${link.title}</h3></div>
                 </a>` : `
-                <a ${action} class="scout-card p-3 sm:p-4 flex flex-col items-center gap-3 sm:gap-4 h-full hover:bg-slate-50 dark:hover:bg-slate-800 text-center">
+                <a ${action} class="scout-card aspect-square p-3 sm:p-4 flex flex-col items-center justify-center gap-3 sm:gap-4 w-full h-full hover:bg-slate-800 text-center">
                     <div class="w-16 h-16 sm:w-20 sm:h-20">${imgHtml}</div>
-                    <h3 class="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest leading-tight line-clamp-2">${link.title}</h3>
+                    <h3 class="text-xs sm:text-sm font-black text-slate-100 uppercase tracking-widest leading-tight line-clamp-2">${link.title}</h3>
                 </a>`}
                 ${isEditing ? `
-                <div class="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 z-10">
-                    <button class="drag-handle p-2 bg-slate-800 text-white rounded-full cursor-move"><i data-lucide="grip-horizontal" class="w-4 h-4"></i></button>
+                <div class="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 z-10 scale-90 sm:scale-100">
+                    <button class="drag-handle p-2 bg-slate-800 text-white rounded-full cursor-move border border-slate-600"><i data-lucide="grip-horizontal" class="w-4 h-4"></i></button>
                     <button onclick="window.editLink(${link.id})" class="p-2 bg-blue-600 text-white rounded-full"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                     <button onclick="window.deleteLink(${link.id})" class="p-2 bg-red-600 text-white rounded-full"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>` : ''}
             `;
             return el;
+        }
+
+        // --- Render View: Planner ---
+        window.renderPlannerView = function(container) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full max-w-4xl flex flex-col gap-4';
+
+            const headerRow = document.createElement('div');
+            headerRow.className = 'flex justify-between items-center mb-2';
+            headerRow.innerHTML = `
+                <h2 class="text-2xl font-black text-slate-100 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="calendar-days" class="w-6 h-6 text-blue-500"></i> Upcoming Events
+                </h2>
+                ${(isAdmin || isLeader) ? `
+                <button onclick="window.openPlannerModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
+                    <i data-lucide="plus" class="w-3 h-3"></i> Add Event
+                </button>
+                ` : ''}
+            `;
+            wrapper.appendChild(headerRow);
+
+            const sortedPlans = [...plans].sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
+                const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
+                return dateA.getTime() - dateB.getTime();
+            });
+
+            const now = new Date();
+            let nextEventId = null;
+            for (const p of sortedPlans) {
+                const pDate = new Date(`${p.date}T${p.time || '00:00'}`);
+                if (pDate >= now) { nextEventId = p.id; break; }
+            }
+
+            if (sortedPlans.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-20 opacity-50 font-bold uppercase tracking-widest text-sm text-slate-500';
+                empty.innerHTML = '<i data-lucide="calendar-x-2" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No upcoming events scheduled.';
+                wrapper.appendChild(empty);
+            } else {
+                sortedPlans.forEach(plan => {
+                    const isNext = plan.id === nextEventId;
+                    const card = document.createElement('div');
+                    
+                    const d = new Date(`${plan.date}T00:00:00`);
+                    const monthStr = isNaN(d.getTime()) ? plan.date : d.toLocaleDateString('en-US', { month: 'short' });
+                    const dayStr = isNaN(d.getTime()) ? '' : d.getDate();
+                    
+                    let timeStr = plan.time;
+                    if(plan.time) {
+                        let [h, m] = plan.time.split(':');
+                        let ampm = h >= 12 ? 'PM' : 'AM';
+                        h = h % 12; h = h ? h : 12; 
+                        timeStr = `${h}:${m} ${ampm}`;
+                    }
+
+                    const nextBadge = isNext ? `<span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest font-black shadow-sm ml-2 whitespace-nowrap self-start mt-0.5">Next Up</span>` : '';
+                    
+                    card.className = `plan-card p-3 sm:p-4 flex flex-row gap-3 sm:gap-4 relative group transition-all duration-300 ${isNext ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-950 scale-[1.02] shadow-xl z-10' : ''}`;
+                    card.style.borderLeftColor = plan.color || '#FDC82F';
+                    
+                    card.innerHTML = `
+                        ${(isAdmin || isLeader) ? `
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                            <button onclick="window.openPlannerModal(${plan.id})" class="p-1.5 bg-slate-800 text-blue-400 rounded-lg hover:bg-blue-900/30 shadow-sm"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="window.deletePlan(${plan.id})" class="p-1.5 bg-slate-800 text-red-400 rounded-lg hover:bg-red-900/30 shadow-sm"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="w-12 sm:w-16 flex-shrink-0 flex flex-col items-center justify-center border-r border-slate-800 pr-2 sm:pr-3">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-none">${monthStr}</span>
+                            <span class="text-xl sm:text-2xl font-black text-blue-400 leading-none my-0.5">${dayStr}</span>
+                            <span class="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-slate-500 leading-none text-center">${timeStr}</span>
+                        </div>
+                        
+                        <div class="flex-grow flex flex-col justify-center min-w-0 pr-8 sm:pr-12">
+                            <div class="flex flex-row items-center w-full">
+                                <h4 class="text-sm sm:text-base font-black uppercase tracking-widest text-slate-100 truncate">${plan.type}</h4>
+                                ${nextBadge}
+                            </div>
+                            ${plan.title ? `<div class="text-xs sm:text-sm font-bold text-slate-300 truncate mt-0.5">${plan.title}</div>` : ''}
+                            ${plan.details ? `<div class="text-[10px] sm:text-[11px] text-slate-400 line-clamp-2 mt-0.5 leading-snug">${plan.details}</div>` : ''}
+                            ${(plan.leader && plan.leader !== 'N/A') ? `<div class="mt-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500"><i data-lucide="user" class="w-3 h-3"></i> Lead: <span class="text-slate-300">${plan.leader}</span></div>` : ''}
+                        </div>
+                    `;
+                    wrapper.appendChild(card);
+                });
+            }
+            container.appendChild(wrapper);
+        }
+
+        window.buildPlannerDropdowns = function(selectedType = '', selectedLeader = '', selectedTime = '') {
+            const timeSelect = document.getElementById('plan-time');
+            const typeSelect = document.getElementById('plan-type');
+            const leaderSelect = document.getElementById('plan-leader');
+            
+            timeSelect.innerHTML = '';
+            for(let h=0; h<24; h++) {
+                for(let m=0; m<60; m+=15) {
+                    const hh = h.toString().padStart(2, '0');
+                    const mm = m.toString().padStart(2, '0');
+                    const val = `${hh}:${mm}`;
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    let dispH = h % 12 || 12;
+                    let ampm = h < 12 ? 'AM' : 'PM';
+                    opt.text = `${dispH}:${mm} ${ampm}`;
+                    if (val === selectedTime) opt.selected = true;
+                    timeSelect.appendChild(opt);
+                }
+            }
+
+            typeSelect.innerHTML = '';
+            eventTypes.forEach(t => {
+                const opt = document.createElement('option'); opt.value = t; opt.text = t;
+                if (t === selectedType) opt.selected = true;
+                typeSelect.appendChild(opt);
+            });
+
+            leaderSelect.innerHTML = '<option value="N/A">N/A</option>';
+            leaders.forEach(l => {
+                if (l === 'N/A') return;
+                const opt = document.createElement('option'); opt.value = l; opt.text = l;
+                if (l === selectedLeader) opt.selected = true;
+                leaderSelect.appendChild(opt);
+            });
+            if (!selectedLeader || selectedLeader === 'N/A') leaderSelect.value = 'N/A';
+        }
+
+        window.manageArray = function(arrayName, action) {
+            let arr = arrayName === 'eventTypes' ? eventTypes : leaders;
+            const selectId = arrayName === 'eventTypes' ? 'plan-type' : 'plan-leader';
+            const selectEl = document.getElementById(selectId);
+            
+            if (action === 'add') {
+                const item = prompt(`Enter new ${arrayName === 'eventTypes' ? 'Event Type' : 'Leader'}:`);
+                if (item && item.trim() && !arr.includes(item.trim())) {
+                    arr.push(item.trim());
+                    window.syncToCloud();
+                    window.buildPlannerDropdowns(
+                        arrayName === 'eventTypes' ? item.trim() : document.getElementById('plan-type').value, 
+                        arrayName === 'leaders' ? item.trim() : document.getElementById('plan-leader').value,
+                        document.getElementById('plan-time').value
+                    );
+                }
+            } else if (action === 'remove') {
+                const val = selectEl.value;
+                if (val === 'N/A') { window.showToast("Cannot remove N/A", true); return; }
+                if (val && confirm(`Permanently remove "${val}" from the list?`)) {
+                    if(arrayName === 'eventTypes') eventTypes = eventTypes.filter(i => i !== val);
+                    else leaders = leaders.filter(i => i !== val);
+                    window.syncToCloud();
+                    window.buildPlannerDropdowns(
+                        document.getElementById('plan-type').value, 
+                        document.getElementById('plan-leader').value,
+                        document.getElementById('plan-time').value
+                    );
+                }
+            }
+        }
+
+        window.openPlannerModal = function(id = null) {
+            if (!isAdmin && !isLeader) return;
+            currentEditId = id;
+            let plan = id ? plans.find(p => p.id === id) : null;
+            
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+
+            document.getElementById('plan-modal-title').innerHTML = `<i data-lucide="calendar" class="w-5 h-5 text-yellow-500"></i> ${plan ? 'Edit Event' : 'New Event'}`;
+            document.getElementById('plan-date').value = plan ? plan.date : todayStr;
+            document.getElementById('plan-title').value = plan?.title || '';
+            document.getElementById('plan-details').value = plan?.details || '';
+            document.getElementById('plan-color').value = plan?.color || '#FDC82F';
+            
+            window.buildPlannerDropdowns(plan?.type, plan?.leader, plan?.time || '18:00');
+            
+            document.getElementById('planner-modal').classList.replace('hidden', 'flex');
+            if (window.lucide) window.lucide.createIcons();
+            setTimeout(() => { document.querySelectorAll('#planner-modal textarea').forEach(el => window.autoResizeTextarea(el)); }, 10);
+        }
+
+        window.closePlannerModal = () => document.getElementById('planner-modal').classList.replace('flex', 'hidden');
+
+        window.savePlan = function() {
+            if (!isAdmin && !isLeader) return;
+            const date = document.getElementById('plan-date').value;
+            const time = document.getElementById('plan-time').value;
+            const type = document.getElementById('plan-type').value;
+            const title = document.getElementById('plan-title').value;
+            const details = document.getElementById('plan-details').value;
+            const leader = document.getElementById('plan-leader').value;
+            const color = document.getElementById('plan-color').value;
+
+            if(!date) { window.showToast("Date is required", true); return; }
+
+            const currentTimestamp = Date.now();
+            if (currentEditId) {
+                const p = plans.find(p => p.id === currentEditId);
+                if (p) { p.date = date; p.time = time; p.type = type; p.title = title; p.details = details; p.leader = leader; p.color = color; p.editedAt = currentTimestamp; }
+            } else {
+                plans.push({ id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader, color });
+            }
+
+            window.closePlannerModal(); window.render(); window.syncToCloud();
+        }
+
+        window.deletePlan = function(id) {
+            if (!isAdmin && !isLeader) return;
+            if(confirm("Remove this event from the planner?")) {
+                plans = plans.filter(p => p.id !== id); window.render(); window.syncToCloud();
+            }
+        }
+
+        // --- Render View: Volunteer Portal ---
+        window.renderVolunteerView = function(container) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full max-w-4xl flex flex-col gap-4';
+
+            const headerRow = document.createElement('div');
+            headerRow.className = 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4';
+            headerRow.innerHTML = `
+                <h2 class="text-2xl font-black text-slate-100 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="users" class="w-6 h-6 text-red-500"></i> Volunteer Portal
+                </h2>
+                ${isAdmin ? `
+                <button onclick="window.openVolunteerModal()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
+                    <i data-lucide="plus" class="w-3 h-3"></i> Add Position
+                </button>` : ''}
+            `;
+            wrapper.appendChild(headerRow);
+
+            if (volunteers.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-20 opacity-50 font-bold uppercase tracking-widest text-sm text-slate-500';
+                empty.innerHTML = '<i data-lucide="user-x" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No volunteer positions listed.';
+                wrapper.appendChild(empty);
+            } else {
+                const listContainer = document.createElement('div');
+                listContainer.id = 'volunteer-list';
+                listContainer.className = 'flex flex-col gap-4 w-full';
+
+                volunteers.forEach(vol => {
+                    const card = document.createElement('div');
+                    card.className = 'vol-card p-6 flex flex-col relative group';
+                    card.dataset.id = vol.id;
+                    
+                    let volNameDisplay = vol.name && vol.name.trim() !== '' 
+                        ? `<span class="text-xl font-black text-slate-100">${vol.name}</span>`
+                        : `<span class="text-sm font-black text-red-400 tracking-widest uppercase animate-pulse border-2 border-red-500/30 px-3 py-1.5 rounded-xl bg-red-500/10 inline-block w-fit mt-1">VACANT</span>`;
+
+                    let respList = '';
+                    if(vol.responsibilities) {
+                        const items = vol.responsibilities.split('\n').filter(i => i.trim() !== '');
+                        if(items.length > 0) {
+                            respList = '<ul class="mt-4 space-y-2">';
+                            items.forEach(item => {
+                                respList += `<li class="flex items-start gap-2.5 text-sm text-slate-400"><i data-lucide="check-circle-2" class="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0"></i> <span class="leading-relaxed">${item}</span></li>`;
+                            });
+                            respList += '</ul>';
+                        }
+                    }
+
+                    card.innerHTML = `
+                        ${isAdmin ? `
+                        <div class="absolute top-4 right-4 flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <button class="vol-drag-handle p-2 bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg transition-colors cursor-move" title="Drag to reorder"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
+                            <button onclick="window.openVolunteerModal(${vol.id})" class="p-2 bg-slate-800 text-blue-400 rounded-lg hover:bg-blue-900/30 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="window.deleteVolunteer(${vol.id})" class="p-2 bg-slate-800 text-red-400 rounded-lg hover:bg-red-900/30 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>` : ''}
+                        <div class="flex flex-col pr-24 sm:pr-28">
+                            <h4 class="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-500 mb-1">${vol.position}</h4>
+                            <div class="mb-2">${volNameDisplay}</div>
+                            ${vol.description ? `<p class="text-sm italic text-slate-400 border-l-2 border-slate-700 pl-3 my-2">${vol.description}</p>` : ''}
+                            ${respList}
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+                
+                wrapper.appendChild(listContainer);
+
+                if (isAdmin && window.Sortable) {
+                    setTimeout(() => {
+                        const el = document.getElementById('volunteer-list');
+                        if (el) {
+                            new Sortable(el, {
+                                animation: 250,
+                                handle: '.vol-drag-handle',
+                                onEnd: function() {
+                                    const newOrderIds = Array.from(el.children).map(child => parseInt(child.dataset.id));
+                                    const newVolunteers = [];
+                                    newOrderIds.forEach(id => {
+                                        const vol = volunteers.find(v => v.id === id);
+                                        if (vol) newVolunteers.push(vol);
+                                    });
+                                    volunteers = newVolunteers;
+                                    window.syncToCloud();
+                                }
+                            });
+                        }
+                    }, 50);
+                }
+            }
+
+            container.appendChild(wrapper);
+        }
+
+        window.openVolunteerModal = function(id = null) {
+            currentEditId = id;
+            let vol = id ? volunteers.find(v => v.id === id) : null;
+
+            document.getElementById('vol-position').value = vol ? vol.position : '';
+            document.getElementById('vol-name').value = vol ? vol.name : '';
+            document.getElementById('vol-description').value = vol ? vol.description : '';
+            document.getElementById('vol-responsibilities').value = vol ? vol.responsibilities : '';
+
+            document.getElementById('volunteer-modal').classList.replace('hidden', 'flex');
+            setTimeout(() => window.autoResizeTextarea(document.getElementById('vol-responsibilities')), 10);
+        }
+
+        window.closeVolunteerModal = () => document.getElementById('volunteer-modal').classList.replace('flex', 'hidden');
+
+        window.saveVolunteer = function() {
+            const position = document.getElementById('vol-position').value;
+            const name = document.getElementById('vol-name').value;
+            const description = document.getElementById('vol-description').value;
+            const responsibilities = document.getElementById('vol-responsibilities').value;
+
+            if(!position) { window.showToast("Position Name is required", true); return; }
+
+            if (currentEditId) {
+                const v = volunteers.find(v => v.id === currentEditId);
+                if (v) { v.position = position; v.name = name; v.description = description; v.responsibilities = responsibilities; }
+            } else {
+                volunteers.push({ id: Date.now(), position, name, description, responsibilities });
+            }
+
+            window.closeVolunteerModal(); window.render(); window.syncToCloud();
+        }
+
+        window.deleteVolunteer = function(id) {
+            if(confirm("Remove this volunteer position?")) {
+                volunteers = volunteers.filter(v => v.id !== id); window.render(); window.syncToCloud();
+            }
+        }
+
+        // --- Render View: Committee Notes ---
+        window.renderCommitteeView = function(container) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full max-w-4xl flex flex-col gap-4';
+
+            const headerRow = document.createElement('div');
+            headerRow.className = 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4';
+            headerRow.innerHTML = `
+                <h2 class="text-2xl font-black text-slate-100 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="users" class="w-6 h-6 text-blue-500"></i> Committee Notes
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="window.exportAllNotes()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-full font-bold uppercase tracking-widest text-[10px] shadow-sm transition-colors flex items-center gap-2">
+                        <i data-lucide="download" class="w-3 h-3"></i> Export Full PDF
+                    </button>
+                    ${isAdmin ? `
+                    <button onclick="window.openCommitteeModal(null, 'committee')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Committee Meeting
+                    </button>
+                    <button onclick="window.openCommitteeModal(null, 'roundtable')" class="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Roundtable
+                    </button>
+                    ` : ''}
+                </div>
+            `;
+            wrapper.appendChild(headerRow);
+
+            const sortedNotes = [...committeeNotes].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (sortedNotes.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center py-20 opacity-50 font-bold uppercase tracking-widest text-sm text-slate-500';
+                empty.innerHTML = '<i data-lucide="folder-open" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No meeting notes recorded.';
+                wrapper.appendChild(empty);
+            } else {
+                sortedNotes.forEach(note => {
+                    const card = document.createElement('div');
+                    const isExpanded = expandedCommNotes.includes(note.id);
+                    const isRT = note.type === 'roundtable';
+                    
+                    card.className = `${isRT ? 'rt-card' : 'comm-card'} p-5 flex flex-col cursor-pointer hover:-translate-y-1`;
+                    card.onclick = (e) => { if (!e.target.closest('button')) window.toggleCommitteeNote(note.id); };
+
+                    const d = new Date(`${note.date}T00:00:00`);
+                    const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    let innerHTML = `
+                        <div class="flex justify-between items-center w-full">
+                            <div class="flex flex-col">
+                                <span class="font-bold ${isRT ? 'text-yellow-500' : 'text-blue-400'} text-base md:text-lg flex items-center gap-2">
+                                    ${dateStr}
+                                    ${isRT ? '<span class="px-2 py-0.5 bg-yellow-900/40 text-yellow-400 text-[9px] uppercase tracking-widest rounded-md">Roundtable</span>' : ''}
+                                </span>
+                                <span class="italic text-slate-500 text-xs mt-1 flex items-center gap-1.5"><i data-lucide="users" class="w-3 h-3"></i> ${note.attendees || 'No attendees listed'}</span>
+                            </div>
+                            <div class="text-slate-500"><i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}"></i></div>
+                        </div>
+                    `;
+
+                    if (isExpanded) {
+                        innerHTML += `
+                            <div class="mt-4 border-t border-slate-800 pt-4 cursor-default text-sm text-slate-300 space-y-4" onclick="(e) => e.stopPropagation()">
+                                ${!isRT ? `
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                                        <span class="font-black text-slate-500 uppercase text-[9px] tracking-widest block mb-1">Finances</span>
+                                        <div><strong class="text-xs">Cash on Hand:</strong> <span class="text-xs">$${note.cashOnHand || '0.00'}</span></div>
+                                        <div class="mt-1"><strong class="text-xs">Notes:</strong> <span class="text-xs">${note.financeNotes || '-'}</span></div>
+                                    </div>
+                                    <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                                        <span class="font-black text-slate-500 uppercase text-[9px] tracking-widest block mb-1">Volunteer Status</span>
+                                        <div class="text-xs">${note.volunteerStatus || '-'}</div>
+                                    </div>
+                                </div>
+                                ` : `
+                                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                                    <span class="font-black text-slate-500 uppercase text-[9px] tracking-widest block mb-1">Volunteer Status Update</span>
+                                    <div class="text-xs">${note.volunteerStatus || '-'}</div>
+                                </div>
+                                `}
+
+                                ${!isRT ? `
+                                <div class="bg-slate-800/50 rounded-lg border border-slate-700 overflow-hidden">
+                                    <div class="grid grid-cols-[90px_1fr] sm:grid-cols-[120px_1fr] border-b border-slate-700">
+                                        <div class="p-2 sm:p-3 bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Current Mo.</div>
+                                        <div class="p-2 text-xs space-y-1">
+                                            <div><strong class="text-slate-500">Pack Mtg:</strong> ${note.cp || '-'}</div>
+                                            <div><strong class="text-slate-500">Outing:</strong> ${note.co || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-[90px_1fr] sm:grid-cols-[120px_1fr] border-b border-slate-700">
+                                        <div class="p-2 sm:p-3 bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Next Month</div>
+                                        <div class="p-2 text-xs space-y-1">
+                                            <div><strong class="text-slate-500">Pack Mtg:</strong> ${note.np || '-'}</div>
+                                            <div><strong class="text-slate-500">Outing:</strong> ${note.no || '-'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-[90px_1fr] sm:grid-cols-[120px_1fr]">
+                                        <div class="p-2 sm:p-3 bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 flex items-center">Following Mo.</div>
+                                        <div class="p-2 text-xs space-y-1">
+                                            <div><strong class="text-slate-500">Pack Mtg:</strong> ${note.fp || '-'}</div>
+                                            <div><strong class="text-slate-500">Outing:</strong> ${note.fo || '-'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="font-black text-slate-500 uppercase text-[9px] tracking-widest block mb-1">Action Items</span>
+                                    <div class="text-xs whitespace-pre-wrap bg-slate-800/50 p-3 rounded-lg border border-slate-700">${note.action || '-'}</div>
+                                </div>
+                                ` : ''}
+
+                                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 flex flex-col sm:flex-row gap-2 sm:gap-4">
+                                    <div class="whitespace-nowrap"><span class="font-black text-slate-500 uppercase text-[9px] tracking-widest block mb-1">Round Table Name</span><div class="text-xs font-bold">${note.rtName || '-'}</div></div>
+                                    <div class="w-full"><span class="font-black text-slate-500 uppercase text-[9px] tracking-widest block mb-1">Comments</span><div class="text-xs italic">${note.rtComments || '-'}</div></div>
+                                </div>
+
+                                ${!isRT && note.notes ? `
+                                <div class="mt-4 pt-4 border-t border-dashed border-slate-700">
+                                    <span class="font-black text-slate-500 uppercase text-[9px] tracking-widest block mb-1">Legacy / General Notes</span>
+                                    <div class="text-xs whitespace-pre-wrap">${note.notes}</div>
+                                </div>
+                                ` : ''}
+                                
+                                <div class="mt-6 flex justify-end gap-2 sm:gap-3 border-t border-slate-800 pt-4">
+                                    <button onclick="window.exportSingleNote(${note.id})" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-colors flex items-center gap-1.5">
+                                        <i data-lucide="file-down" class="w-3 h-3"></i> PDF
+                                    </button>
+                                    ${isAdmin ? `
+                                    <button onclick="window.openCommitteeModal(${note.id}, '${note.type || 'committee'}')" class="px-3 py-2 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-colors flex items-center gap-1.5">
+                                        <i data-lucide="unlock" class="w-3 h-3"></i> Edit
+                                    </button>
+                                    <button onclick="window.deleteCommitteeNote(${note.id})" class="px-3 py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-colors flex items-center gap-1.5">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i> Delete
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    card.innerHTML = innerHTML;
+                    wrapper.appendChild(card);
+                });
+            }
+
+            container.appendChild(wrapper);
+        }
+
+        window.toggleCommitteeNote = function(id) {
+            if (expandedCommNotes.includes(id)) expandedCommNotes = expandedCommNotes.filter(n => n !== id);
+            else expandedCommNotes.push(id);
+            window.render();
+        }
+
+        window.openCommitteeModal = function(id = null, type = 'committee') {
+            currentCommType = type;
+            if (!id) {
+                id = Date.now();
+                const todayStr = new Date().toISOString().split('T')[0];
+                committeeNotes.push({ id: id, type: type, date: todayStr, attendees: '', cashOnHand: '', financeNotes: '', volunteerStatus: '', cp: '', co: '', np: '', no: '', fp: '', fo: '', action: '', rtName: '', rtComments: '', notes: '' });
+                window.syncToCloud();
+            }
+            
+            currentCommEditId = id;
+            const note = committeeNotes.find(n => n.id === id);
+            currentCommType = note.type || 'committee'; 
+            
+            document.getElementById('comm-date').value = note.date || '';
+            document.getElementById('comm-attendees').value = note.attendees || '';
+            document.getElementById('comm-cash').value = note.cashOnHand || '';
+            document.getElementById('comm-finance').value = note.financeNotes || '';
+            document.getElementById('comm-volunteer').value = note.volunteerStatus || '';
+            document.getElementById('comm-cp').value = note.cp || '';
+            document.getElementById('comm-co').value = note.co || '';
+            document.getElementById('comm-np').value = note.np || '';
+            document.getElementById('comm-no').value = note.no || '';
+            document.getElementById('comm-fp').value = note.fp || '';
+            document.getElementById('comm-fo').value = note.fo || '';
+            document.getElementById('comm-action').value = note.action || '';
+            document.getElementById('comm-rtname').value = note.rtName || '';
+            document.getElementById('comm-rtcomments').value = note.rtComments || '';
+            document.getElementById('comm-notes').value = note.notes || '';
+            
+            const isRT = currentCommType === 'roundtable';
+            document.getElementById('comm-modal-title').innerHTML = isRT 
+                ? '<i data-lucide="users" class="w-5 h-5 text-yellow-500"></i> Roundtable Notes'
+                : '<i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i> Meeting Minutes';
+            document.getElementById('comm-modal-panel').className = `bg-slate-900 rounded-3xl w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-8 ${isRT ? 'border-yellow-500' : 'border-blue-600'} my-auto`;
+
+            document.getElementById('comm-finance-row').style.display = isRT ? 'none' : '';
+            document.getElementById('comm-planner-row').style.display = isRT ? 'none' : '';
+            document.getElementById('comm-action-row').style.display = isRT ? 'none' : '';
+            document.getElementById('comm-legacy-container').style.display = isRT ? 'none' : '';
+
+            const statusEl = document.getElementById('comm-save-status');
+            statusEl.innerText = 'Ready';
+            statusEl.className = 'text-slate-500 text-[9px] font-bold uppercase tracking-widest mt-0.5';
+            
+            document.getElementById('committee-modal').classList.replace('hidden', 'flex');
+            if (window.lucide) window.lucide.createIcons();
+
+            setTimeout(() => {
+                document.querySelectorAll('#committee-modal textarea').forEach(el => {
+                    if(el.closest('div').style.display !== 'none') window.autoResizeTextarea(el);
+                });
+            }, 10);
+        }
+
+        window.closeCommitteeModal = function() {
+            const note = committeeNotes.find(n => n.id === currentCommEditId);
+            if (note && !note.notes?.trim() && !note.attendees?.trim() && !note.cashOnHand?.trim() && !note.cp?.trim() && !note.action?.trim() && !note.rtComments?.trim()) {
+                committeeNotes = committeeNotes.filter(n => n.id !== currentCommEditId);
+                window.syncToCloud();
+            }
+            document.getElementById('committee-modal').classList.replace('flex', 'hidden');
+            window.render(); 
+        }
+
+        window.triggerCommAutoSave = function() {
+            const statusEl = document.getElementById('comm-save-status');
+            statusEl.innerText = 'Saving...';
+            statusEl.className = 'text-yellow-500 text-[9px] font-bold uppercase tracking-widest mt-0.5';
+            
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const note = committeeNotes.find(n => n.id === currentCommEditId);
+                if (note) {
+                    note.type = currentCommType;
+                    note.date = document.getElementById('comm-date').value;
+                    note.attendees = document.getElementById('comm-attendees').value;
+                    note.cashOnHand = document.getElementById('comm-cash').value;
+                    note.financeNotes = document.getElementById('comm-finance').value;
+                    note.volunteerStatus = document.getElementById('comm-volunteer').value;
+                    note.cp = document.getElementById('comm-cp').value;
+                    note.co = document.getElementById('comm-co').value;
+                    note.np = document.getElementById('comm-np').value;
+                    note.no = document.getElementById('comm-no').value;
+                    note.fp = document.getElementById('comm-fp').value;
+                    note.fo = document.getElementById('comm-fo').value;
+                    note.action = document.getElementById('comm-action').value;
+                    note.rtName = document.getElementById('comm-rtname').value;
+                    note.rtComments = document.getElementById('comm-rtcomments').value;
+                    note.notes = document.getElementById('comm-notes').value;
+                    window.syncToCloud();
+                    
+                    statusEl.innerText = 'Saved';
+                    statusEl.className = 'text-green-500 text-[9px] font-bold uppercase tracking-widest mt-0.5';
+                }
+            }, 1000); 
+        }
+
+        window.deleteCommitteeNote = function(id) {
+            if(confirm("Permanently delete this meeting's minutes?")) {
+                committeeNotes = committeeNotes.filter(n => n.id !== id); window.syncToCloud(); window.render();
+            }
+        }
+
+        window.getPDFTemplateHTML = function(note) {
+            const d = new Date(`${note.date}T00:00:00`);
+            const dateStr = isNaN(d) ? note.date : d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const isRT = note.type === 'roundtable';
+
+            return `
+                <div style="font-family: Helvetica, Arial, sans-serif; padding: 20px;">
+                    <h1 style="color: ${isRT ? '#b45309' : '#003F87'}; font-size: 22px; font-weight: 900; border-bottom: 3px solid #FDC82F; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase;">
+                        ${isRT ? 'Roundtable Notes' : 'Committee Meeting Minutes'}
+                    </h1>
+                    <div style="margin-bottom: 20px; font-size: 12px;">
+                        <span style="display:inline-block; width: 70px;"><strong>Date:</strong></span> ${dateStr}<br/>
+                        <span style="display:inline-block; width: 70px;"><strong>Attendees:</strong></span> ${note.attendees || 'None specified'}
+                    </div>
+                    ${!isRT ? `
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 100px; background: #f1f5f9;">Cash on Hand</th>
+                            <td style="border: 1px solid #000; padding: 6px; width: 100px;">$${note.cashOnHand || '0.00'}</td>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 100px; background: #f1f5f9;">Finance Notes</th>
+                            <td style="border: 1px solid #000; padding: 6px;">${note.financeNotes || ''}</td>
+                        </tr>
+                    </table>
+                    ` : ''}
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr><th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Volunteer Status Update</th></tr>
+                        <tr><td style="border: 1px solid #000; padding: 6px; height: 25px;">${note.volunteerStatus || ''}</td></tr>
+                    </table>
+                    ${!isRT ? `
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 100px; background: #f1f5f9;">Current Month</th>
+                            <td style="border: 1px solid #000; padding: 4px 6px;">
+                                <div style="margin-bottom:2px;"><strong>Pack Meeting:</strong> ${note.cp || ''}</div>
+                                <div><strong>Outing:</strong> ${note.co || ''}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Next Month</th>
+                            <td style="border: 1px solid #000; padding: 4px 6px;">
+                                <div style="margin-bottom:2px;"><strong>Pack Meeting:</strong> ${note.np || ''}</div>
+                                <div><strong>Outing:</strong> ${note.no || ''}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Following Month</th>
+                            <td style="border: 1px solid #000; padding: 4px 6px;">
+                                <div style="margin-bottom:2px;"><strong>Pack Meeting:</strong> ${note.fp || ''}</div>
+                                <div><strong>Outing:</strong> ${note.fo || ''}</div>
+                            </td>
+                        </tr>
+                    </table>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr><th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Action Items</th></tr>
+                        <tr><td style="border: 1px solid #000; padding: 6px; height: 50px; white-space: pre-wrap; vertical-align: top;">${note.action || ''}</td></tr>
+                    </table>
+                    ` : ''}
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px;">
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 120px; background: #f1f5f9;">Round Table Name</th>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: left; background: #f1f5f9;">Comments</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">${note.rtName || ''}</td>
+                            <td style="border: 1px solid #000; padding: 6px; vertical-align: top; white-space: pre-wrap;">${note.rtComments || ''}</td>
+                        </tr>
+                    </table>
+                    ${!isRT && note.notes ? `
+                    <div style="font-size: 11px; margin-top: 20px;">
+                        <strong>Legacy / General Notes:</strong><br/>
+                        <div style="white-space: pre-wrap; margin-top: 5px; color: #444;">${note.notes}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        window.exportSingleNote = function(id) {
+            const note = committeeNotes.find(n => n.id === id);
+            if(!note) return;
+            
+            window.showToast("Generating PDF...");
+            const element = document.createElement('div');
+            element.innerHTML = window.getPDFTemplateHTML(note);
+
+            html2pdf().set({
+                margin: 10, filename: `Pack_${note.type === 'roundtable' ? 'Roundtable' : 'Minutes'}_${note.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            }).from(element).save();
+        }
+
+        window.exportAllNotes = function() {
+            if(committeeNotes.length === 0) { window.showToast("No history to export.", true); return; }
+            
+            window.showToast("Generating Full History PDF...");
+            const sortedNotes = [...committeeNotes].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const container = document.createElement('div');
+
+            sortedNotes.forEach((note, index) => {
+                const noteDiv = document.createElement('div');
+                noteDiv.innerHTML = window.getPDFTemplateHTML(note);
+                if(index < sortedNotes.length - 1) noteDiv.innerHTML += `<div class="html2pdf__page-break"></div>`;
+                container.appendChild(noteDiv);
+            });
+
+            html2pdf().set({
+                margin: 0, filename: `Complete_Committee_History.pdf`,
+                image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 },
+                pagebreak: { mode: 'css', before: '.html2pdf__page-break' },
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            }).from(container).save();
         }
 
         // --- Render Engine & Utilities ---
@@ -480,19 +1372,29 @@
 
             const c = document.getElementById('main-container'); c.innerHTML = '';
             if(currentView === 'links') window.renderLinksView(c);
-            else if(currentView === 'planner') c.innerHTML = "<div class='text-center py-20 text-slate-500 font-bold uppercase'>Planner View Logic Maintained in Memory</div>";
-            else c.innerHTML = "<div class='text-center py-20 text-slate-500 font-bold uppercase'>Secondary Views Operational</div>";
+            else if(currentView === 'planner') window.renderPlannerView(c);
+            else if(currentView === 'volunteer') window.renderVolunteerView(c);
+            else if(currentView === 'committee') window.renderCommitteeView(c);
             
             document.getElementById('home-btn').classList.toggle('hidden', currentView === 'links');
             const adminBtn = document.getElementById('admin-toggle-btn');
             if(isAdmin && currentView === 'links') {
                 adminBtn.classList.remove('hidden');
                 adminBtn.innerHTML = isEditing ? '<i data-lucide="settings" class="w-4 h-4 text-blue-900"></i><span class="text-xs">Done</span>' : '<i data-lucide="settings" class="w-4 h-4"></i><span class="text-xs">Edit</span>';
-                adminBtn.className = isEditing ? "flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 font-bold uppercase shadow-lg text-blue-900" : "flex items-center gap-2 px-4 py-3 rounded-xl bg-white shadow-lg font-bold uppercase text-slate-600";
+                adminBtn.className = isEditing ? "flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 font-bold uppercase shadow-lg text-blue-900" : "flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-800 shadow-lg font-bold uppercase text-slate-300";
             } else adminBtn.classList.add('hidden');
 
             document.getElementById('edit-header-btn').classList.toggle('hidden', !(isAdmin && isEditing && currentView === 'links'));
             
+            const lockBtn = document.getElementById('lock-btn');
+            if (isAdmin || isLeader) {
+                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-yellow-400 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="unlock" class="text-blue-900 w-5 h-5"></i>';
+            } else {
+                lockBtn.className = "w-12 h-12 rounded-[1rem] flex items-center justify-center bg-blue-600 shadow-2xl transition-all hover:scale-110 active:scale-95 z-50";
+                lockBtn.innerHTML = '<i data-lucide="lock" class="text-white w-5 h-5"></i>';
+            }
+
             if(window.lucide) window.lucide.createIcons();
             localStorage.setItem('scout_links', JSON.stringify(links));
             localStorage.setItem('scout_categories', JSON.stringify(categories));
@@ -506,9 +1408,9 @@
         window.closeLoginModal = () => document.getElementById('login-modal').classList.replace('flex','hidden');
         window.submitLogin = () => {
             const val = document.getElementById('login-password').value;
-            if(val === 'CoRf121') { isAdmin=isLeader=true; window.closeLoginModal(); window.render(); }
-            else if(val.toLowerCase() === 'plan121') { isAdmin=false; isLeader=true; currentView='planner'; window.closeLoginModal(); window.render(); }
-            else window.showToast("Invalid", true);
+            if(val === 'CoRf121') { isAdmin=isLeader=true; window.closeLoginModal(); window.render(); window.showToast("Admin Mode Unlocked"); }
+            else if(val.toLowerCase() === 'plan121') { isAdmin=false; isLeader=true; currentView='planner'; window.closeLoginModal(); window.render(); window.showToast("Planner View Unlocked"); }
+            else window.showToast("Invalid Key", true);
         };
         window.togglePasswordVisibility = () => { const i = document.getElementById('login-password'); i.type = i.type==='password'?'text':'password'; };
         
@@ -536,14 +1438,13 @@
         window.editCategory = (id) => { currentEditId = id; currentEditType = 'category'; document.getElementById('input-title').value = categories.find(c=>c.id===id).title; document.getElementById('modal-overlay').classList.replace('hidden','flex'); };
         window.closeModal = () => document.getElementById('modal-overlay').classList.replace('flex','hidden');
 
-        // Update preview logic exactly matching live object-contain rule
         window.updatePreview = () => {
             if(currentEditType==='category') return;
             const img = document.getElementById('preview-img');
             const z = document.getElementById('input-zoom').value || 1;
             
             img.src = document.getElementById('input-image').value || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png';
-            img.className = "absolute inset-0 w-full h-full object-contain pointer-events-none"; // FORCED MATCH to Live Tile
+            img.className = "absolute inset-0 w-full h-full object-contain pointer-events-none";
 
             let obj = currentEditType==='header'?settings:links.find(l=>l.id===currentEditId);
             if(obj) img.style.transform = `translate(${obj.x||0}%, ${obj.y||0}%) scale(${z})`;
@@ -566,7 +1467,6 @@
             window.closeModal(); window.render(); window.syncToCloud();
         };
 
-        // Zoom Drag
         document.getElementById('input-zoom').addEventListener('input', window.updatePreview);
         const pb = document.getElementById('preview-box');
         pb.addEventListener('mousedown', (e)=>{ if(currentEditType==='category')return; isDragging=true; startX=e.clientX; startY=e.clientY; });
