@@ -311,10 +311,10 @@
                                 <button onclick="window.manageArray('eventTypes', 'remove')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
                             </div>
                         </div>
-                        <select id="plan-type" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-all appearance-none cursor-pointer"></select>
+                        <select id="plan-type" onchange="window.updatePlanColorPicker()" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-all appearance-none cursor-pointer"></select>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Tile Border Color</label>
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Type Color</label>
                         <input type="color" id="plan-color" value="#FDC82F" class="w-full h-[56px] p-1 bg-slate-800 rounded-2xl cursor-pointer border-0 outline-none transition-all">
                     </div>
                 </div>
@@ -488,12 +488,25 @@
         let isAdmin = false; let isLeader = false; let isEditing = false; let currentView = 'links'; 
         const appId = 'pack-26-resources';
 
+        // Load Event Types (Converting Legacy strings to color-coded objects if needed)
+        let savedEventTypes = JSON.parse(localStorage.getItem('scout_event_types'));
+        let eventTypes = [];
+        if (savedEventTypes && savedEventTypes.length > 0) {
+            if (typeof savedEventTypes[0] === 'string') eventTypes = savedEventTypes.map(t => ({name: t, color: '#FDC82F'}));
+            else eventTypes = savedEventTypes;
+        } else {
+            eventTypes = [
+                {name: 'Pack Meeting', color: '#FDC82F'}, 
+                {name: 'Den Meeting', color: '#003F87'}, 
+                {name: 'Campout', color: '#CE1126'}
+            ];
+        }
+
         let categories = JSON.parse(localStorage.getItem('scout_categories')) || [{ id: 'default', title: 'General Resources' }];
         let links = JSON.parse(localStorage.getItem('scout_links')) || [{ id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default', isMaster: false }];
         let settings = JSON.parse(localStorage.getItem('scout_settings')) || { title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0 };
         let plans = JSON.parse(localStorage.getItem('scout_plans')) || [];
         let committeeNotes = JSON.parse(localStorage.getItem('scout_committee')) || [];
-        let eventTypes = JSON.parse(localStorage.getItem('scout_event_types')) || ['Pack Meeting', 'Den Meeting', 'Campout'];
         let leaders = JSON.parse(localStorage.getItem('scout_leaders')) || ['Cubmaster', 'Committee Chair'];
         let volunteers = JSON.parse(localStorage.getItem('scout_volunteers')) || [];
 
@@ -532,7 +545,14 @@
                                 const d = snap.data();
                                 if(d.categories) categories = d.categories; if(d.links) links = d.links; if(d.settings) settings = d.settings;
                                 if(d.plans) plans = d.plans; if(d.committeeNotes) committeeNotes = d.committeeNotes;
-                                if(d.eventTypes) eventTypes = d.eventTypes; if(d.leaders) leaders = d.leaders; if(d.volunteers) volunteers = d.volunteers;
+                                if(d.leaders) leaders = d.leaders; if(d.volunteers) volunteers = d.volunteers;
+                                if(d.eventTypes) {
+                                    if (d.eventTypes.length > 0 && typeof d.eventTypes[0] === 'string') {
+                                        eventTypes = d.eventTypes.map(t => ({name: t, color: '#FDC82F'}));
+                                    } else {
+                                        eventTypes = d.eventTypes;
+                                    }
+                                }
                                 window.render();
                             } else window.syncToCloud();
                         });
@@ -700,8 +720,11 @@
 
                     const nextBadge = isNext ? `<span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest font-black shadow-sm ml-2 whitespace-nowrap self-start mt-0.5">Next Up</span>` : '';
                     
+                    const typeObj = eventTypes.find(t => t.name === plan.type);
+                    const displayColor = typeObj ? typeObj.color : (plan.color || '#FDC82F');
+
                     card.className = `plan-card p-3 sm:p-4 flex flex-row gap-3 sm:gap-4 relative group transition-all duration-300 ${isNext ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-950 scale-[1.02] shadow-xl z-10' : ''}`;
-                    card.style.borderLeftColor = plan.color || '#FDC82F';
+                    card.style.borderLeftColor = displayColor;
                     
                     card.innerHTML = `
                         ${(isAdmin || isLeader) ? `
@@ -733,6 +756,12 @@
             container.appendChild(wrapper);
         }
 
+        window.updatePlanColorPicker = function() {
+            const val = document.getElementById('plan-type').value;
+            const t = eventTypes.find(x => x.name === val);
+            if(t) document.getElementById('plan-color').value = t.color || '#FDC82F';
+        };
+
         window.buildPlannerDropdowns = function(selectedType = '', selectedLeader = '', selectedTime = '') {
             const timeSelect = document.getElementById('plan-time');
             const typeSelect = document.getElementById('plan-type');
@@ -756,10 +785,11 @@
 
             typeSelect.innerHTML = '';
             eventTypes.forEach(t => {
-                const opt = document.createElement('option'); opt.value = t; opt.text = t;
-                if (t === selectedType) opt.selected = true;
+                const opt = document.createElement('option'); opt.value = t.name; opt.text = t.name;
+                if (t.name === selectedType) opt.selected = true;
                 typeSelect.appendChild(opt);
             });
+            window.updatePlanColorPicker();
 
             leaderSelect.innerHTML = '<option value="N/A">N/A</option>';
             leaders.forEach(l => {
@@ -772,26 +802,27 @@
         }
 
         window.manageArray = function(arrayName, action) {
-            let arr = arrayName === 'eventTypes' ? eventTypes : leaders;
             const selectId = arrayName === 'eventTypes' ? 'plan-type' : 'plan-leader';
             const selectEl = document.getElementById(selectId);
             
             if (action === 'add') {
                 const item = prompt(`Enter new ${arrayName === 'eventTypes' ? 'Event Type' : 'Leader'}:`);
-                if (item && item.trim() && !arr.includes(item.trim())) {
-                    arr.push(item.trim());
-                    window.syncToCloud();
-                    window.buildPlannerDropdowns(
-                        arrayName === 'eventTypes' ? item.trim() : document.getElementById('plan-type').value, 
-                        arrayName === 'leaders' ? item.trim() : document.getElementById('plan-leader').value,
-                        document.getElementById('plan-time').value
-                    );
+                if (item && item.trim()) {
+                    if (arrayName === 'eventTypes' && !eventTypes.find(t => t.name === item.trim())) {
+                        eventTypes.push({ name: item.trim(), color: '#FDC82F' });
+                        window.syncToCloud();
+                        window.buildPlannerDropdowns(item.trim(), document.getElementById('plan-leader').value, document.getElementById('plan-time').value);
+                    } else if (arrayName === 'leaders' && !leaders.includes(item.trim())) {
+                        leaders.push(item.trim());
+                        window.syncToCloud();
+                        window.buildPlannerDropdowns(document.getElementById('plan-type').value, item.trim(), document.getElementById('plan-time').value);
+                    }
                 }
             } else if (action === 'remove') {
                 const val = selectEl.value;
                 if (val === 'N/A') { window.showToast("Cannot remove N/A", true); return; }
                 if (val && confirm(`Permanently remove "${val}" from the list?`)) {
-                    if(arrayName === 'eventTypes') eventTypes = eventTypes.filter(i => i !== val);
+                    if(arrayName === 'eventTypes') eventTypes = eventTypes.filter(i => i.name !== val);
                     else leaders = leaders.filter(i => i !== val);
                     window.syncToCloud();
                     window.buildPlannerDropdowns(
@@ -815,7 +846,6 @@
             document.getElementById('plan-date').value = plan ? plan.date : todayStr;
             document.getElementById('plan-title').value = plan?.title || '';
             document.getElementById('plan-details').value = plan?.details || '';
-            document.getElementById('plan-color').value = plan?.color || '#FDC82F';
             
             window.buildPlannerDropdowns(plan?.type, plan?.leader, plan?.time || '18:00');
             
@@ -836,14 +866,18 @@
             const leader = document.getElementById('plan-leader').value;
             const color = document.getElementById('plan-color').value;
 
+            // Update the Event Type's color globally
+            const typeObj = eventTypes.find(t => t.name === type);
+            if (typeObj) typeObj.color = color;
+
             if(!date) { window.showToast("Date is required", true); return; }
 
             const currentTimestamp = Date.now();
             if (currentEditId) {
                 const p = plans.find(p => p.id === currentEditId);
-                if (p) { p.date = date; p.time = time; p.type = type; p.title = title; p.details = details; p.leader = leader; p.color = color; p.editedAt = currentTimestamp; }
+                if (p) { p.date = date; p.time = time; p.type = type; p.title = title; p.details = details; p.leader = leader; p.editedAt = currentTimestamp; }
             } else {
-                plans.push({ id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader, color });
+                plans.push({ id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader });
             }
 
             window.closePlannerModal(); window.render(); window.syncToCloud();
@@ -1396,6 +1430,10 @@
             }
 
             if(window.lucide) window.lucide.createIcons();
+            
+            // Backup State to Local Storage
+            localStorage.setItem('scout_event_types', JSON.stringify(eventTypes));
+            localStorage.setItem('scout_plans', JSON.stringify(plans));
             localStorage.setItem('scout_links', JSON.stringify(links));
             localStorage.setItem('scout_categories', JSON.stringify(categories));
             localStorage.setItem('scout_settings', JSON.stringify(settings));
