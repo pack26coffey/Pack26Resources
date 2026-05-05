@@ -601,7 +601,6 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Add auto resize function for textareas
         window.autoResizeTextarea = function(el) {
             el.style.height = 'auto';
             el.style.height = el.scrollHeight + 'px';
@@ -636,7 +635,6 @@
             headerBgType: 'default', headerBgColor: '#ffffff', headerBorderColor: '#facc15', headerBgImage: '', headerBgZoom: 1, headerBgX: 0, headerBgY: 0
         };
 
-        // Planner, Committee & Volunteers State
         let plans = JSON.parse(localStorage.getItem('scout_plans')) || [];
         let committeeNotes = JSON.parse(localStorage.getItem('scout_committee')) || [];
         let eventTypes = JSON.parse(localStorage.getItem('scout_event_types')) || ['Pack Meeting', 'Den Meeting', 'Campout', 'Blue & Gold', 'Pinewood Derby'];
@@ -677,8 +675,11 @@
             };
         }
 
+        if (fbConfig && fbConfig.apiKey) {
+            const app = initializeApp(fbConfig); auth = getAuth(app); db = getFirestore(app); useFirebase = true;
+        }
+
         if (useFirebase) {
-            const app = initializeApp(fbConfig); auth = getAuth(app); db = getFirestore(app);
             const initAuth = async () => {
                 try {
                     if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) await signInWithCustomToken(auth, window.__initial_auth_token);
@@ -902,6 +903,184 @@
             currentView = view;
             window.render();
         }
+
+        // --- Render View: Resource Links ---
+        window.renderLinksView = function(container) {
+            // 1. Master Tiles
+            const masterLinks = links.filter(l => l.isMaster);
+            if (masterLinks.length > 0 || isEditing) {
+                const masterContainer = document.createElement('div');
+                masterContainer.className = 'w-full mb-12';
+                
+                if (isEditing) {
+                    masterContainer.innerHTML = `<div class="flex justify-between items-center mb-6"><h3 class="text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Master Tiles</h3> <button onclick="window.addNewMasterLink()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-blue-200 transition"><i data-lucide="plus" class="inline w-3 h-3"></i> Add Master</button></div>`;
+                }
+                
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
+                grid.id = 'master-links-grid';
+                
+                masterLinks.forEach(link => {
+                    grid.appendChild(createLinkElement(link, true));
+                });
+                
+                masterContainer.appendChild(grid);
+                container.appendChild(masterContainer);
+                
+                if (isEditing && window.Sortable) {
+                    new Sortable(grid, {
+                        animation: 150, handle: '.drag-handle',
+                        onEnd: function() {
+                            const masterIds = Array.from(grid.children).map(c => parseInt(c.dataset.id));
+                            const otherLinks = links.filter(l => !l.isMaster);
+                            const sortedMasters = masterIds.map(id => links.find(l => l.id === id));
+                            links = [...sortedMasters, ...otherLinks];
+                            window.syncToCloud();
+                        }
+                    });
+                }
+            }
+
+            // 2. Categories
+            const catContainerWrapper = document.createElement('div');
+            catContainerWrapper.className = 'w-full flex flex-col gap-10';
+            catContainerWrapper.id = 'categories-container';
+
+            categories.forEach(cat => {
+                const catLinks = links.filter(l => l.categoryId === cat.id && !l.isMaster);
+                if (catLinks.length === 0 && !isEditing) return;
+
+                const catDiv = document.createElement('div');
+                catDiv.dataset.id = cat.id;
+                catDiv.className = 'w-full flex flex-col gap-4 relative group/cat';
+                
+                let catHeader = `
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest pl-2 border-l-4 border-yellow-400 flex items-center gap-2">
+                            ${isEditing ? `<button class="cat-drag-handle p-1 text-slate-300 hover:text-slate-500 cursor-move"><i data-lucide="grip-vertical" class="w-5 h-5 pointer-events-none"></i></button>` : ''}
+                            ${cat.title}
+                        </h2>
+                        ${isEditing ? `
+                        <div class="flex gap-2 opacity-0 group-hover/cat:opacity-100 transition-opacity">
+                            <button onclick="window.editCategory('${cat.id}')" class="p-2 bg-slate-200 dark:bg-slate-800 text-blue-600 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                            <button onclick="window.addNewLink('${cat.id}')" class="p-2 bg-slate-200 dark:bg-slate-800 text-green-600 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                            ${cat.id !== 'default' ? `<button onclick="window.deleteCategory('${cat.id}')" class="p-2 bg-slate-200 dark:bg-slate-800 text-red-600 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 min-h-[100px]';
+                grid.id = `grid-${cat.id}`;
+                grid.dataset.catId = cat.id;
+
+                catLinks.forEach(link => {
+                    grid.appendChild(createLinkElement(link, false));
+                });
+
+                catDiv.innerHTML = catHeader;
+                catDiv.appendChild(grid);
+                catContainerWrapper.appendChild(catDiv);
+
+                if (isEditing && window.Sortable) {
+                    new Sortable(grid, {
+                        group: 'shared', animation: 150, handle: '.drag-handle',
+                        onEnd: function(evt) {
+                            const itemEl = evt.item;
+                            const newCatId = evt.to.dataset.catId;
+                            const linkId = parseInt(itemEl.dataset.id);
+                            const link = links.find(l => l.id === linkId);
+                            if (link) link.categoryId = newCatId;
+                            
+                            const allGrids = document.querySelectorAll('[id^="grid-"]');
+                            let newLinksArr = links.filter(l => l.isMaster);
+                            allGrids.forEach(g => {
+                                Array.from(g.children).forEach(c => {
+                                    const id = parseInt(c.dataset.id);
+                                    const l = links.find(x => x.id === id);
+                                    if (l) newLinksArr.push(l);
+                                });
+                            });
+                            links = newLinksArr;
+                            window.syncToCloud();
+                        }
+                    });
+                }
+            });
+
+            container.appendChild(catContainerWrapper);
+
+            if (isEditing) {
+                const addCatBtn = document.createElement('button');
+                addCatBtn.onclick = window.addNewCategory;
+                addCatBtn.className = 'mt-12 px-8 py-4 border-4 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest rounded-[2rem] hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-3 w-full max-w-md mx-auto';
+                addCatBtn.innerHTML = '<i data-lucide="folder-plus" class="w-6 h-6"></i> Add New Category';
+                container.appendChild(addCatBtn);
+                
+                if (window.Sortable) {
+                    new Sortable(catContainerWrapper, {
+                        animation: 150, handle: '.cat-drag-handle',
+                        onEnd: function() {
+                            const catIds = Array.from(catContainerWrapper.children).map(c => c.dataset.id);
+                            const newCats = [];
+                            catIds.forEach(id => {
+                                const c = categories.find(x => x.id === id);
+                                if (c) newCats.push(c);
+                            });
+                            categories = newCats;
+                            window.syncToCloud();
+                        }
+                    });
+                }
+            }
+
+            function createLinkElement(link, isMaster) {
+                const el = document.createElement('div');
+                el.className = 'relative group';
+                el.dataset.id = link.id;
+                
+                const imgHtml = `
+                    <div class="image-viewport shadow-sm">
+                        <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
+                             class="absolute inset-0 w-full h-full object-cover" 
+                             style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom || 1})">
+                    </div>
+                `;
+                
+                let linkContent = '';
+                if (isMaster) {
+                    linkContent = `
+                        <a href="${link.url}" ${link.url.startsWith('#') ? '' : 'target="_blank"'} class="scout-card p-6 flex items-center gap-6 h-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <div class="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">${imgHtml}</div>
+                            <div class="flex flex-col">
+                                <h3 class="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest leading-tight">${link.title}</h3>
+                                <span class="text-xs md:text-sm font-bold text-slate-400 mt-1 uppercase tracking-widest flex items-center gap-1"><i data-lucide="${link.url.startsWith('#') ? 'layers' : 'external-link'}" class="w-3 h-3"></i> Open Resource</span>
+                            </div>
+                        </a>
+                    `;
+                } else {
+                    linkContent = `
+                        <a href="${link.url}" ${link.url.startsWith('#') ? '' : 'target="_blank"'} class="scout-card p-3 sm:p-4 flex flex-col items-center gap-3 sm:gap-4 h-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-center">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20">${imgHtml}</div>
+                            <h3 class="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest leading-tight line-clamp-2">${link.title}</h3>
+                        </a>
+                    `;
+                }
+
+                el.innerHTML = `
+                    ${linkContent}
+                    ${isEditing ? `
+                    <div class="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 scale-90 sm:scale-100">
+                        <button class="drag-handle p-2 bg-slate-800 text-slate-300 rounded-full shadow-lg cursor-move hover:bg-slate-700 hover:scale-110 transition"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
+                        <button onclick="window.editLink(${link.id})" class="p-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-500 hover:scale-110 transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="window.deleteLink(${link.id})" class="p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-500 hover:scale-110 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    ` : ''}
+                `;
+                return el;
+            }
+        };
 
         // --- Render View: Volunteer Portal ---
         window.renderVolunteerView = function(container) {
