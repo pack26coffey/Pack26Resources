@@ -952,7 +952,8 @@
 
                 const catDiv = document.createElement('div');
                 catDiv.dataset.id = cat.id;
-                catDiv.className = 'w-full flex flex-col gap-4 relative group/cat';
+                // Restored Bubble Styling Here:
+                catDiv.className = 'w-full flex flex-col gap-4 relative group/cat bg-white dark:bg-slate-800/40 rounded-[2rem] p-6 md:p-8 shadow-sm border border-slate-200/60 dark:border-slate-700/50';
                 
                 let catHeader = `
                     <div class="flex items-center justify-between mb-2">
@@ -1048,10 +1049,17 @@
                     </div>
                 `;
                 
+                // --- Fix for Internal Link Routing ---
+                let linkAction = `href="${link.url}" target="_blank"`;
+                if (link.url && link.url.startsWith('#')) {
+                    const targetView = link.url.replace('#', '');
+                    linkAction = `href="javascript:void(0)" onclick="window.switchView('${targetView}')"`;
+                }
+                
                 let linkContent = '';
                 if (isMaster) {
                     linkContent = `
-                        <a href="${link.url}" ${link.url.startsWith('#') ? '' : 'target="_blank"'} class="scout-card p-6 flex items-center gap-6 h-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <a ${linkAction} class="scout-card p-6 flex items-center gap-6 h-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
                             <div class="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">${imgHtml}</div>
                             <div class="flex flex-col">
                                 <h3 class="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest leading-tight">${link.title}</h3>
@@ -1061,7 +1069,7 @@
                     `;
                 } else {
                     linkContent = `
-                        <a href="${link.url}" ${link.url.startsWith('#') ? '' : 'target="_blank"'} class="scout-card p-3 sm:p-4 flex flex-col items-center gap-3 sm:gap-4 h-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-center">
+                        <a ${linkAction} class="scout-card p-3 sm:p-4 flex flex-col items-center gap-3 sm:gap-4 h-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-center">
                             <div class="w-16 h-16 sm:w-20 sm:h-20">${imgHtml}</div>
                             <h3 class="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest leading-tight line-clamp-2">${link.title}</h3>
                         </a>
