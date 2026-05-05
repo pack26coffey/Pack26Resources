@@ -691,9 +691,15 @@
 
             const now = new Date();
             let nextEventId = null;
-            for (const p of sortedPlans) {
-                const pDate = new Date(`${p.date}T${p.time || '00:00'}`);
-                if (pDate >= now) { nextEventId = p.id; break; }
+            let nextEventIndex = -1;
+            
+            for (let i = 0; i < sortedPlans.length; i++) {
+                const pDate = new Date(`${sortedPlans[i].date}T${sortedPlans[i].time || '00:00'}`);
+                if (pDate >= now) { 
+                    nextEventIndex = i;
+                    nextEventId = sortedPlans[i].id; 
+                    break; 
+                }
             }
 
             if (sortedPlans.length === 0) {
@@ -705,6 +711,7 @@
                 sortedPlans.forEach(plan => {
                     const isNext = plan.id === nextEventId;
                     const card = document.createElement('div');
+                    card.id = `plan-card-${plan.id}`;
                     
                     const d = new Date(`${plan.date}T00:00:00`);
                     const monthStr = isNaN(d.getTime()) ? plan.date : d.toLocaleDateString('en-US', { month: 'short' });
@@ -718,12 +725,14 @@
                         timeStr = `${h}:${m} ${ampm}`;
                     }
 
-                    const nextBadge = isNext ? `<span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest font-black shadow-sm ml-2 whitespace-nowrap self-start mt-0.5">Next Up</span>` : '';
+                    // Yellow highlight details for the Next Event
+                    const nextBadge = isNext ? `<span class="bg-yellow-500 text-slate-900 text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest font-black shadow-sm ml-2 whitespace-nowrap self-start mt-0.5">Next Up</span>` : '';
+                    const nextHighlightClasses = isNext ? 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-slate-950 scale-[1.02] shadow-xl z-10' : '';
                     
                     const typeObj = eventTypes.find(t => t.name === plan.type);
                     const displayColor = typeObj ? typeObj.color : (plan.color || '#FDC82F');
 
-                    card.className = `plan-card p-3 sm:p-4 flex flex-row gap-3 sm:gap-4 relative group transition-all duration-300 ${isNext ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-950 scale-[1.02] shadow-xl z-10' : ''}`;
+                    card.className = `plan-card p-3 sm:p-4 flex flex-row gap-3 sm:gap-4 relative group transition-all duration-300 ${nextHighlightClasses}`;
                     card.style.borderLeftColor = displayColor;
                     
                     card.innerHTML = `
@@ -754,6 +763,22 @@
                 });
             }
             container.appendChild(wrapper);
+
+            // Handle Smart Scrolling on Load
+            setTimeout(() => {
+                if (nextEventIndex > 0) {
+                    // Scroll to the item right BEFORE the next event
+                    const targetId = sortedPlans[nextEventIndex - 1].id;
+                    const el = document.getElementById(`plan-card-${targetId}`);
+                    if (el) {
+                        const y = el.getBoundingClientRect().top + window.pageYOffset - 40; 
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                    }
+                } else if (nextEventIndex === 0 || nextEventIndex === -1) {
+                    // If the first item is the next event (or there are no future events), scroll to top
+                    window.scrollTo({top: 0, behavior: 'smooth'});
+                }
+            }, 100);
         }
 
         window.updatePlanColorPicker = function() {
