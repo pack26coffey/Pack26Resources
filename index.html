@@ -575,7 +575,25 @@
                 const grid = document.createElement('div'); grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'; grid.id = 'master-grid';
                 masterLinks.forEach(l => grid.appendChild(createLinkElement(l, true)));
                 mc.appendChild(grid); container.appendChild(mc);
-                if (isEditing && window.Sortable) new Sortable(grid, { animation: 150, handle: '.drag-handle', onEnd: () => { window.syncToCloud(); }});
+                
+                if (isEditing && window.Sortable) {
+                    new Sortable(grid, { 
+                        animation: 150, 
+                        handle: '.drag-handle', 
+                        onEnd: () => { 
+                            const newOrderIds = Array.from(grid.children).map(child => child.dataset.id).filter(Boolean);
+                            const newLinks = [];
+                            newOrderIds.forEach(id => {
+                                const l = links.find(x => x.id == id); // Loose equality important here
+                                if (l) newLinks.push(l);
+                            });
+                            links.forEach(l => { if (!l.isMaster) newLinks.push(l); });
+                            links = newLinks;
+                            window.syncToCloud(); 
+                            setTimeout(() => window.render(), 50); // Lock it in
+                        }
+                    });
+                }
             }
 
             const catContainerWrapper = document.createElement('div');
@@ -593,15 +611,16 @@
                 catDiv.innerHTML = `
                     <div class="flex items-center justify-between mb-2">
                         <h2 class="text-xl font-black text-slate-100 uppercase tracking-widest pl-2 border-l-4 border-yellow-400 flex items-center gap-2">
-                            ${isEditing ? `<button class="cat-drag-handle p-1 text-slate-500 cursor-move"><i data-lucide="grip-vertical" class="w-5 h-5 pointer-events-none"></i></button>` : ''}
+                            ${isEditing ? `<button class="cat-drag-handle p-1 text-slate-500 hover:text-slate-300 cursor-move transition-colors"><i data-lucide="grip-vertical" class="w-5 h-5 pointer-events-none"></i></button>` : ''}
                             ${cat.title}
                         </h2>
-                        ${isEditing ? `<div class="flex gap-2 opacity-0 group-hover/cat:opacity-100"><button onclick="window.editCategory('${cat.id}')" class="p-2 bg-slate-800 text-blue-400 rounded-xl"><i data-lucide="edit-2" class="w-4 h-4"></i></button><button onclick="window.addNewLink('${cat.id}')" class="p-2 bg-slate-800 text-green-400 rounded-xl"><i data-lucide="plus" class="w-4 h-4"></i></button></div>` : ''}
+                        ${isEditing ? `<div class="flex gap-2 opacity-0 group-hover/cat:opacity-100"><button onclick="window.editCategory('${cat.id}')" class="p-2 bg-slate-800 text-blue-400 rounded-xl hover:bg-blue-900/30 transition-colors"><i data-lucide="edit-2" class="w-4 h-4"></i></button><button onclick="window.addNewLink('${cat.id}')" class="p-2 bg-slate-800 text-green-400 rounded-xl hover:bg-green-900/30 transition-colors"><i data-lucide="plus" class="w-4 h-4"></i></button></div>` : ''}
                     </div>
                 `;
                 
                 const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-2 gap-3 sm:gap-4 mt-2 min-h-[50px]';
+                // UPDATE: Changed grid-cols-2 to grid-cols-3 and slightly tightened gap for 3 columns
+                grid.className = 'grid grid-cols-3 gap-2 sm:gap-3 mt-3 min-h-[50px]';
                 grid.dataset.catId = cat.id;
                 catLinks.forEach(l => grid.appendChild(createLinkElement(l, false)));
                 
@@ -609,16 +628,51 @@
                 catContainerWrapper.appendChild(catDiv);
                 
                 if (isEditing && window.Sortable) {
-                    new Sortable(grid, { group: 'shared', animation: 150, handle: '.drag-handle', onEnd: (evt) => {
-                        const linkId = parseInt(evt.item.dataset.id);
-                        const link = links.find(l => l.id === linkId);
-                        if (link) link.categoryId = evt.to.dataset.catId;
-                        window.syncToCloud();
-                    }});
+                    new Sortable(grid, { 
+                        group: 'shared', 
+                        animation: 150, 
+                        handle: '.drag-handle', 
+                        onEnd: (evt) => {
+                            const linkId = evt.item.dataset.id;
+                            const link = links.find(l => l.id == linkId);
+                            if (link && evt.to.dataset.catId) link.categoryId = evt.to.dataset.catId;
+                            
+                            const newLinks = links.filter(l => l.isMaster);
+                            document.querySelectorAll('#categories-container [data-cat-id]').forEach(catGrid => {
+                                Array.from(catGrid.children).forEach(child => {
+                                    const id = child.dataset.id;
+                                    const l = links.find(x => x.id == id); // Loose equality important here
+                                    if (l) newLinks.push(l);
+                                });
+                            });
+                            links = newLinks;
+                            window.syncToCloud();
+                            setTimeout(() => window.render(), 50); // Lock it in
+                        }
+                    });
                 }
             });
 
             container.appendChild(catContainerWrapper);
+            
+            if(isEditing && window.Sortable) {
+                new Sortable(catContainerWrapper, {
+                    animation: 150,
+                    handle: '.cat-drag-handle',
+                    onEnd: () => {
+                        const newOrderIds = Array.from(catContainerWrapper.children).map(child => child.dataset.id).filter(Boolean);
+                        const newCats = [];
+                        newOrderIds.forEach(id => {
+                            const cat = categories.find(c => c.id == id); // Loose equality important here
+                            if (cat) newCats.push(cat);
+                        });
+                        categories = newCats;
+                        window.syncToCloud();
+                        setTimeout(() => window.render(), 50); // Lock it in
+                    }
+                });
+            }
+
             if(isEditing) {
                 const addBtn = document.createElement('button');
                 addBtn.onclick = window.addNewCategory;
@@ -643,21 +697,22 @@
             let action = `href="${link.url}" target="_blank"`;
             if (link.url?.startsWith('#')) action = `href="javascript:void(0)" onclick="window.switchView('${link.url.replace('#','')}')"`;
             
+            // UPDATE: Scaled down image boundaries (w-10 to w-16 etc.) slightly to look perfect in a 3-across grid
             el.innerHTML = `
                 ${isMaster ? `
                 <a ${action} class="scout-card p-6 flex items-center gap-6 h-full hover:bg-slate-800">
                     <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">${imgHtml}</div>
                     <div class="flex flex-col"><h3 class="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-widest">${link.title}</h3></div>
                 </a>` : `
-                <a ${action} class="scout-card aspect-square p-3 sm:p-4 flex flex-col items-center justify-center gap-2 sm:gap-3 w-full h-full hover:bg-slate-800 text-center">
-                    <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-16 md:h-16 lg:w-20 lg:h-20 flex-shrink-0 flex items-center justify-center">${imgHtml}</div>
-                    <h3 class="text-[11px] sm:text-xs md:text-[10px] lg:text-xs font-black text-slate-100 uppercase tracking-widest leading-tight px-1">${link.title}</h3>
+                <a ${action} class="scout-card aspect-square p-2 sm:p-3 flex flex-col items-center justify-center gap-1.5 sm:gap-2 w-full h-full hover:bg-slate-800 text-center">
+                    <div class="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 flex-shrink-0 flex items-center justify-center">${imgHtml}</div>
+                    <h3 class="text-[9px] sm:text-[10px] lg:text-[10px] font-black text-slate-100 uppercase tracking-widest leading-tight px-1">${link.title}</h3>
                 </a>`}
                 ${isEditing ? `
-                <div class="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 z-10 scale-90 sm:scale-100">
-                    <button class="drag-handle p-2 bg-slate-800 text-white rounded-full cursor-move border border-slate-600"><i data-lucide="grip-horizontal" class="w-4 h-4"></i></button>
-                    <button onclick="window.editLink(${link.id})" class="p-2 bg-blue-600 text-white rounded-full"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                    <button onclick="window.deleteLink(${link.id})" class="p-2 bg-red-600 text-white rounded-full"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                <div class="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 z-10 scale-[0.8] sm:scale-90 origin-top-right">
+                    <button class="drag-handle p-2 bg-slate-800 text-white rounded-full cursor-move border border-slate-600 hover:text-slate-300 transition-colors"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
+                    <button onclick="window.editLink(${link.id})" class="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                    <button onclick="window.deleteLink(${link.id})" class="p-2 bg-red-600 text-white rounded-full hover:bg-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>` : ''}
             `;
             return el;
@@ -999,14 +1054,15 @@
                                 animation: 250,
                                 handle: '.vol-drag-handle',
                                 onEnd: function() {
-                                    const newOrderIds = Array.from(el.children).map(child => parseInt(child.dataset.id));
+                                    const newOrderIds = Array.from(el.children).map(child => child.dataset.id).filter(Boolean);
                                     const newVolunteers = [];
                                     newOrderIds.forEach(id => {
-                                        const vol = volunteers.find(v => v.id === id);
+                                        const vol = volunteers.find(v => v.id == id);
                                         if (vol) newVolunteers.push(vol);
                                     });
                                     volunteers = newVolunteers;
                                     window.syncToCloud();
+                                    setTimeout(() => window.render(), 50); // Lock it in
                                 }
                             });
                         }
