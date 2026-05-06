@@ -339,8 +339,8 @@
 
                 <!-- Row 4: Details -->
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Details <span class="text-slate-400/50 font-normal">(Optional)</span></label>
-                    <textarea id="plan-details" rows="2" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Provide extra details, location, requirements..."></textarea>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Details <span class="text-slate-400/50 font-normal">(Optional. Links: [text](https://url.com))</span></label>
+                    <textarea id="plan-details" rows="2" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Provide extra details..."></textarea>
                 </div>
 
                 <div class="flex justify-end mt-4">
@@ -643,16 +643,15 @@
             let action = `href="${link.url}" target="_blank"`;
             if (link.url?.startsWith('#')) action = `href="javascript:void(0)" onclick="window.switchView('${link.url.replace('#','')}')"`;
             
-            // Standard tiles are perfectly square now with aspect-square and full width
             el.innerHTML = `
                 ${isMaster ? `
                 <a ${action} class="scout-card p-6 flex items-center gap-6 h-full hover:bg-slate-800">
                     <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">${imgHtml}</div>
                     <div class="flex flex-col"><h3 class="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-widest">${link.title}</h3></div>
                 </a>` : `
-                <a ${action} class="scout-card aspect-square p-4 sm:p-5 flex flex-col items-center justify-center gap-3 sm:gap-4 w-full h-full hover:bg-slate-800 text-center">
-                    <div class="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 flex items-center justify-center">${imgHtml}</div>
-                    <h3 class="text-xs sm:text-sm font-black text-slate-100 uppercase tracking-widest leading-tight line-clamp-2">${link.title}</h3>
+                <a ${action} class="scout-card aspect-square p-3 sm:p-4 flex flex-col items-center justify-center gap-2 sm:gap-3 w-full h-full hover:bg-slate-800 text-center">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-16 md:h-16 lg:w-20 lg:h-20 flex-shrink-0 flex items-center justify-center">${imgHtml}</div>
+                    <h3 class="text-[11px] sm:text-xs md:text-[10px] lg:text-xs font-black text-slate-100 uppercase tracking-widest leading-tight px-1">${link.title}</h3>
                 </a>`}
                 ${isEditing ? `
                 <div class="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 z-10 scale-90 sm:scale-100">
@@ -732,6 +731,15 @@
                     const typeObj = eventTypes.find(t => t.name === plan.type);
                     const displayColor = typeObj ? typeObj.color : (plan.color || '#FDC82F');
 
+                    // Parse Hyperlinks for Details text
+                    let displayDetails = plan.details || '';
+                    displayDetails = displayDetails
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
+                        .replace(/\n/g, '<br>');
+
                     card.className = `plan-card p-3 sm:p-4 flex flex-row gap-3 sm:gap-4 relative group transition-all duration-300 ${nextHighlightClasses}`;
                     card.style.borderLeftColor = displayColor;
                     
@@ -755,8 +763,8 @@
                                 ${nextBadge}
                             </div>
                             ${plan.title ? `<div class="text-xs sm:text-sm font-bold text-slate-300 truncate mt-0.5">${plan.title}</div>` : ''}
-                            ${plan.details ? `<div class="text-[10px] sm:text-[11px] text-slate-400 line-clamp-2 mt-0.5 leading-snug">${plan.details}</div>` : ''}
-                            ${(plan.leader && plan.leader !== 'N/A') ? `<div class="mt-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500"><i data-lucide="user" class="w-3 h-3"></i> Lead: <span class="text-slate-300">${plan.leader}</span></div>` : ''}
+                            ${displayDetails ? `<div class="text-[10px] sm:text-[11px] text-slate-400 mt-1 leading-snug break-words">${displayDetails}</div>` : ''}
+                            ${(plan.leader && plan.leader !== 'N/A') ? `<div class="mt-2 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500"><i data-lucide="user" class="w-3 h-3"></i> Lead: <span class="text-slate-300">${plan.leader}</span></div>` : ''}
                         </div>
                     `;
                     wrapper.appendChild(card);
