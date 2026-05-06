@@ -110,7 +110,7 @@
 </head>
 <body class="min-h-screen relative text-slate-100 bg-slate-950">
     <!-- Hidden div to ensure Tailwind compiles necessary dynamic grid classes -->
-    <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full aspect-square"></div>
+    <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full aspect-square aspect-[3/4]"></div>
 
     <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
 
@@ -619,7 +619,6 @@
                 `;
                 
                 const grid = document.createElement('div');
-                // UPDATE: Changed grid-cols-2 to grid-cols-3 and slightly tightened gap for 3 columns
                 grid.className = 'grid grid-cols-3 gap-2 sm:gap-3 mt-3 min-h-[50px]';
                 grid.dataset.catId = cat.id;
                 catLinks.forEach(l => grid.appendChild(createLinkElement(l, false)));
@@ -697,16 +696,15 @@
             let action = `href="${link.url}" target="_blank"`;
             if (link.url?.startsWith('#')) action = `href="javascript:void(0)" onclick="window.switchView('${link.url.replace('#','')}')"`;
             
-            // UPDATE: Scaled down image boundaries (w-10 to w-16 etc.) slightly to look perfect in a 3-across grid
             el.innerHTML = `
                 ${isMaster ? `
                 <a ${action} class="scout-card p-6 flex items-center gap-6 h-full hover:bg-slate-800">
                     <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">${imgHtml}</div>
                     <div class="flex flex-col"><h3 class="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-widest">${link.title}</h3></div>
                 </a>` : `
-                <a ${action} class="scout-card aspect-square p-2 sm:p-3 flex flex-col items-center justify-center gap-1.5 sm:gap-2 w-full h-full hover:bg-slate-800 text-center">
-                    <div class="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 flex-shrink-0 flex items-center justify-center">${imgHtml}</div>
-                    <h3 class="text-[9px] sm:text-[10px] lg:text-[10px] font-black text-slate-100 uppercase tracking-widest leading-tight px-1">${link.title}</h3>
+                <a ${action} class="scout-card aspect-[3/4] p-3 sm:p-4 flex flex-col items-center justify-center gap-3 w-full h-full hover:bg-slate-800 text-center">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 flex-shrink-0 flex items-center justify-center">${imgHtml}</div>
+                    <h3 class="text-[10px] sm:text-[11px] lg:text-xs font-black text-slate-100 uppercase tracking-widest leading-tight px-1">${link.title}</h3>
                 </a>`}
                 ${isEditing ? `
                 <div class="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 z-10 scale-[0.8] sm:scale-90 origin-top-right">
