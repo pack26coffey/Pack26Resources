@@ -65,8 +65,6 @@
             overflow: hidden; 
             border-radius: 1rem; 
             background: #1e293b; 
-            -webkit-mask-image: -webkit-radial-gradient(white, black);
-            mask-image: radial-gradient(white, black);
             transform: translateZ(0);
         }
 
@@ -266,7 +264,7 @@
                     </div>
                 </div>
                 <div class="flex flex-col items-center" id="field-preview">
-                    <div id="preview-box" class="w-64 h-64 bg-slate-800 rounded-[3rem] overflow-hidden relative border-8 border-slate-700 shadow-xl cursor-move" style="-webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black);">
+                    <div id="preview-box" class="w-64 h-64 bg-slate-800 rounded-[2rem] overflow-hidden relative border-8 border-slate-700 shadow-xl cursor-move">
                         <img id="preview-img" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none">
                     </div>
                     <div class="w-full mt-8 space-y-4" id="field-zoom">
@@ -686,7 +684,7 @@
             el.className = 'relative group h-full w-full'; el.dataset.id = link.id;
             
             const imgHtml = `
-                <div class="image-viewport shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <div class="image-viewport shadow-sm group-hover:scale-105 transition-transform duration-300 w-full h-full">
                     <img src="${link.img || 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png'}" 
                          class="absolute inset-0 w-full h-full object-contain" 
                          style="transform: translate(${link.x || 0}%, ${link.y || 0}%) scale(${link.zoom || 1})">
@@ -702,8 +700,8 @@
                     <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">${imgHtml}</div>
                     <div class="flex flex-col"><h3 class="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-widest">${link.title}</h3></div>
                 </a>` : `
-                <a ${action} class="scout-card aspect-[3/4] p-2 sm:p-4 flex flex-col items-center justify-start w-full h-full hover:bg-slate-800 text-center overflow-hidden">
-                    <div class="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 max-w-[80%] max-h-[55%] flex-shrink-0 mt-2 flex items-center justify-center">${imgHtml}</div>
+                <a ${action} class="scout-card p-3 sm:p-4 flex flex-col items-center justify-start w-full h-full hover:bg-slate-800 text-center">
+                    <div class="w-full aspect-square flex-shrink-0 mb-2 sm:mb-3">${imgHtml}</div>
                     <div class="flex-1 w-full flex flex-col justify-center items-center px-1">
                         <h3 class="text-[10px] sm:text-[11px] lg:text-xs font-black text-slate-100 uppercase tracking-widest leading-tight line-clamp-3">${link.title}</h3>
                     </div>
