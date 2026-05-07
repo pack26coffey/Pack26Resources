@@ -760,12 +760,29 @@
                 empty.innerHTML = '<i data-lucide="calendar-x-2" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No upcoming events scheduled.';
                 wrapper.appendChild(empty);
             } else {
+                let currentMonthYear = ''; // Track the current month/year being rendered
+
                 sortedPlans.forEach(plan => {
                     const isNext = plan.id === nextEventId;
+                    
+                    const d = new Date(`${plan.date}T00:00:00`);
+                    
+                    // --- Insert Month/Year Separator ---
+                    const monthYearStr = isNaN(d.getTime()) ? 'Unscheduled' : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    if (monthYearStr !== currentMonthYear) {
+                        currentMonthYear = monthYearStr;
+                        const separator = document.createElement('div');
+                        separator.className = 'flex items-center mt-8 mb-2 w-full';
+                        separator.innerHTML = `
+                            <h3 class="text-sm md:text-base font-black text-slate-400 uppercase tracking-widest mr-4 drop-shadow-sm">${currentMonthYear}</h3>
+                            <div class="flex-grow border-t-2 border-slate-800/80"></div>
+                        `;
+                        wrapper.appendChild(separator);
+                    }
+                    
                     const card = document.createElement('div');
                     card.id = `plan-card-${plan.id}`;
                     
-                    const d = new Date(`${plan.date}T00:00:00`);
                     const monthStr = isNaN(d.getTime()) ? plan.date : d.toLocaleDateString('en-US', { month: 'short' });
                     const dayStr = isNaN(d.getTime()) ? '' : d.getDate();
                     
