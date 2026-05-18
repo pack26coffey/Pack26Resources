@@ -107,13 +107,11 @@
     </style>
 </head>
 <body class="min-h-screen relative text-slate-100 bg-slate-950">
-    <!-- Hidden div to ensure Tailwind compiles necessary dynamic grid classes -->
     <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full aspect-square aspect-[3/4] w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 max-w-[80%] max-h-[55%] line-clamp-3"></div>
 
     <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="app">
-        <!-- Header -->
         <header id="main-header" class="bg-slate-900 border-b-[8px] border-yellow-400 shadow-xl px-4 md:px-6 py-4 md:py-6 transition-colors relative z-30 overflow-hidden">
             <div id="header-bg-layer" class="absolute inset-0 z-0 pointer-events-none hidden">
                 <img id="header-bg-img" src="" class="absolute inset-0 w-full h-full object-cover">
@@ -121,7 +119,6 @@
 
             <div class="max-w-6xl mx-auto relative z-10">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-                    <!-- Left Side -->
                     <div class="flex flex-row items-center gap-4 w-full md:w-auto md:flex-1">
                         <div class="relative group flex-shrink-0">
                             <div id="header-logo-container" class="w-20 h-20 md:w-32 md:h-32 rounded-[1.25rem] md:rounded-[2rem] bg-slate-800 shadow-inner overflow-hidden border-4 border-slate-700 transition-all relative">
@@ -139,12 +136,11 @@
                         </div>
                     </div>
 
-                    <!-- Right Side -->
                     <div class="flex flex-row items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-2 md:gap-3 mt-1 md:mt-0 border-t border-slate-800/50 pt-3 md:border-0 md:pt-0">
                         <div class="flex flex-col items-start md:items-end gap-1 md:gap-1.5 drop-shadow-md">
-                            <a href="https://my.scouting.org" target="_blank" class="text-[10px] md:text-xs font-black text-blue-400 hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1">
-                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> my.scouting.org
-                            </a>
+                            <button onclick="window.openContactModal()" class="text-[10px] md:text-xs font-black text-blue-400 hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
+                                <i data-lucide="info" class="w-3.5 h-3.5"></i> Contact Info
+                            </button>
                             <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-400 hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
                                 <i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal
                             </button>
@@ -171,17 +167,14 @@
             </div>
         </header>
 
-        <!-- Dynamic Content Area -->
         <main class="w-full max-w-7xl mx-auto py-8 md:py-12 px-4 sm:px-6 min-h-[50vh]" id="main-container">
-            <!-- Content injected here -->
-        </main>
+            </main>
 
         <div class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50">
             <button id="lock-btn" onclick="window.handleAuthClick()"></button>
         </div>
     </div>
 
-    <!-- Login Modal -->
     <div id="login-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] hidden items-center justify-center p-6">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-sm overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-400">
             <div class="bg-blue-900 p-6 text-white flex justify-between items-center">
@@ -201,7 +194,19 @@
         </div>
     </div>
 
-    <!-- Universal Modal -->
+    <div id="contact-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] hidden items-center justify-center p-6">
+        <div class="bg-slate-900 rounded-[3rem] w-full max-w-md overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-500">
+            <div class="bg-blue-900 p-6 text-white flex justify-between items-center border-b border-slate-700">
+                <h3 class="text-xl font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="info" class="w-5 h-5 text-blue-300"></i> Contact Us</h3>
+                <button onclick="window.closeContactModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-8 flex flex-col gap-6 text-center">
+                <div id="contact-display-text" class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                    </div>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
         <div class="bg-slate-900 rounded-[4rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-900">
             <div class="bg-blue-900 p-8 text-white flex justify-between items-center">
@@ -229,6 +234,12 @@
                             <option value="#committee">Committee Notes</option>
                         </select>
                     </div>
+                    
+                    <div id="field-contact" class="hidden">
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Contact Information</label>
+                        <textarea id="input-contact" rows="4" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Email, phone, meeting location..."></textarea>
+                    </div>
+
                     <div id="field-master" class="hidden items-center justify-between p-4 bg-blue-900/20 rounded-2xl border border-blue-800/50">
                         <div>
                             <span class="text-[10px] font-black uppercase text-blue-400 tracking-widest block mb-0.5">Master Tile</span>
@@ -279,7 +290,6 @@
         </div>
     </div>
 
-    <!-- Planner Edit Modal -->
     <div id="planner-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-500 my-auto">
             <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
@@ -287,7 +297,6 @@
                 <button onclick="window.closePlannerModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
             </div>
             <div class="p-6 sm:p-8 space-y-6">
-                <!-- Row 1: Date & Time -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Date</label>
@@ -299,7 +308,6 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Type & Color -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <div class="flex justify-between items-end mb-2">
@@ -317,7 +325,6 @@
                     </div>
                 </div>
 
-                <!-- Row 3: Leader & Title -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <div class="flex justify-between items-end mb-2">
@@ -335,7 +342,6 @@
                     </div>
                 </div>
 
-                <!-- Row 4: Details -->
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Details <span class="text-slate-400/50 font-normal">(Optional. Links: [text](https://url.com))</span></label>
                     <textarea id="plan-details" rows="2" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Provide extra details..."></textarea>
@@ -348,7 +354,6 @@
         </div>
     </div>
 
-    <!-- Volunteer Portal Edit Modal -->
     <div id="volunteer-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-6 overflow-y-auto">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-red-600 my-auto">
             <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
@@ -379,7 +384,6 @@
         </div>
     </div>
 
-    <!-- Committee Note Edit Modal with Auto-Save -->
     <div id="committee-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
         <div class="bg-slate-900 rounded-3xl w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-8 border-blue-600 my-auto" id="comm-modal-panel">
             <div class="bg-slate-800 p-4 sm:p-5 text-white flex justify-between items-center border-b border-slate-700 sticky top-0 z-10">
@@ -502,7 +506,7 @@
 
         let categories = JSON.parse(localStorage.getItem('scout_categories')) || [{ id: 'default', title: 'General Resources' }];
         let links = JSON.parse(localStorage.getItem('scout_links')) || [{ id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default', isMaster: false }];
-        let settings = JSON.parse(localStorage.getItem('scout_settings')) || { title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0 };
+        let settings = JSON.parse(localStorage.getItem('scout_settings')) || { title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0, contactInfo: '' };
         let plans = JSON.parse(localStorage.getItem('scout_plans')) || [];
         let committeeNotes = JSON.parse(localStorage.getItem('scout_committee')) || [];
         let leaders = JSON.parse(localStorage.getItem('scout_leaders')) || ['Cubmaster', 'Committee Chair'];
@@ -1499,6 +1503,16 @@
             }).from(container).save();
         }
 
+        window.openContactModal = () => {
+            const txt = settings.contactInfo || 'No contact information has been added yet.';
+            document.getElementById('contact-display-text').innerHTML = txt.replace(/\n/g, '<br>');
+            document.getElementById('contact-modal').classList.replace('hidden', 'flex');
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.closeContactModal = () => document.getElementById('contact-modal').classList.replace('flex', 'hidden');
+
+
         // --- Render Engine & Utilities ---
         window.render = () => {
             document.getElementById('display-title').innerText = settings.title;
@@ -1560,7 +1574,12 @@
             currentEditId = 'header'; currentEditType = 'header';
             document.getElementById('input-title').value = settings.title; document.getElementById('input-url').value = settings.subtitle;
             document.getElementById('input-image').value = settings.logo; document.getElementById('input-zoom').value = settings.zoom || 1;
+            
+            document.getElementById('input-contact').value = settings.contactInfo || '';
+            document.getElementById('field-contact').classList.remove('hidden');
+
             document.getElementById('modal-overlay').classList.replace('hidden','flex'); window.updatePreview();
+            setTimeout(() => window.autoResizeTextarea(document.getElementById('input-contact')), 10);
         };
 
         window.editLink = (id) => {
@@ -1568,6 +1587,8 @@
             document.getElementById('input-title').value = l.title; document.getElementById('input-url').value = l.url;
             document.getElementById('input-image').value = l.img; document.getElementById('input-zoom').value = l.zoom||1;
             
+            document.getElementById('field-contact').classList.add('hidden');
+
             const sel = document.getElementById('input-category'); sel.innerHTML = '';
             categories.forEach(c => { const o = document.createElement('option'); o.value=c.id; o.innerText=c.title; if(c.id===l.categoryId) o.selected=true; sel.appendChild(o); });
             document.getElementById('modal-overlay').classList.replace('hidden','flex'); window.updatePreview();
@@ -1577,7 +1598,12 @@
         window.addNewMasterLink = () => { const id=Date.now(); links.push({id, title:'New Master', url:'', img:'', zoom:1, x:0, y:0, categoryId:'default', isMaster:true}); window.editLink(id); };
         window.deleteLink = (id) => { if(confirm("Remove tile?")) { links = links.filter(l=>l.id!==id); window.render(); window.syncToCloud(); } };
         window.addNewCategory = () => { categories.push({id:'cat_'+Date.now(), title:'New Category'}); window.render(); window.syncToCloud(); };
-        window.editCategory = (id) => { currentEditId = id; currentEditType = 'category'; document.getElementById('input-title').value = categories.find(c=>c.id===id).title; document.getElementById('modal-overlay').classList.replace('hidden','flex'); };
+        window.editCategory = (id) => { 
+            currentEditId = id; currentEditType = 'category'; 
+            document.getElementById('input-title').value = categories.find(c=>c.id===id).title; 
+            document.getElementById('field-contact').classList.add('hidden');
+            document.getElementById('modal-overlay').classList.replace('hidden','flex'); 
+        };
         window.closeModal = () => document.getElementById('modal-overlay').classList.replace('flex','hidden');
 
         window.updatePreview = () => {
@@ -1597,6 +1623,7 @@
             if(currentEditType==='header') {
                 settings.title = document.getElementById('input-title').value; settings.subtitle = document.getElementById('input-url').value;
                 settings.logo = document.getElementById('input-image').value; settings.zoom = document.getElementById('input-zoom').value;
+                settings.contactInfo = document.getElementById('input-contact').value;
             } else if(currentEditType==='category') {
                 categories.find(c=>c.id===currentEditId).title = document.getElementById('input-title').value;
             } else if(currentEditType==='link') {
