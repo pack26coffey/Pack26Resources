@@ -16,24 +16,99 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
-        :root { --bsa-blue: #003F87; --bsa-red: #CE1126; --bsa-gold: #FDC82F; }
-        body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #f8fafc; transition: background-color 0.5s ease; }
-        .scout-card { background: #0f172a; border-radius: 1.5rem; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .scout-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); border-color: var(--bsa-blue); }
-        .plan-card, .comm-card, .rt-card, .vol-card { background: #1e293b; border-radius: 1.5rem; box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.05); transition: all 0.2s ease; border-top: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 8px solid; }
-        .comm-card { border-left-color: var(--bsa-blue); } .rt-card { border-left-color: var(--bsa-gold); } .vol-card { border-radius: 2rem; border-left-color: var(--bsa-red); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
-        .image-viewport { width: 100%; aspect-ratio: 1 / 1; position: relative; overflow: hidden; border-radius: 1rem; background: #1e293b; transform: translateZ(0); }
-        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #e2e8f0; border-radius: 5px; outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: var(--bsa-blue); border-radius: 50%; cursor: pointer; border: 2px solid white; }
+        :root {
+            --bsa-blue: #003F87;
+            --bsa-red: #CE1126;
+            --bsa-gold: #FDC82F;
+        }
+        
+        body { 
+            font-family: 'Outfit', sans-serif;
+            background-color: #020617; 
+            color: #f8fafc; 
+            transition: background-color 0.5s ease;
+        }
+
+        .scout-card {
+            background: #0f172a; 
+            border-radius: 1.5rem; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.05); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .scout-card:hover { 
+            transform: translateY(-8px) scale(1.02); 
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+            border-color: var(--bsa-blue);
+        }
+
+        .plan-card, .comm-card, .rt-card, .vol-card {
+            background: #1e293b;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-left: 8px solid;
+        }
+        
+        .comm-card { border-left-color: var(--bsa-blue); }
+        .rt-card { border-left-color: var(--bsa-gold); }
+        .vol-card { border-radius: 2rem; border-left-color: var(--bsa-red); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+
+        .image-viewport { 
+            width: 100%; 
+            aspect-ratio: 1 / 1; 
+            position: relative; 
+            overflow: hidden; 
+            border-radius: 1rem; 
+            background: #1e293b; 
+            transform: translateZ(0);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--bsa-blue);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+
         .modal-animate { animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        .sortable-ghost { opacity: 0.4; transform: scale(0.95); } .sortable-drag { cursor: grabbing !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        textarea::-webkit-scrollbar { width: 8px; } textarea::-webkit-scrollbar-track { background: transparent; } textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; } input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.75rem; }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .sortable-ghost { opacity: 0.4; transform: scale(0.95); }
+        .sortable-drag { cursor: grabbing !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.75rem; }
     </style>
 </head>
 <body class="min-h-screen relative text-slate-100 bg-slate-950">
     <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full aspect-square aspect-[3/4] w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 max-w-[80%] max-h-[55%] line-clamp-3"></div>
+
     <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="app">
@@ -517,14 +592,10 @@
                     new Sortable(grid, { 
                         animation: 150, handle: '.drag-handle', 
                         onEnd: () => { 
-                            const newOrderIds = Array.from(grid.children).map(child => child.dataset.id).filter(Boolean);
-                            const newLinks = [];
-                            newOrderIds.forEach(id => {
-                                const l = links.find(x => x.id == id);
-                                if (l) newLinks.push(l);
-                            });
-                            links.forEach(l => { if (!l.isMaster) newLinks.push(l); });
-                            links = newLinks;
+                            const newOrderIds = Array.from(grid.children).map(child => parseInt(child.dataset.id));
+                            const otherLinks = links.filter(l => !l.isMaster);
+                            const sortedMasters = newOrderIds.map(id => links.find(l => l.id === id)).filter(Boolean);
+                            links = [...sortedMasters, ...otherLinks];
                             window.syncToCloud(); 
                             setTimeout(() => window.render(), 50);
                         }
@@ -566,15 +637,15 @@
                     new Sortable(grid, { 
                         group: 'shared', animation: 150, handle: '.drag-handle', 
                         onEnd: (evt) => {
-                            const linkId = evt.item.dataset.id;
-                            const link = links.find(l => l.id == linkId);
+                            const linkId = parseInt(evt.item.dataset.id);
+                            const link = links.find(l => l.id === linkId);
                             if (link && evt.to.dataset.catId) link.categoryId = evt.to.dataset.catId;
                             
                             const newLinks = links.filter(l => l.isMaster);
                             document.querySelectorAll('#categories-container [data-cat-id]').forEach(catGrid => {
                                 Array.from(catGrid.children).forEach(child => {
-                                    const id = child.dataset.id;
-                                    const l = links.find(x => x.id == id);
+                                    const id = parseInt(child.dataset.id);
+                                    const l = links.find(x => x.id === id);
                                     if (l) newLinks.push(l);
                                 });
                             });
@@ -595,7 +666,7 @@
                         const newOrderIds = Array.from(catContainerWrapper.children).map(child => child.dataset.id).filter(Boolean);
                         const newCats = [];
                         newOrderIds.forEach(id => {
-                            const cat = categories.find(c => c.id == id);
+                            const cat = categories.find(c => c.id === id);
                             if (cat) newCats.push(cat);
                         });
                         categories = newCats;
@@ -687,7 +758,7 @@
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
-                .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+|mailto:[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
                 .replace(/\n/g, '<br>');
 
             document.getElementById('info-modal-content').innerHTML = displayDetails;
@@ -747,6 +818,7 @@
                     
                     const d = new Date(`${plan.date}T00:00:00`);
                     
+                    // --- Insert Month/Year Separator ---
                     const monthYearStr = isNaN(d.getTime()) ? 'Unscheduled' : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     if (monthYearStr !== currentMonthYear) {
                         currentMonthYear = monthYearStr;
@@ -784,7 +856,7 @@
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
                         .replace(/>/g, '&gt;')
-                        .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
+                        .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+|mailto:[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
                         .replace(/\n/g, '<br>');
 
                     card.className = `plan-card p-3 sm:p-4 flex flex-row gap-3 sm:gap-4 relative group transition-all duration-300 ${nextHighlightClasses}`;
@@ -923,7 +995,6 @@
             document.getElementById('plan-date').value = plan ? plan.date : todayStr;
             document.getElementById('plan-title').value = plan?.title || '';
             document.getElementById('plan-details').value = plan?.details || '';
-            document.getElementById('plan-color').value = plan?.color || '#FDC82F';
             
             window.buildPlannerDropdowns(plan?.type, plan?.leader, plan?.time || '18:00');
             
@@ -954,7 +1025,7 @@
                 const p = plans.find(p => p.id === currentEditId);
                 if (p) { p.date = date; p.time = time; p.type = type; p.title = title; p.details = details; p.leader = leader; p.color = color; p.editedAt = currentTimestamp; }
             } else {
-                plans.push({ id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader, color });
+                plans.push({ id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader });
             }
 
             window.closePlannerModal(); window.render(); window.syncToCloud();
@@ -1043,7 +1114,7 @@
                                 animation: 250,
                                 handle: '.vol-drag-handle',
                                 onEnd: function() {
-                                    const newOrderIds = Array.from(el.children).map(child => parseInt(child.dataset.id));
+                                    const newOrderIds = Array.from(el.children).map(child => child.dataset.id).filter(Boolean);
                                     const newVolunteers = [];
                                     newOrderIds.forEach(id => {
                                         const vol = volunteers.find(v => v.id == id);
@@ -1051,6 +1122,7 @@
                                     });
                                     volunteers = newVolunteers;
                                     window.syncToCloud();
+                                    setTimeout(() => window.render(), 50);
                                 }
                             });
                         }
@@ -1479,7 +1551,7 @@
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
-                .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+|mailto:[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
                 .replace(/\n/g, '<br>');
 
             document.getElementById('contact-display-text').innerHTML = displayDetails;
