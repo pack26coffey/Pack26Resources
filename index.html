@@ -16,107 +16,29 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
-        :root {
-            --bsa-blue: #003F87;
-            --bsa-red: #CE1126;
-            --bsa-gold: #FDC82F;
-        }
-        
-        body { 
-            font-family: 'Outfit', sans-serif;
-            background-color: #020617; 
-            color: #f8fafc; 
-            transition: background-color 0.5s ease;
-        }
-
-        .scout-card {
-            background: #0f172a; 
-            border-radius: 1.5rem; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.05); 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .scout-card:hover { 
-            transform: translateY(-8px) scale(1.02); 
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
-            border-color: var(--bsa-blue);
-        }
-
-        .plan-card, .comm-card, .rt-card, .vol-card {
-            background: #1e293b;
-            border-radius: 1.5rem;
-            box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-right: 1px solid rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            border-left: 8px solid;
-        }
-        
-        .comm-card { border-left-color: var(--bsa-blue); }
-        .rt-card { border-left-color: var(--bsa-gold); }
-        .vol-card { border-radius: 2rem; border-left-color: var(--bsa-red); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
-
-        .image-viewport { 
-            width: 100%; 
-            aspect-ratio: 1 / 1; 
-            position: relative; 
-            overflow: hidden; 
-            border-radius: 1rem; 
-            background: #1e293b; 
-            transform: translateZ(0);
-        }
-
-        input[type=range] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 5px;
-            outline: none;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--bsa-blue);
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid white;
-        }
-
+        :root { --bsa-blue: #003F87; --bsa-red: #CE1126; --bsa-gold: #FDC82F; }
+        body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #f8fafc; transition: background-color 0.5s ease; }
+        .scout-card { background: #0f172a; border-radius: 1.5rem; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .scout-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); border-color: var(--bsa-blue); }
+        .plan-card, .comm-card, .rt-card, .vol-card { background: #1e293b; border-radius: 1.5rem; box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.05); transition: all 0.2s ease; border-top: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 8px solid; }
+        .comm-card { border-left-color: var(--bsa-blue); } .rt-card { border-left-color: var(--bsa-gold); } .vol-card { border-radius: 2rem; border-left-color: var(--bsa-red); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .image-viewport { width: 100%; aspect-ratio: 1 / 1; position: relative; overflow: hidden; border-radius: 1rem; background: #1e293b; transform: translateZ(0); }
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #e2e8f0; border-radius: 5px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: var(--bsa-blue); border-radius: 50%; cursor: pointer; border: 2px solid white; }
         .modal-animate { animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.9) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .sortable-ghost { opacity: 0.4; transform: scale(0.95); }
-        .sortable-drag { cursor: grabbing !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-
-        textarea::-webkit-scrollbar { width: 8px; }
-        textarea::-webkit-scrollbar-track { background: transparent; }
-        textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-
-        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.75rem; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .sortable-ghost { opacity: 0.4; transform: scale(0.95); } .sortable-drag { cursor: grabbing !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        textarea::-webkit-scrollbar { width: 8px; } textarea::-webkit-scrollbar-track { background: transparent; } textarea::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; } input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.75rem; }
     </style>
 </head>
 <body class="min-h-screen relative text-slate-100 bg-slate-950">
     <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full aspect-square aspect-[3/4] w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 max-w-[80%] max-h-[55%] line-clamp-3"></div>
-
     <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="app">
         <header id="main-header" class="bg-slate-900 border-b-[8px] border-yellow-400 shadow-xl px-4 md:px-6 py-4 md:py-6 transition-colors relative z-30 overflow-hidden">
-            <div id="header-bg-layer" class="absolute inset-0 z-0 pointer-events-none hidden">
-                <img id="header-bg-img" src="" class="absolute inset-0 w-full h-full object-cover">
-            </div>
-
+            <div id="header-bg-layer" class="absolute inset-0 z-0 pointer-events-none hidden"><img id="header-bg-img" src="" class="absolute inset-0 w-full h-full object-cover"></div>
             <div class="max-w-6xl mx-auto relative z-10">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
                     <div class="flex flex-row items-center gap-4 w-full md:w-auto md:flex-1">
@@ -126,38 +48,25 @@
                             </div>
                             <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 p-2 md:p-2.5 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20"></button>
                         </div>
-
                         <div class="text-left flex-1 relative group md:pr-12">
                             <h1 id="display-title" class="text-3xl sm:text-4xl md:text-6xl font-black text-blue-500 uppercase tracking-tighter mb-0.5 md:mb-1 leading-none drop-shadow-md">Pack 26</h1>
-                            <div class="text-[11px] sm:text-xs md:text-xl font-bold text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em] flex items-center justify-start gap-3 drop-shadow-md">
-                                <span id="display-subtitle">Scouting America</span>
-                            </div>
+                            <div class="text-[11px] sm:text-xs md:text-xl font-bold text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em] flex items-center justify-start gap-3 drop-shadow-md"><span id="display-subtitle">Scouting America</span></div>
                             <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-2 md:p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform"></button>
                         </div>
                     </div>
-
                     <div class="flex flex-row items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-2 md:gap-3 mt-1 md:mt-0 border-t border-slate-800/50 pt-3 md:border-0 md:pt-0">
                         <div class="flex flex-col items-start md:items-end gap-1 md:gap-1.5 drop-shadow-md">
-                            <button onclick="window.openContactModal()" class="text-[10px] md:text-xs font-black text-blue-400 hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
-                                <i data-lucide="info" class="w-3.5 h-3.5"></i> Contact Info
-                            </button>
-                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-400 hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
-                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal
-                            </button>
+                            <button onclick="window.openContactModal()" class="text-[10px] md:text-xs font-black text-blue-400 hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right"><i data-lucide="info" class="w-3.5 h-3.5"></i> Contact Info</button>
+                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-400 hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right"><i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal</button>
                         </div>
                         <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
                             <button id="home-btn" onclick="window.switchView('links')" class="hidden p-2.5 md:p-3 rounded-xl bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-md flex items-center justify-center group"><i data-lucide="home" class="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform"></i></button>
-                            <button id="header-design-btn" onclick="window.openHeaderDesignModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-teal-900/30 text-teal-400 hover:bg-teal-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
-                                <i data-lucide="paint-roller" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">Header Design</span>
-                            </button>
-                            <button id="app-icon-edit-btn" onclick="window.openAppIconModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-purple-900/30 text-purple-400 hover:bg-purple-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
-                                <i data-lucide="smartphone" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">App Icon</span>
-                            </button>
+                            <button id="header-design-btn" onclick="window.openHeaderDesignModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-teal-900/30 text-teal-400 hover:bg-teal-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group"><i data-lucide="paint-roller" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">Header Design</span></button>
+                            <button id="app-icon-edit-btn" onclick="window.openAppIconModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-purple-900/30 text-purple-400 hover:bg-purple-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group"><i data-lucide="smartphone" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">App Icon</span></button>
                             <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden"></button>
                         </div>
                     </div>
                 </div>
-
                 <div id="leader-nav" class="hidden mt-4 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3 border-t border-slate-800/50 pt-4">
                     <button onclick="window.switchView('links')" id="tab-links" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Resources</button>
                     <button onclick="window.switchView('planner')" id="tab-planner" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Pack Planner</button>
@@ -167,8 +76,7 @@
             </div>
         </header>
 
-        <main class="w-full max-w-7xl mx-auto py-8 md:py-12 px-4 sm:px-6 min-h-[50vh]" id="main-container">
-            </main>
+        <main class="w-full max-w-7xl mx-auto py-8 md:py-12 px-4 sm:px-6 min-h-[50vh]" id="main-container"></main>
 
         <div class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50">
             <button id="lock-btn" onclick="window.handleAuthClick()"></button>
@@ -201,8 +109,19 @@
                 <button onclick="window.closeContactModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="p-8 flex flex-col gap-6 text-center">
-                <div id="contact-display-text" class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                    </div>
+                <div id="contact-display-text" class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="info-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[250] hidden items-center justify-center p-6">
+        <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-purple-500">
+            <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
+                <h3 id="info-modal-title" class="text-xl font-black uppercase tracking-widest flex items-center gap-2"></h3>
+                <button onclick="window.closeInfoModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-8 flex flex-col gap-6">
+                <div id="info-modal-content" class="text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium"></div>
             </div>
         </div>
     </div>
@@ -246,9 +165,30 @@
                             <span class="text-[10px] text-slate-400 font-bold">Display large at the top</span>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="input-is-master" class="sr-only peer">
+                            <input type="checkbox" id="input-is-master" onchange="window.toggleMasterMode()" class="sr-only peer">
                             <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-blue-600"></div>
                         </label>
+                    </div>
+
+                    <div id="field-info-only" class="hidden items-center justify-between p-4 bg-purple-900/20 rounded-2xl border border-purple-800/50 mt-4">
+                        <div>
+                            <span class="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-0.5">Info Only Mode</span>
+                            <span class="text-[10px] text-slate-400 font-bold">Disable link, open text popup instead</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="input-is-info" onchange="window.toggleInfoMode()" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+
+                    <div id="field-subtext" class="hidden mt-4">
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Tile Sub-section Text</label>
+                        <textarea id="input-subtext" rows="2" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl text-sm font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Short description for the tile face..."></textarea>
+                    </div>
+
+                    <div id="field-modaltext" class="hidden mt-4">
+                        <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Popup Modal Text</label>
+                        <textarea id="input-modaltext" rows="4" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl text-sm font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Detailed info for the popup. (Links: [text](https://url.com))"></textarea>
                     </div>
                     <div id="field-category" class="hidden">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Category</label>
@@ -490,22 +430,17 @@
         let isAdmin = false; let isLeader = false; let isEditing = false; let currentView = 'links'; 
         const appId = 'pack-26-resources';
 
-        // Load Event Types (Converting Legacy strings to color-coded objects if needed)
         let savedEventTypes = JSON.parse(localStorage.getItem('scout_event_types'));
         let eventTypes = [];
         if (savedEventTypes && savedEventTypes.length > 0) {
             if (typeof savedEventTypes[0] === 'string') eventTypes = savedEventTypes.map(t => ({name: t, color: '#FDC82F'}));
             else eventTypes = savedEventTypes;
         } else {
-            eventTypes = [
-                {name: 'Pack Meeting', color: '#FDC82F'}, 
-                {name: 'Den Meeting', color: '#003F87'}, 
-                {name: 'Campout', color: '#CE1126'}
-            ];
+            eventTypes = [{name: 'Pack Meeting', color: '#FDC82F'}, {name: 'Den Meeting', color: '#003F87'}, {name: 'Campout', color: '#CE1126'}];
         }
 
         let categories = JSON.parse(localStorage.getItem('scout_categories')) || [{ id: 'default', title: 'General Resources' }];
-        let links = JSON.parse(localStorage.getItem('scout_links')) || [{ id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default', isMaster: false }];
+        let links = JSON.parse(localStorage.getItem('scout_links')) || [{ id: 1, title: 'Scoutbook', url: 'https://scoutbook.scouting.org/', img: '', zoom: 1, x: 0, y: 0, categoryId: 'default', isMaster: false, isInfoOnly: false }];
         let settings = JSON.parse(localStorage.getItem('scout_settings')) || { title: 'Pack 26', subtitle: 'Scouting America', logo: 'https://www.scouting.org/wp-content/uploads/2018/05/cub-scouts-logo.png', zoom: 1, x: 0, y: 0, contactInfo: '' };
         let plans = JSON.parse(localStorage.getItem('scout_plans')) || [];
         let committeeNotes = JSON.parse(localStorage.getItem('scout_committee')) || [];
@@ -568,7 +503,7 @@
             try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'packData', 'config'), { links, settings, categories, plans, committeeNotes, eventTypes, leaders, volunteers, updatedAt: Date.now() }); } catch(e){}
         };
 
-        // --- Render Links View with Structural Grid Fixes & Square Tiles ---
+        // --- Render Links View ---
         window.renderLinksView = function(container) {
             const masterLinks = links.filter(l => l.isMaster);
             if (masterLinks.length > 0 || isEditing) {
@@ -580,19 +515,18 @@
                 
                 if (isEditing && window.Sortable) {
                     new Sortable(grid, { 
-                        animation: 150, 
-                        handle: '.drag-handle', 
+                        animation: 150, handle: '.drag-handle', 
                         onEnd: () => { 
                             const newOrderIds = Array.from(grid.children).map(child => child.dataset.id).filter(Boolean);
                             const newLinks = [];
                             newOrderIds.forEach(id => {
-                                const l = links.find(x => x.id == id); // Loose equality important here
+                                const l = links.find(x => x.id == id);
                                 if (l) newLinks.push(l);
                             });
                             links.forEach(l => { if (!l.isMaster) newLinks.push(l); });
                             links = newLinks;
                             window.syncToCloud(); 
-                            setTimeout(() => window.render(), 50); // Lock it in
+                            setTimeout(() => window.render(), 50);
                         }
                     });
                 }
@@ -621,7 +555,7 @@
                 `;
                 
                 const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-3 gap-2 sm:gap-3 mt-3 min-h-[50px]';
+                grid.className = 'grid grid-cols-2 gap-3 sm:gap-4 mt-2 min-h-[50px]';
                 grid.dataset.catId = cat.id;
                 catLinks.forEach(l => grid.appendChild(createLinkElement(l, false)));
                 
@@ -630,9 +564,7 @@
                 
                 if (isEditing && window.Sortable) {
                     new Sortable(grid, { 
-                        group: 'shared', 
-                        animation: 150, 
-                        handle: '.drag-handle', 
+                        group: 'shared', animation: 150, handle: '.drag-handle', 
                         onEnd: (evt) => {
                             const linkId = evt.item.dataset.id;
                             const link = links.find(l => l.id == linkId);
@@ -642,13 +574,13 @@
                             document.querySelectorAll('#categories-container [data-cat-id]').forEach(catGrid => {
                                 Array.from(catGrid.children).forEach(child => {
                                     const id = child.dataset.id;
-                                    const l = links.find(x => x.id == id); // Loose equality important here
+                                    const l = links.find(x => x.id == id);
                                     if (l) newLinks.push(l);
                                 });
                             });
                             links = newLinks;
                             window.syncToCloud();
-                            setTimeout(() => window.render(), 50); // Lock it in
+                            setTimeout(() => window.render(), 50);
                         }
                     });
                 }
@@ -658,18 +590,17 @@
             
             if(isEditing && window.Sortable) {
                 new Sortable(catContainerWrapper, {
-                    animation: 150,
-                    handle: '.cat-drag-handle',
+                    animation: 150, handle: '.cat-drag-handle',
                     onEnd: () => {
                         const newOrderIds = Array.from(catContainerWrapper.children).map(child => child.dataset.id).filter(Boolean);
                         const newCats = [];
                         newOrderIds.forEach(id => {
-                            const cat = categories.find(c => c.id == id); // Loose equality important here
+                            const cat = categories.find(c => c.id == id);
                             if (cat) newCats.push(cat);
                         });
                         categories = newCats;
                         window.syncToCloud();
-                        setTimeout(() => window.render(), 50); // Lock it in
+                        setTimeout(() => window.render(), 50);
                     }
                 });
             }
@@ -698,18 +629,43 @@
             let action = `href="${link.url}" target="_blank"`;
             if (link.url?.startsWith('#')) action = `href="javascript:void(0)" onclick="window.switchView('${link.url.replace('#','')}')"`;
             
+            let linkContent = '';
+            if (isMaster) {
+                if (link.isInfoOnly) {
+                    linkContent = `
+                        <div onclick="window.openInfoModal(${link.id})" class="scout-card p-6 flex items-center gap-6 h-full cursor-pointer hover:bg-slate-800">
+                            <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">${imgHtml}</div>
+                            <div class="flex flex-col flex-1 min-w-0 pr-4">
+                                <h3 class="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-widest leading-tight">${link.title}</h3>
+                                ${link.subText ? `<p class="text-xs md:text-sm text-slate-400 mt-1 line-clamp-2">${link.subText}</p>` : ''}
+                                <span class="text-[10px] md:text-xs font-bold text-purple-400 mt-2 uppercase tracking-widest flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> View Details</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    linkContent = `
+                        <a ${action} class="scout-card p-6 flex items-center gap-6 h-full hover:bg-slate-800">
+                            <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">${imgHtml}</div>
+                            <div class="flex flex-col flex-1 min-w-0 pr-4">
+                                <h3 class="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-widest leading-tight">${link.title}</h3>
+                                <span class="text-[10px] md:text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest flex items-center gap-1"><i data-lucide="${link.url?.startsWith('#') ? 'layers' : 'external-link'}" class="w-3 h-3"></i> Open Resource</span>
+                            </div>
+                        </a>
+                    `;
+                }
+            } else {
+                linkContent = `
+                    <a ${action} class="scout-card aspect-square p-2.5 sm:p-4 flex flex-col items-center justify-start w-full h-full hover:bg-slate-800 text-center overflow-hidden">
+                        <div class="w-[55%] sm:w-[60%] max-w-[80px] mt-1 sm:mt-2 flex-shrink-0">${imgHtml}</div>
+                        <div class="flex-1 w-full flex flex-col justify-center items-center mt-2.5 sm:mt-3">
+                            <h3 class="text-[9px] sm:text-[11px] lg:text-xs font-black text-slate-100 uppercase tracking-widest leading-tight line-clamp-3">${link.title}</h3>
+                        </div>
+                    </a>
+                `;
+            }
+
             el.innerHTML = `
-                ${isMaster ? `
-                <a ${action} class="scout-card p-6 flex items-center gap-6 h-full hover:bg-slate-800">
-                    <div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">${imgHtml}</div>
-                    <div class="flex flex-col"><h3 class="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-widest">${link.title}</h3></div>
-                </a>` : `
-                <a ${action} class="scout-card p-3 sm:p-4 flex flex-col items-center justify-start w-full h-full hover:bg-slate-800 text-center">
-                    <div class="w-full aspect-square flex-shrink-0 mb-2 sm:mb-3">${imgHtml}</div>
-                    <div class="flex-1 w-full flex flex-col justify-center items-center px-1">
-                        <h3 class="text-[10px] sm:text-[11px] lg:text-xs font-black text-slate-100 uppercase tracking-widest leading-tight line-clamp-3">${link.title}</h3>
-                    </div>
-                </a>`}
+                ${linkContent}
                 ${isEditing ? `
                 <div class="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 z-10 scale-[0.8] sm:scale-90 origin-top-right">
                     <button class="drag-handle p-2 bg-slate-800 text-white rounded-full cursor-move border border-slate-600 hover:text-slate-300 transition-colors"><i data-lucide="grip-horizontal" class="w-4 h-4 pointer-events-none"></i></button>
@@ -719,6 +675,26 @@
             `;
             return el;
         }
+
+        // --- Info Modal Handling ---
+        window.openInfoModal = function(id) {
+            const link = links.find(l => l.id === id);
+            if(!link) return;
+            document.getElementById('info-modal-title').innerHTML = `<i data-lucide="info" class="w-5 h-5 text-purple-400"></i> ${link.title}`;
+            
+            let displayDetails = link.modalText || 'No additional information provided.';
+            displayDetails = displayDetails
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
+                .replace(/\n/g, '<br>');
+
+            document.getElementById('info-modal-content').innerHTML = displayDetails;
+            document.getElementById('info-modal').classList.replace('hidden', 'flex');
+            if (window.lucide) window.lucide.createIcons();
+        };
+        window.closeInfoModal = () => document.getElementById('info-modal').classList.replace('flex', 'hidden');
 
         // --- Render View: Planner ---
         window.renderPlannerView = function(container) {
@@ -764,14 +740,13 @@
                 empty.innerHTML = '<i data-lucide="calendar-x-2" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No upcoming events scheduled.';
                 wrapper.appendChild(empty);
             } else {
-                let currentMonthYear = ''; // Track the current month/year being rendered
+                let currentMonthYear = ''; 
 
                 sortedPlans.forEach(plan => {
                     const isNext = plan.id === nextEventId;
                     
                     const d = new Date(`${plan.date}T00:00:00`);
                     
-                    // --- Insert Month/Year Separator ---
                     const monthYearStr = isNaN(d.getTime()) ? 'Unscheduled' : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                     if (monthYearStr !== currentMonthYear) {
                         currentMonthYear = monthYearStr;
@@ -798,14 +773,12 @@
                         timeStr = `${h}:${m} ${ampm}`;
                     }
 
-                    // Yellow highlight details for the Next Event
                     const nextBadge = isNext ? `<span class="bg-yellow-500 text-slate-900 text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest font-black shadow-sm ml-2 whitespace-nowrap self-start mt-0.5">Next Up</span>` : '';
                     const nextHighlightClasses = isNext ? 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-slate-950 scale-[1.02] shadow-xl z-10' : '';
                     
                     const typeObj = eventTypes.find(t => t.name === plan.type);
                     const displayColor = typeObj ? typeObj.color : (plan.color || '#FDC82F');
 
-                    // Parse Hyperlinks for Details text
                     let displayDetails = plan.details || '';
                     displayDetails = displayDetails
                         .replace(/&/g, '&amp;')
@@ -846,10 +819,8 @@
             }
             container.appendChild(wrapper);
 
-            // Handle Smart Scrolling on Load
             setTimeout(() => {
                 if (nextEventIndex > 0) {
-                    // Scroll to the item right BEFORE the next event
                     const targetId = sortedPlans[nextEventIndex - 1].id;
                     const el = document.getElementById(`plan-card-${targetId}`);
                     if (el) {
@@ -857,7 +828,6 @@
                         window.scrollTo({top: y, behavior: 'smooth'});
                     }
                 } else if (nextEventIndex === 0 || nextEventIndex === -1) {
-                    // If the first item is the next event (or there are no future events), scroll to top
                     window.scrollTo({top: 0, behavior: 'smooth'});
                 }
             }, 100);
@@ -953,6 +923,7 @@
             document.getElementById('plan-date').value = plan ? plan.date : todayStr;
             document.getElementById('plan-title').value = plan?.title || '';
             document.getElementById('plan-details').value = plan?.details || '';
+            document.getElementById('plan-color').value = plan?.color || '#FDC82F';
             
             window.buildPlannerDropdowns(plan?.type, plan?.leader, plan?.time || '18:00');
             
@@ -973,7 +944,6 @@
             const leader = document.getElementById('plan-leader').value;
             const color = document.getElementById('plan-color').value;
 
-            // Update the Event Type's color globally
             const typeObj = eventTypes.find(t => t.name === type);
             if (typeObj) typeObj.color = color;
 
@@ -982,9 +952,9 @@
             const currentTimestamp = Date.now();
             if (currentEditId) {
                 const p = plans.find(p => p.id === currentEditId);
-                if (p) { p.date = date; p.time = time; p.type = type; p.title = title; p.details = details; p.leader = leader; p.editedAt = currentTimestamp; }
+                if (p) { p.date = date; p.time = time; p.type = type; p.title = title; p.details = details; p.leader = leader; p.color = color; p.editedAt = currentTimestamp; }
             } else {
-                plans.push({ id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader });
+                plans.push({ id: currentTimestamp, createdAt: currentTimestamp, date, time, type, title, details, leader, color });
             }
 
             window.closePlannerModal(); window.render(); window.syncToCloud();
@@ -1073,7 +1043,7 @@
                                 animation: 250,
                                 handle: '.vol-drag-handle',
                                 onEnd: function() {
-                                    const newOrderIds = Array.from(el.children).map(child => child.dataset.id).filter(Boolean);
+                                    const newOrderIds = Array.from(el.children).map(child => parseInt(child.dataset.id));
                                     const newVolunteers = [];
                                     newOrderIds.forEach(id => {
                                         const vol = volunteers.find(v => v.id == id);
@@ -1081,7 +1051,6 @@
                                     });
                                     volunteers = newVolunteers;
                                     window.syncToCloud();
-                                    setTimeout(() => window.render(), 50); // Lock it in
                                 }
                             });
                         }
@@ -1505,7 +1474,15 @@
 
         window.openContactModal = () => {
             const txt = settings.contactInfo || 'No contact information has been added yet.';
-            document.getElementById('contact-display-text').innerHTML = txt.replace(/\n/g, '<br>');
+            
+            let displayDetails = txt
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-400 hover:text-blue-300 underline font-bold pointer-events-auto" onclick="event.stopPropagation()">$1</a>')
+                .replace(/\n/g, '<br>');
+
+            document.getElementById('contact-display-text').innerHTML = displayDetails;
             document.getElementById('contact-modal').classList.replace('hidden', 'flex');
             if (window.lucide) window.lucide.createIcons();
         };
@@ -1570,6 +1547,41 @@
         };
         window.togglePasswordVisibility = () => { const i = document.getElementById('login-password'); i.type = i.type==='password'?'text':'password'; };
         
+        window.toggleMasterMode = function() {
+            const isMaster = document.getElementById('input-is-master').checked;
+            const infoField = document.getElementById('field-info-only');
+            if (isMaster) {
+                infoField.classList.remove('hidden');
+                infoField.classList.add('flex');
+            } else {
+                infoField.classList.add('hidden');
+                infoField.classList.remove('flex');
+                document.getElementById('input-is-info').checked = false;
+            }
+            window.toggleInfoMode();
+        };
+
+        window.toggleInfoMode = function() {
+            const isInfoOnly = document.getElementById('input-is-info').checked;
+            const urlField = document.getElementById('field-url');
+            const subtextField = document.getElementById('field-subtext');
+            const modaltextField = document.getElementById('field-modaltext');
+
+            if (isInfoOnly) {
+                urlField.classList.add('hidden');
+                subtextField.classList.remove('hidden');
+                modaltextField.classList.remove('hidden');
+            } else {
+                urlField.classList.remove('hidden');
+                subtextField.classList.add('hidden');
+                modaltextField.classList.add('hidden');
+            }
+            setTimeout(() => {
+                if(!subtextField.classList.contains('hidden')) window.autoResizeTextarea(document.getElementById('input-subtext'));
+                if(!modaltextField.classList.contains('hidden')) window.autoResizeTextarea(document.getElementById('input-modaltext'));
+            }, 10);
+        };
+
         window.openHeaderModal = () => {
             currentEditId = 'header'; currentEditType = 'header';
             document.getElementById('input-title').value = settings.title; document.getElementById('input-url').value = settings.subtitle;
@@ -1591,11 +1603,28 @@
 
             const sel = document.getElementById('input-category'); sel.innerHTML = '';
             categories.forEach(c => { const o = document.createElement('option'); o.value=c.id; o.innerText=c.title; if(c.id===l.categoryId) o.selected=true; sel.appendChild(o); });
+            
+            const isMasterEl = document.getElementById('input-is-master');
+            if (isMasterEl) {
+                isMasterEl.checked = !!l.isMaster;
+            }
+
+            const isInfoEl = document.getElementById('input-is-info');
+            if (isInfoEl) {
+                isInfoEl.checked = !!l.isInfoOnly;
+            }
+
+            document.getElementById('input-subtext').value = l.subText || '';
+            document.getElementById('input-modaltext').value = l.modalText || '';
+
             document.getElementById('modal-overlay').classList.replace('hidden','flex'); window.updatePreview();
+            
+            // Trigger UI updates based on loaded toggles
+            if(isMasterEl) window.toggleMasterMode();
         };
 
-        window.addNewLink = (catId) => { const id=Date.now(); links.push({id, title:'New Link', url:'', img:'', zoom:1, x:0, y:0, categoryId:catId}); window.editLink(id); };
-        window.addNewMasterLink = () => { const id=Date.now(); links.push({id, title:'New Master', url:'', img:'', zoom:1, x:0, y:0, categoryId:'default', isMaster:true}); window.editLink(id); };
+        window.addNewLink = (catId) => { const id=Date.now(); links.push({id, title:'New Link', url:'', img:'', zoom:1, x:0, y:0, categoryId:catId, isMaster:false, isInfoOnly:false, subText:'', modalText:''}); window.editLink(id); };
+        window.addNewMasterLink = () => { const id=Date.now(); links.push({id, title:'New Master', url:'', img:'', zoom:1, x:0, y:0, categoryId:'default', isMaster:true, isInfoOnly:false, subText:'', modalText:''}); window.editLink(id); };
         window.deleteLink = (id) => { if(confirm("Remove tile?")) { links = links.filter(l=>l.id!==id); window.render(); window.syncToCloud(); } };
         window.addNewCategory = () => { categories.push({id:'cat_'+Date.now(), title:'New Category'}); window.render(); window.syncToCloud(); };
         window.editCategory = (id) => { 
@@ -1631,7 +1660,12 @@
                 l.title = document.getElementById('input-title').value; l.url = document.getElementById('input-url').value;
                 l.img = document.getElementById('input-image').value; l.zoom = document.getElementById('input-zoom').value;
                 l.categoryId = document.getElementById('input-category').value;
-                if(document.getElementById('input-is-master')) l.isMaster = document.getElementById('input-is-master').checked;
+                if(document.getElementById('input-is-master')) {
+                    l.isMaster = document.getElementById('input-is-master').checked;
+                    l.isInfoOnly = document.getElementById('input-is-info').checked;
+                    l.subText = document.getElementById('input-subtext').value;
+                    l.modalText = document.getElementById('input-modaltext').value;
+                }
             }
             window.closeModal(); window.render(); window.syncToCloud();
         };
