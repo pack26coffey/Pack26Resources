@@ -107,15 +107,21 @@
     </style>
 </head>
 <body class="min-h-screen relative text-slate-100 bg-slate-950">
+    <!-- Hidden div to ensure Tailwind compiles necessary dynamic grid classes -->
     <div class="hidden grid grid-cols-1 grid-cols-2 grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-3 sm:gap-4 items-start w-full aspect-square aspect-[3/4] w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 max-w-[80%] max-h-[55%] line-clamp-3"></div>
 
     <div id="toast-container" class="fixed top-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="app">
+        <!-- Header -->
         <header id="main-header" class="bg-slate-900 border-b-[8px] border-yellow-400 shadow-xl px-4 md:px-6 py-4 md:py-6 transition-colors relative z-30 overflow-hidden">
-            <div id="header-bg-layer" class="absolute inset-0 z-0 pointer-events-none hidden"><img id="header-bg-img" src="" class="absolute inset-0 w-full h-full object-cover"></div>
+            <div id="header-bg-layer" class="absolute inset-0 z-0 pointer-events-none hidden">
+                <img id="header-bg-img" src="" class="absolute inset-0 w-full h-full object-cover">
+            </div>
+
             <div class="max-w-6xl mx-auto relative z-10">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+                    <!-- Left Side -->
                     <div class="flex flex-row items-center gap-4 w-full md:w-auto md:flex-1">
                         <div class="relative group flex-shrink-0">
                             <div id="header-logo-container" class="w-20 h-20 md:w-32 md:h-32 rounded-[1.25rem] md:rounded-[2rem] bg-slate-800 shadow-inner overflow-hidden border-4 border-slate-700 transition-all relative">
@@ -123,25 +129,39 @@
                             </div>
                             <button id="edit-header-btn" onclick="window.openHeaderModal()" class="hidden absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 p-2 md:p-2.5 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform z-20"></button>
                         </div>
+
                         <div class="text-left flex-1 relative group md:pr-12">
                             <h1 id="display-title" class="text-3xl sm:text-4xl md:text-6xl font-black text-blue-500 uppercase tracking-tighter mb-0.5 md:mb-1 leading-none drop-shadow-md">Pack 26</h1>
-                            <div class="text-[11px] sm:text-xs md:text-xl font-bold text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em] flex items-center justify-start gap-3 drop-shadow-md"><span id="display-subtitle">Scouting America</span></div>
+                            <div class="text-[11px] sm:text-xs md:text-xl font-bold text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.4em] flex items-center justify-start gap-3 drop-shadow-md">
+                                <span id="display-subtitle">Scouting America</span>
+                            </div>
                             <button id="edit-text-btn" onclick="window.openHeaderModal()" class="hidden absolute top-1/2 -translate-y-1/2 right-0 md:-right-4 p-2 md:p-3 bg-blue-600 text-white rounded-xl shadow-xl hover:scale-110 transition-transform"></button>
                         </div>
                     </div>
+
+                    <!-- Right Side -->
                     <div class="flex flex-row items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-2 md:gap-3 mt-1 md:mt-0 border-t border-slate-800/50 pt-3 md:border-0 md:pt-0">
                         <div class="flex flex-col items-start md:items-end gap-1 md:gap-1.5 drop-shadow-md">
-                            <button onclick="window.openContactModal()" class="text-[10px] md:text-xs font-black text-blue-400 hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right"><i data-lucide="info" class="w-3.5 h-3.5"></i> Contact Info</button>
-                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-400 hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right"><i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal</button>
+                            <button onclick="window.openContactModal()" class="text-[10px] md:text-xs font-black text-blue-400 hover:text-blue-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
+                                <i data-lucide="info" class="w-3.5 h-3.5"></i> Contact Info
+                            </button>
+                            <button onclick="window.switchView('volunteer')" class="text-[10px] md:text-xs font-black text-red-400 hover:text-red-300 hover:underline uppercase tracking-widest flex items-center gap-1.5 transition-colors pr-1 text-left md:text-right">
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Volunteer Portal
+                            </button>
                         </div>
                         <div class="flex items-center gap-2 md:gap-4 flex-shrink-0">
                             <button id="home-btn" onclick="window.switchView('links')" class="hidden p-2.5 md:p-3 rounded-xl bg-blue-900/30 text-blue-400 hover:bg-blue-600 hover:text-white transition-all shadow-md flex items-center justify-center group"><i data-lucide="home" class="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform"></i></button>
-                            <button id="header-design-btn" onclick="window.openHeaderDesignModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-teal-900/30 text-teal-400 hover:bg-teal-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group"><i data-lucide="paint-roller" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">Header Design</span></button>
-                            <button id="app-icon-edit-btn" onclick="window.openAppIconModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-purple-900/30 text-purple-400 hover:bg-purple-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group"><i data-lucide="smartphone" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">App Icon</span></button>
+                            <button id="header-design-btn" onclick="window.openHeaderDesignModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-teal-900/30 text-teal-400 hover:bg-teal-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
+                                <i data-lucide="paint-roller" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">Header Design</span>
+                            </button>
+                            <button id="app-icon-edit-btn" onclick="window.openAppIconModal()" class="hidden p-2.5 md:px-4 md:py-3 rounded-xl bg-purple-900/30 text-purple-400 hover:bg-purple-600 hover:text-white transition-all shadow-md items-center justify-center gap-2 group">
+                                <i data-lucide="smartphone" class="w-4 h-4 md:w-4 md:h-4 group-hover:scale-110 transition-transform"></i><span class="hidden md:inline font-bold uppercase tracking-widest text-[10px] md:text-xs">App Icon</span>
+                            </button>
                             <button id="admin-toggle-btn" onclick="window.toggleAdminMode()" class="hidden"></button>
                         </div>
                     </div>
                 </div>
+
                 <div id="leader-nav" class="hidden mt-4 flex flex-wrap justify-center md:justify-start gap-2 md:gap-3 border-t border-slate-800/50 pt-4">
                     <button onclick="window.switchView('links')" id="tab-links" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Resources</button>
                     <button onclick="window.switchView('planner')" id="tab-planner" class="px-4 md:px-5 py-2 rounded-full font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors shadow-sm">Pack Planner</button>
@@ -151,13 +171,17 @@
             </div>
         </header>
 
-        <main class="w-full max-w-7xl mx-auto py-8 md:py-12 px-4 sm:px-6 min-h-[50vh]" id="main-container"></main>
+        <!-- Dynamic Content Area -->
+        <main class="w-full max-w-7xl mx-auto py-8 md:py-12 px-4 sm:px-6 min-h-[50vh]" id="main-container">
+            <!-- Content injected here -->
+        </main>
 
         <div class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50">
             <button id="lock-btn" onclick="window.handleAuthClick()"></button>
         </div>
     </div>
 
+    <!-- Login Modal -->
     <div id="login-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] hidden items-center justify-center p-6">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-sm overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-400">
             <div class="bg-blue-900 p-6 text-white flex justify-between items-center">
@@ -177,6 +201,7 @@
         </div>
     </div>
 
+    <!-- Contact Info Display Modal -->
     <div id="contact-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[200] hidden items-center justify-center p-6">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-md overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-500">
             <div class="bg-blue-900 p-6 text-white flex justify-between items-center border-b border-slate-700">
@@ -189,6 +214,7 @@
         </div>
     </div>
 
+    <!-- Info Tile Display Modal -->
     <div id="info-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[250] hidden items-center justify-center p-6">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-purple-500">
             <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
@@ -201,6 +227,7 @@
         </div>
     </div>
 
+    <!-- Universal Modal -->
     <div id="modal-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-6">
         <div class="bg-slate-900 rounded-[4rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-blue-900">
             <div class="bg-blue-900 p-8 text-white flex justify-between items-center">
@@ -245,6 +272,7 @@
                         </label>
                     </div>
 
+                    <!-- NEW INFO MODE TOGGLE -->
                     <div id="field-info-only" class="hidden items-center justify-between p-4 bg-purple-900/20 rounded-2xl border border-purple-800/50 mt-4">
                         <div>
                             <span class="text-[10px] font-black uppercase text-purple-400 tracking-widest block mb-0.5">Info Only Mode</span>
@@ -265,6 +293,8 @@
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Popup Modal Text</label>
                         <textarea id="input-modaltext" rows="4" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl text-sm font-bold outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Detailed info for the popup. (Links: [text](https://url.com))"></textarea>
                     </div>
+                    <!-- END INFO MODE FIELDS -->
+
                     <div id="field-category" class="hidden">
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Category</label>
                         <select id="input-category" class="w-full p-4 bg-slate-800 rounded-2xl font-bold outline-none text-white transition-all"></select>
@@ -305,6 +335,7 @@
         </div>
     </div>
 
+    <!-- Planner Edit Modal -->
     <div id="planner-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-yellow-500 my-auto">
             <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
@@ -312,6 +343,7 @@
                 <button onclick="window.closePlannerModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="x"></i></button>
             </div>
             <div class="p-6 sm:p-8 space-y-6">
+                <!-- Row 1: Date & Time -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Date</label>
@@ -323,6 +355,7 @@
                     </div>
                 </div>
 
+                <!-- Row 2: Type & Color -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <div class="flex justify-between items-end mb-2">
@@ -340,6 +373,7 @@
                     </div>
                 </div>
 
+                <!-- Row 3: Leader & Title -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <div class="flex justify-between items-end mb-2">
@@ -357,6 +391,7 @@
                     </div>
                 </div>
 
+                <!-- Row 4: Details -->
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Details <span class="text-slate-400/50 font-normal">(Optional. Links: [text](https://url.com))</span></label>
                     <textarea id="plan-details" rows="2" oninput="window.autoResizeTextarea(this)" class="w-full p-4 bg-slate-800 rounded-2xl outline-none focus:ring-4 ring-blue-900/10 text-white transition-colors resize-none overflow-hidden" placeholder="Provide extra details..."></textarea>
@@ -369,6 +404,7 @@
         </div>
     </div>
 
+    <!-- Volunteer Portal Edit Modal -->
     <div id="volunteer-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-6 overflow-y-auto">
         <div class="bg-slate-900 rounded-[3rem] w-full max-w-2xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-[16px] border-red-600 my-auto">
             <div class="bg-slate-800 p-6 text-white flex justify-between items-center border-b border-slate-700">
@@ -399,6 +435,7 @@
         </div>
     </div>
 
+    <!-- Committee Note Edit Modal with Auto-Save -->
     <div id="committee-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] hidden items-center justify-center p-4 sm:p-6 overflow-y-auto">
         <div class="bg-slate-900 rounded-3xl w-full max-w-3xl overflow-hidden flex flex-col shadow-2xl modal-animate border-b-8 border-blue-600 my-auto" id="comm-modal-panel">
             <div class="bg-slate-800 p-4 sm:p-5 text-white flex justify-between items-center border-b border-slate-700 sticky top-0 z-10">
@@ -503,6 +540,7 @@
 
         let useFirebase = false; let auth = null; let db = null; let currentUser = null;
         let isAdmin = false; let isLeader = false; let isEditing = false; let currentView = 'links'; 
+        let isViewingArchive = false;
         const appId = 'pack-26-resources';
 
         let savedEventTypes = JSON.parse(localStorage.getItem('scout_event_types'));
@@ -773,47 +811,77 @@
             wrapper.className = 'w-full max-w-4xl flex flex-col gap-4';
 
             const headerRow = document.createElement('div');
-            headerRow.className = 'flex justify-between items-center mb-2';
+            headerRow.className = 'flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2';
             headerRow.innerHTML = `
                 <h2 class="text-2xl font-black text-slate-100 uppercase tracking-widest flex items-center gap-3">
-                    <i data-lucide="calendar-days" class="w-6 h-6 text-blue-500"></i> Upcoming Events
+                    <i data-lucide="${isViewingArchive ? 'archive' : 'calendar-days'}" class="w-6 h-6 ${isViewingArchive ? 'text-slate-500' : 'text-blue-500'}"></i> 
+                    ${isViewingArchive ? 'Archived Events' : 'Upcoming Events'}
                 </h2>
-                ${(isAdmin || isLeader) ? `
-                <button onclick="window.openPlannerModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
-                    <i data-lucide="plus" class="w-3 h-3"></i> Add Event
-                </button>
-                ` : ''}
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="window.toggleArchiveView()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full font-bold uppercase tracking-widest text-[10px] shadow-sm transition-colors flex items-center gap-2">
+                        <i data-lucide="${isViewingArchive ? 'calendar-days' : 'archive'}" class="w-3 h-3"></i> 
+                        ${isViewingArchive ? 'View Upcoming' : 'View Archive'}
+                    </button>
+                    ${(isAdmin || isLeader) ? `
+                    <button onclick="window.openPlannerModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform hover:scale-105 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Add Event
+                    </button>
+                    ` : ''}
+                </div>
             `;
             wrapper.appendChild(headerRow);
 
-            const sortedPlans = [...plans].sort((a, b) => {
-                const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
-                const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
-                return dateA.getTime() - dateB.getTime();
+            const now = new Date();
+            const exactNow = new Date();
+            now.setHours(0, 0, 0, 0);
+            const archiveThreshold = new Date(now);
+            archiveThreshold.setDate(archiveThreshold.getDate() - 15);
+
+            let filteredPlans = plans.filter(p => {
+                const pDate = new Date(`${p.date}T00:00:00`);
+                if (isViewingArchive) return pDate < archiveThreshold;
+                return pDate >= archiveThreshold;
             });
 
-            const now = new Date();
+            if (isViewingArchive) {
+                // Newest archived events first
+                filteredPlans.sort((a, b) => {
+                    const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
+                    const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
+                    return dateB.getTime() - dateA.getTime();
+                });
+            } else {
+                // Oldest upcoming events first
+                filteredPlans.sort((a, b) => {
+                    const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
+                    const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
+                    return dateA.getTime() - dateB.getTime();
+                });
+            }
+
             let nextEventId = null;
             let nextEventIndex = -1;
             
-            for (let i = 0; i < sortedPlans.length; i++) {
-                const pDate = new Date(`${sortedPlans[i].date}T${sortedPlans[i].time || '00:00'}`);
-                if (pDate >= now) { 
-                    nextEventIndex = i;
-                    nextEventId = sortedPlans[i].id; 
-                    break; 
+            if (!isViewingArchive) {
+                for (let i = 0; i < filteredPlans.length; i++) {
+                    const pDate = new Date(`${filteredPlans[i].date}T${filteredPlans[i].time || '00:00'}`);
+                    if (pDate >= exactNow) { 
+                        nextEventIndex = i;
+                        nextEventId = filteredPlans[i].id; 
+                        break; 
+                    }
                 }
             }
 
-            if (sortedPlans.length === 0) {
+            if (filteredPlans.length === 0) {
                 const empty = document.createElement('div');
                 empty.className = 'text-center py-20 opacity-50 font-bold uppercase tracking-widest text-sm text-slate-500';
-                empty.innerHTML = '<i data-lucide="calendar-x-2" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No upcoming events scheduled.';
+                empty.innerHTML = `<i data-lucide="${isViewingArchive ? 'archive-x' : 'calendar-x-2'}" class="w-16 h-16 mx-auto mb-4 opacity-50"></i> No ${isViewingArchive ? 'archived' : 'upcoming'} events.`;
                 wrapper.appendChild(empty);
             } else {
                 let currentMonthYear = ''; 
 
-                sortedPlans.forEach(plan => {
+                filteredPlans.forEach(plan => {
                     const isNext = plan.id === nextEventId;
                     
                     const d = new Date(`${plan.date}T00:00:00`);
@@ -891,18 +959,20 @@
             }
             container.appendChild(wrapper);
 
-            setTimeout(() => {
-                if (nextEventIndex > 0) {
-                    const targetId = sortedPlans[nextEventIndex - 1].id;
-                    const el = document.getElementById(`plan-card-${targetId}`);
-                    if (el) {
-                        const y = el.getBoundingClientRect().top + window.pageYOffset - 40; 
-                        window.scrollTo({top: y, behavior: 'smooth'});
+            if (!isViewingArchive) {
+                setTimeout(() => {
+                    if (nextEventIndex > 0) {
+                        const targetId = filteredPlans[nextEventIndex - 1].id;
+                        const el = document.getElementById(`plan-card-${targetId}`);
+                        if (el) {
+                            const y = el.getBoundingClientRect().top + window.pageYOffset - 40; 
+                            window.scrollTo({top: y, behavior: 'smooth'});
+                        }
+                    } else if (nextEventIndex === 0 || nextEventIndex === -1) {
+                        window.scrollTo({top: 0, behavior: 'smooth'});
                     }
-                } else if (nextEventIndex === 0 || nextEventIndex === -1) {
-                    window.scrollTo({top: 0, behavior: 'smooth'});
-                }
-            }, 100);
+                }, 100);
+            }
         }
 
         window.updatePlanColorPicker = function() {
@@ -1114,7 +1184,7 @@
                                 animation: 250,
                                 handle: '.vol-drag-handle',
                                 onEnd: function() {
-                                    const newOrderIds = Array.from(el.children).map(child => child.dataset.id).filter(Boolean);
+                                    const newOrderIds = Array.from(el.children).map(child => parseInt(child.dataset.id));
                                     const newVolunteers = [];
                                     newOrderIds.forEach(id => {
                                         const vol = volunteers.find(v => v.id == id);
@@ -1122,7 +1192,6 @@
                                     });
                                     volunteers = newVolunteers;
                                     window.syncToCloud();
-                                    setTimeout(() => window.render(), 50);
                                 }
                             });
                         }
@@ -1561,7 +1630,6 @@
 
         window.closeContactModal = () => document.getElementById('contact-modal').classList.replace('flex', 'hidden');
 
-
         // --- Render Engine & Utilities ---
         window.render = () => {
             document.getElementById('display-title').innerText = settings.title;
@@ -1607,7 +1675,17 @@
         };
 
         // --- Editing Functions ---
-        window.switchView = (v) => { currentView = v; window.render(); };
+        window.switchView = (v) => { 
+            currentView = v; 
+            if(v !== 'planner') isViewingArchive = false; 
+            window.render(); 
+        };
+        
+        window.toggleArchiveView = () => { 
+            isViewingArchive = !isViewingArchive; 
+            window.render(); 
+        };
+
         window.toggleAdminMode = () => { isEditing = !isEditing; window.render(); };
         window.handleAuthClick = () => { if(isAdmin||isLeader){ isAdmin=isLeader=isEditing=false; currentView='links'; window.render(); } else { document.getElementById('login-modal').classList.replace('hidden','flex'); }};
         window.closeLoginModal = () => document.getElementById('login-modal').classList.replace('flex','hidden');
@@ -1691,7 +1769,6 @@
 
             document.getElementById('modal-overlay').classList.replace('hidden','flex'); window.updatePreview();
             
-            // Trigger UI updates based on loaded toggles
             if(isMasterEl) window.toggleMasterMode();
         };
 
